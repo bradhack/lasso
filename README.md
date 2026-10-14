@@ -1,6 +1,6 @@
 # Lasso: Believe Your Call
 
-**See why the odds moved. Then beat the AI to what's next.**
+**See why the odds moved. Then out-predict the AI Gaffer on what's next.**
 
 Lasso is a live, multi-agent match companion for the Microsoft and Premier League *Inside the Game* hackathon. It ingests synthetic football events, explains every swing in each team's chance of winning (the **Believe-o-Meter**) in plain language, and invites fans to make free-to-play calls against **the Gaffer**, a Bayesian live match model.
 
