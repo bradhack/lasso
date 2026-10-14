@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lasso-engine"
+version = "0.1.0"
+description = "Synthetic football league, event simulator and the Gaffer: a live Bayesian match model"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "pandas>=2.1",
+    "pyarrow>=15",
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+mcmc = ["numpyro>=0.15", "jax>=0.4"]
+dev = ["pytest>=8", "ruff>=0.5"]
+
+[tool.setuptools.packages.find]
+include = ["lasso_engine*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110

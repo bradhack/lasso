@@ -1,0 +1,27 @@
+{
+  "seasons": [
+    3,
+    4
+  ],
+  "laplace_vs_nuts": {
+    "max_abs_mean_diff": 0.006152793187710642,
+    "mean_corr": 0.9999608081078365,
+    "sd_ratio_median": 1.0008150334806674
+  },
+  "hierarchical": {
+    "sigma_att_median": 0.17681293189525604,
+    "sigma_att_90ci": [
+      0.12026216387748719,
+      0.2596784934401512
+    ],
+    "sigma_def_median": 0.13543842732906342,
+    "sigma_def_90ci": [
+      0.08419781699776649,
+      0.2022604905068874
+    ],
+    "tuned": {
+      "sigma_att": 0.25,
+      "sigma_def": 0.225
+    }
+  }
+}

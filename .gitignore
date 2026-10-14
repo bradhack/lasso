@@ -1,0 +1,10 @@
+# Generated league data is deterministic: regenerate with `python -m lasso_engine.generate`
+data/league/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+node_modules/
+dist/
+.env
+.azure/
