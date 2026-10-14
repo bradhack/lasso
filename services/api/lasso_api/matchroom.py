@@ -16,8 +16,8 @@ from .narrative import driver_rows, template_package
 
 SWING_THRESHOLD = 0.08  # 8 points on either side's win chance triggers a moment
 PULSE_EVERY = 15  # match minutes between "pulse" moments
-MARKET_EVERY = 7  # match minutes between new Call It challenges
-MARKET_OPEN_FOR = 2.0  # match minutes a challenge accepts calls
+MARKET_EVERY = 4  # match minutes between new Call It challenges
+MARKET_OPEN_FOR = 3.0  # match minutes a challenge accepts calls
 _moment_ids = itertools.count(1)
 
 
@@ -328,7 +328,7 @@ class MatchRoom:
             return []
         if not kickoff and self.minute() - self.last_market_min < MARKET_EVERY:
             return []
-        if self.state.period == 2 and self.state.clock > 86:
+        if (self.state.period == 2 and self.state.clock > 86) or (self.state.period == 1 and self.state.clock > 41):
             return []
         if sum(1 for m in self.markets.values() if m.status == "open") >= 2:
             return []
@@ -349,7 +349,11 @@ class MatchRoom:
             bonus = {"score": 0.15, "comeback": 0.25, "next": 0.05, "result": 0.0}[c.market_id.split("-")[0]]
             return ent + bonus
 
-        cands = [c for c in cands if c.market_id.split("-")[0] != "result"]
+        # One live question per settlement rule: no stacking three "who scores next?" calls on one goal.
+        pending = {m.settles.split(":until")[0] for m in self.markets.values() if m.status != "settled"}
+        cands = [c for c in cands if c.market_id.split("-")[0] != "result"
+                 and c.settles.split(":until")[0] not in pending
+                 and min(o["p"] for o in c.options) >= (0.06 if len(c.options) == 2 else 0.04)]
         recent = {m.kind for m in list(self.markets.values())[-2:]}
         cands.sort(key=lambda c: interest(c) - (0.3 if c.market_id.split("-")[0] in recent else 0), reverse=True)
         return cands[0] if cands else None

@@ -1,0 +1,14 @@
+# Match Feed publisher: replays synthetic matches into Azure Event Hubs. Build context: repository root.
+FROM python:3.12-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+WORKDIR /app
+COPY engine /app/engine
+RUN pip install /app/engine
+COPY services/api/requirements.txt /app/requirements.txt
+RUN pip install -r /app/requirements.txt
+COPY services/api/lasso_api /app/lasso_api
+COPY data/demo /app/data/demo
+ENV LASSO_DATA_DIR=/app/data/demo
+RUN useradd -m lasso && chown -R lasso /app
+USER lasso
+CMD ["python", "-m", "lasso_api.feed"]

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import os
 import time
 from pathlib import Path
 
@@ -19,7 +20,7 @@ from lasso_engine.markets import generate_markets
 from .agents_client import AgentsClient
 from .config import settings
 from .data import DemoData
-from .feed import Scheduler, consume_forever
+from .feed import Scheduler, consume_forever, replay
 from .game import STAKES, GameService, daily_top_up, public_user
 from .matchroom import MatchRoom
 from .mcp_tools import build_mcp
@@ -28,6 +29,10 @@ from .store import make_store
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("lasso.api")
+if os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING"):
+    from azure.monitor.opentelemetry import configure_azure_monitor
+
+    configure_azure_monitor()
 
 data = DemoData(settings.data_dir)
 rooms: dict[str, MatchRoom] = {mid: MatchRoom(mid, data) for mid in settings.featured_matches
@@ -77,8 +82,29 @@ async def publish(room: MatchRoom, msg: dict) -> None:
         _spawn(game.bot_calls(room, room.markets[msg["market"]["market_id"]]))
     elif kind == "market_settled":
         _spawn(settle(room, msg["market"]["market_id"]))
-    elif kind == "moment" and agents is not None:
+    elif kind == "moment" and agents is not None and await _should_enrich(room, msg["moment"]):
         _spawn(enrich(room, msg["moment"]))
+
+
+_enrich_state = {"day": "", "count": 0, "last": {}}
+ALWAYS_ENRICH = {"goal", "red_card", "full_time"}
+
+
+async def _should_enrich(room: MatchRoom, moment: dict) -> bool:
+    """Cost guard-rails: agents only run for matches people are watching, with a per-match gap and daily cap."""
+    day = time.strftime("%Y-%m-%d")
+    if _enrich_state["day"] != day:
+        _enrich_state.update(day=day, count=0)
+    if _enrich_state["count"] >= settings.agents_daily_limit:
+        return False
+    if not await hub.has_viewers(f"match:{room.match_id}"):
+        return False
+    last = _enrich_state["last"].get(room.match_id, 0.0)
+    if moment["trigger"] not in ALWAYS_ENRICH and time.time() - last < settings.agents_min_gap_seconds:
+        return False
+    _enrich_state["last"][room.match_id] = time.time()
+    _enrich_state["count"] += 1
+    return True
 
 
 async def settle(room: MatchRoom, market_id: str) -> None:
@@ -114,13 +140,21 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
                 await publish(room, msg)
 
 
+_overrides: set[str] = set()  # matches temporarily replayed locally (demo recording), ignoring Event Hubs
+
+
+async def on_hub_event(match_id: str, ev: dict) -> None:
+    if match_id not in _overrides:
+        await on_event(match_id, ev)
+
+
 # ------------------------------------------------------------------- app
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI):
     await game.bootstrap()
     async with mcp.session_manager.run():
         if settings.event_source == "eventhubs":
-            _spawn(consume_forever(on_event))
+            _spawn(consume_forever(on_hub_event))
         else:
             scheduler.start()
         log.info("Lasso API ready: %d featured matches, agents=%s", len(rooms), bool(agents))
@@ -160,7 +194,8 @@ class LeagueIn(BaseModel):
 
 @app.get("/api/health")
 async def health() -> dict:
-    return {"ok": True, "matches": len(rooms), "agents": bool(agents), "model": data.model_meta.get("version")}
+    return {"ok": True, "matches": len(rooms), "agents": bool(agents), "model": data.model_meta.get("version"),
+            "agent_calls_today": _enrich_state["count"]}
 
 
 @app.get("/api/negotiate")
@@ -225,7 +260,8 @@ async def activity(user_id: str, kind: str = Query(..., pattern="^read_story$"))
     msgs = await game.record_activity(user_id, kind)
     for m in msgs:
         await hub.to_user(user_id, m)
-    return {"ok": True, "events": msgs}
+    u = await store.get_user(user_id)
+    return {"ok": True, "events": msgs, "user": public_user(u) if u else None}
 
 
 @app.get("/api/users/{user_id}/calls")
@@ -293,7 +329,18 @@ async def restart(match_id: str, key: str, from_minute: float = 0.0, minute_seco
         raise HTTPException(404, "match not found")
     if match_id not in rooms:
         rooms[match_id] = MatchRoom(match_id, data)
-    await scheduler.restart(match_id, from_minute, minute_seconds)
+    if settings.event_source == "eventhubs":
+        _overrides.add(match_id)
+
+        async def run_once() -> None:
+            try:
+                await replay(data, match_id, on_event, minute_seconds or settings.minute_seconds, from_minute)
+            finally:
+                _overrides.discard(match_id)
+
+        _spawn(run_once())
+    else:
+        await scheduler.restart(match_id, from_minute, minute_seconds)
     return {"ok": True}
 
 

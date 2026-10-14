@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import contextlib
 import logging
+import os
 
 from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.routes import create_agent_card_routes, create_jsonrpc_routes
@@ -23,6 +24,16 @@ from .team import build_team, make_clients
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("lasso.agents")
+
+if os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING"):
+    # Every agent run, tool call and workflow step becomes an OpenTelemetry span in Application Insights
+    # (and in the Foundry portal's tracing view once the project is connected to that resource).
+    from agent_framework.observability import enable_instrumentation
+    from azure.monitor.opentelemetry import configure_azure_monitor
+
+    configure_azure_monitor()
+    enable_instrumentation()
+    log.info("OpenTelemetry tracing enabled")
 
 if settings.foundry_endpoint:
     fast, writer = make_clients(settings)

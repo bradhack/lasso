@@ -57,6 +57,9 @@ class LocalHub:
         for ws in dead:
             sockets.discard(ws)
 
+    async def has_viewers(self, group: str) -> bool:
+        return bool(self.groups.get(group))
+
     async def to_group(self, group: str, data: dict) -> None:
         await self._send(self.groups.get(group, set()),
                          {"type": "message", "from": "group", "group": group, "dataType": "json", "data": data})
@@ -74,6 +77,19 @@ class WebPubSubHub:
         self._cred = DefaultAzureCredential(managed_identity_client_id=client_id or None)
         self.client = WebPubSubServiceClient(endpoint=endpoint, hub=hub, credential=self._cred)
         self._sem = asyncio.Semaphore(32)
+        self._viewers: dict[str, tuple[float, bool]] = {}
+
+    async def has_viewers(self, group: str) -> bool:
+        now = asyncio.get_event_loop().time()
+        hit = self._viewers.get(group)
+        if hit and now - hit[0] < 15:
+            return hit[1]
+        try:
+            exists = bool(await self.client.group_exists(group))
+        except Exception:  # noqa: BLE001
+            exists = True
+        self._viewers[group] = (now, exists)
+        return exists
 
     async def negotiate(self, user_id: str, base_ws_url: str) -> dict:
         token = await self.client.get_client_access_token(

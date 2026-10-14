@@ -8,3 +8,4 @@ node_modules/
 dist/
 .env
 .azure/
+web/e2e-shots/

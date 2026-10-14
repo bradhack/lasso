@@ -129,7 +129,7 @@ class GameService:
             u["biscuits"] += MISSIONS[key]["reward"]
             u["xp"] += 40
             out.append({"type": "mission_complete", "mission": key, "label": MISSIONS[key]["label"],
-                        "reward": MISSIONS[key]["reward"]})
+                        "reward": MISSIONS[key]["reward"], "biscuits": u["biscuits"]})
         return out
 
     async def record_activity(self, user_id: str, kind: str) -> list[dict]:

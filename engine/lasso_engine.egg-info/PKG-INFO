@@ -7,7 +7,8 @@ Requires-Dist: numpy>=1.26
 Requires-Dist: scipy>=1.11
 Requires-Dist: pandas>=2.1
 Requires-Dist: pyarrow>=15
-Requires-Dist: matplotlib>=3.8
+Provides-Extra: eval
+Requires-Dist: matplotlib>=3.8; extra == "eval"
 Provides-Extra: mcmc
 Requires-Dist: numpyro>=0.15; extra == "mcmc"
 Requires-Dist: jax>=0.4; extra == "mcmc"

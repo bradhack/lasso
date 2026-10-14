@@ -1,0 +1,45 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Engine tests
+        run: |
+          pip install -e "engine[dev]"
+          cd engine && pytest -q
+      - name: Agents tests
+        run: |
+          pip install -r services/agents/requirements.txt pytest
+          cd services/agents && pytest -q
+      - name: API imports
+        run: |
+          pip install -r services/api/requirements.txt
+          cd services/api && LASSO_DATA_DIR=../../data/demo python -c "import lasso_api.main, lasso_api.feed"
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci && npm run build
+        working-directory: web
+
+  infra:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: az bicep build --file infra/main.bicep --stdout > /dev/null

@@ -14,8 +14,8 @@ T = {
              "fr": "But : {team} {min}'"},
     "red": {"en": "Red card: {team} {min}'", "es": "Roja: {team} {min}'", "pt": "Vermelho: {team} {min}'",
             "fr": "Rouge : {team} {min}'"},
-    "chances": {"en": "Chances created ({xg} xG)", "es": "Ocasiones creadas ({xg} xG)",
-                "pt": "Chances criadas ({xg} xG)", "fr": "Occasions créées ({xg} xG)"},
+    "chances": {"en": "Chances: xG {h} v {a}", "es": "Ocasiones: xG {h} a {a}",
+                "pt": "Chances: xG {h} x {a}", "fr": "Occasions : xG {h} - {a}"},
     "clock": {"en": "Clock running down", "es": "El reloj corre", "pt": "O relógio corre",
               "fr": "Le chrono tourne"},
     "h_goal": {"en": "{player} scores for {team}!", "es": "¡Gol de {player} para {team}!",
@@ -68,8 +68,8 @@ def driver_rows(contrib: dict[str, float], window: dict, names: tuple[str, str],
             r = window["reds"][-1]
             labels = {lang: tr("red", lang, team=names[r["team"]], min=r["minute"]) for lang in LANGS}
         elif comp == "chances":
-            xg = window["xg"][focus]
-            labels = {lang: tr("chances", lang, xg=f"{xg:.2f}") for lang in LANGS}
+            h, a = window["xg"]
+            labels = {lang: tr("chances", lang, h=f"{h:.2f}", a=f"{a:.2f}") for lang in LANGS}
         elif comp == "clock":
             labels = {lang: tr("clock", lang) for lang in LANGS}
         else:

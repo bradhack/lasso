@@ -6,3 +6,4 @@ mcp==1.30.0
 azure-identity>=1.19
 starlette>=0.40
 uvicorn[standard]==0.53.0
+azure-monitor-opentelemetry>=1.6

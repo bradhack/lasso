@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": { "value": "${AZURE_ENV_NAME}" },
+    "location": { "value": "${AZURE_LOCATION=eastus2}" },
+    "fastModelName": { "value": "${FOUNDRY_MODEL=gpt-5-mini}" },
+    "fastModelVersion": { "value": "${FOUNDRY_MODEL_VERSION=2025-08-07}" },
+    "writerModelName": { "value": "${FOUNDRY_WRITER_MODEL=gpt-5-mini}" },
+    "writerModelVersion": { "value": "${FOUNDRY_WRITER_MODEL_VERSION=2025-08-07}" },
+    "apiImage": { "value": "${SERVICE_API_IMAGE_NAME=}" },
+    "agentsImage": { "value": "${SERVICE_AGENTS_IMAGE_NAME=}" },
+    "feedImage": { "value": "${SERVICE_FEED_IMAGE_NAME=}" }
+  }
+}
