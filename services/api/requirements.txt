@@ -1,0 +1,12 @@
+fastapi==0.135.3
+uvicorn[standard]==0.38.0
+pydantic>=2.9
+httpx>=0.28
+mcp==1.30.0
+agent-framework-a2a==1.0.0b261002
+agent-framework-core==1.21.0
+azure-identity>=1.19
+azure-cosmos>=4.9
+azure-eventhub>=5.12
+azure-messaging-webpubsubservice>=1.2
+aiohttp>=3.10

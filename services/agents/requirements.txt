@@ -1,0 +1,8 @@
+agent-framework-core==1.21.0
+agent-framework-foundry==1.14.1
+agent-framework-a2a==1.0.0b261002
+a2a-sdk==1.2.2
+mcp==1.30.0
+azure-identity>=1.19
+starlette>=0.40
+uvicorn[standard]==0.38.0
