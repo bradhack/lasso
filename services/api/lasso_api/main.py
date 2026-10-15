@@ -150,6 +150,15 @@ _US = {"favourite": "favorite", "equaliser": "equalizer", "equalise": "equalize"
 _US_RE = re.compile(r"\b(" + "|".join(_US) + r")", re.IGNORECASE)
 _FROM_TO = re.compile(r"\bfrom (\d+) ?% to (\d+) ?%")
 _FROM_TO_LANG = {"es": "del {}% al {}%", "pt": "de {}% para {}%", "fr": "de {} % à {} %"}
+# What models still slip into despite instructions: European Portuguese, and English "chances" in Spanish.
+_FIXES = {
+    "pt": [(r"\bgolos\b", "gols"), (r"\bgolo\b", "gol"), (r"\bequipas\b", "times"), (r"\bequipa\b", "time"),
+           (r"\bremates\b", "chutes"), (r"\bremate\b", "chute"), (r"\ba jogar\b", "jogando"),
+           (r"\ba correr\b", "correndo"), (r"\ba ganhar\b", "ganhando"), (r"\ba perder\b", "perdendo"),
+           (r"\ba pressionar\b", "pressionando"), (r"(\d+)\.º", r"\1º")],
+    "es": [(r"\bchances\b", "opciones"), (r"\buna chance\b", "una opción"), (r"\bchance\b", "opción"),
+           (r"\bpossession\b", "posesión")],
+}
 
 
 def _us(m: re.Match) -> str:
@@ -162,8 +171,14 @@ def _localize(lang: str, text: str) -> str:
     if lang == "en":
         return _US_RE.sub(_us, text)
     if fmt := _FROM_TO_LANG.get(lang):
-        return _FROM_TO.sub(lambda m: fmt.format(m.group(1), m.group(2)), text)
+        text = _FROM_TO.sub(lambda m: fmt.format(m.group(1), m.group(2)), text)
+    for pat, rep in _FIXES.get(lang, []):
+        text = re.sub(pat, lambda m, r=rep: _same_case(m.group(0), m.expand(r)), text, flags=re.IGNORECASE)
     return text
+
+
+def _same_case(old: str, new: str) -> str:
+    return new[:1].upper() + new[1:] if old[:1].isupper() else new
 
 
 def _lang_map(value: object) -> dict[str, str]:
@@ -377,6 +392,16 @@ async def touch_the_sign(match_id: str, body: BelieveIn) -> dict:
 # ------------------------------------------------------------ Ask the Gaffer
 _ask_state: dict = {"day": "", "count": 0, "users": {}}
 KEY_EVENTS = {"goal", "red_card", "yellow_card", "substitution", "half_time"}
+_ASK_OFF_TOPIC = {
+    "en": "I only talk about this match, so I'll leave that one. Right now at {m}': {score}. My numbers: {h} {ph}%, "
+          "draw {pd}%, {a} {pa}%.",
+    "es": "Solo hablo de este partido, así que esa la dejo pasar. Ahora, en el minuto {m}: {score}. Mis números: {h} "
+          "{ph}%, empate {pd}%, {a} {pa}%.",
+    "pt": "Eu só falo deste jogo, então vou deixar essa passar. Agora, aos {m}': {score}. Meus números: {h} {ph}%, "
+          "empate {pd}%, {a} {pa}%.",
+    "fr": "Je ne parle que de ce match, alors je laisse celle-là. À la {m}e minute : {score}. Mes chiffres : {h} "
+          "{ph} %, nul {pd} %, {a} {pa} %.",
+}
 _ASK_FALLBACK = {
     "en": "I can't take questions right now, but here's where it stands at {m}': {score}. My numbers: {h} {ph}%, "
           "draw {pd}%, {a} {pa}%.",
@@ -390,6 +415,16 @@ _ASK_FALLBACK = {
 
 
 _SENTENCE = re.compile(r"(?<=[.!?])\s+")
+
+
+_XG = re.compile(r"\bxG\b|\d[.,]\d\d")
+
+
+def _plain_for_fans(text: str) -> str:
+    """Fans don't get xG decimals: drop sentences that quote them, as long as one sentence remains."""
+    sents = _SENTENCE.split(text.strip())
+    keep = [s_ for s_ in sents if not _XG.search(s_)]
+    return " ".join(keep) if keep else text
 
 
 def _cap_words(text: str, limit: int) -> str:
@@ -423,10 +458,11 @@ def _ask_allowed(user_id: str) -> str | None:
     return None
 
 
-def _ask_fallback(room: MatchRoom, lang: str) -> str:
+def _ask_fallback(room: MatchRoom, lang: str, templates: dict | None = None) -> str:
     p = _pct(room.probs())
     h, a = room.state.goals
-    return _ASK_FALLBACK.get(lang, _ASK_FALLBACK["en"]).format(
+    templates = templates or _ASK_FALLBACK
+    return templates.get(lang, templates["en"]).format(
         m=room.minute(), score=f"{room.names[0]} {h}-{a} {room.names[1]}", h=room.names[0], a=room.names[1],
         ph=p["home"], pd=p["draw"], pa=p["away"])
 
@@ -475,11 +511,16 @@ async def ask(match_id: str, body: AskIn) -> dict:
         pkg = await agents.produce(brief)
         # A real answer echoes our id and carries the agents' trace; anything else is an error reply.
         if pkg and pkg.get("ask_id") == ask_id and pkg.get("trace") and isinstance(pkg.get("answer"), str):
-            answer = _cap_words(_localize(lang, _clean(pkg["answer"])), 85 if u.get("persona") == "analyst" else 55)
+            answer = _localize(lang, _clean(pkg["answer"]))
+            if u.get("persona") != "analyst":
+                answer = _plain_for_fans(answer)
+            answer = _cap_words(answer, 85 if u.get("persona") == "analyst" else 55)
             followups = [_localize(lang, _clean(f))[:60] for f in (pkg.get("followups") or [])
                          if isinstance(f, str) and f.strip()][:2]
             trace = pkg["trace"]
             source = "agents" if answer else "gaffer"
+            if pkg.get("off_topic"):  # the Scout ruled it off topic: a kind fixed reply, with the match situation
+                answer, source = _ask_fallback(room, lang, _ASK_OFF_TOPIC), "agents"
     if not answer:
         answer = _ask_fallback(room, lang)
     log.info("ask %s %s source=%s %dms", match_id, ask_id, source, int((time.time() - t0) * 1000))

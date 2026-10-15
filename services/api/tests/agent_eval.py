@@ -61,10 +61,14 @@ QUESTIONS = [
 
 # ---------------------------------------------------------------- language and style checks
 STOP = {
-    "en": {"the", "and", "is", "of", "to", "with", "have", "but", "their", "they", "chance", "after", "was"},
-    "es": {"el", "los", "las", "y", "del", "pero", "tiene", "está", "con", "su", "fue", "para", "más"},
-    "pt": {"o", "os", "e", "do", "da", "não", "mas", "tem", "está", "com", "seu", "foi", "para", "mais"},
-    "fr": {"le", "les", "et", "du", "des", "est", "mais", "pas", "avec", "leur", "à", "pour", "plus", "été"},
+    "en": {"the", "and", "is", "of", "to", "with", "have", "but", "their", "they", "chance", "after", "was", "win",
+           "biggest"},
+    "es": {"el", "los", "las", "y", "del", "pero", "tiene", "está", "con", "su", "fue", "para", "más", "victoria",
+           "probabilidad", "clave", "gol"},
+    "pt": {"o", "os", "e", "do", "da", "não", "mas", "tem", "está", "com", "seu", "foi", "para", "mais", "vitória",
+           "fator", "jogo", "gols", "você"},
+    "fr": {"le", "les", "et", "du", "des", "est", "mais", "pas", "avec", "leur", "à", "pour", "plus", "été",
+           "victoire", "facteur", "clé", "buts"},
 }
 META = {
     "en": ["notes", "scout", "feed", "brief", "recorded", "listed", "the data", "tool", "i do not have",

@@ -90,3 +90,16 @@ def test_tool_calls_are_traced_without_the_match_id():
                                      NS(type="function_call", name="match_story", arguments={"match_id": "x"}),
                                      NS(type="text", name=None, arguments=None)])])
     assert tool_calls(resp) == [{"name": "chances_at", "args": {"minute": 45}}, {"name": "match_story"}]
+
+
+def test_press_room_skips_the_writer_when_the_scout_rules_a_question_off_topic():
+    SCRIPT["Scout for Lasso"] = {"facts": [], "on_topic": False}
+    try:
+        agent = build_press_room(make_team()).as_agent(name="Press Room")
+        pkg = parse_json(asyncio.run(agent.run(json.dumps({"kind": "ask", "ask_id": "q2",
+                                                             "question": "What's the capital of France?"}))).text)
+    finally:
+        SCRIPT["Scout for Lasso"] = {"facts": ["Red card for Lorford at 5'", "Chances fell from 41% to 19%"],
+                                     "on_topic": True}
+    assert pkg["off_topic"] is True and pkg["answer"] == ""
+    assert [t["agent"] for t in pkg["trace"]] == ["scout"]

@@ -23,6 +23,7 @@ from agent_framework import Message, Workflow, WorkflowBuilder, WorkflowContext,
 from .team import Team
 
 log = logging.getLogger("lasso.director")
+WRITER_TIME = 1.6  # the Narrator and Persona write four languages each, so they get longer than the lookups
 
 
 def parse_json(text: str) -> dict:
@@ -115,12 +116,12 @@ def build_director(team: Team, timeout: float = 25.0) -> Workflow:
 
     @executor(id="narrator_step")
     async def narrator_step(c: dict, ctx: WorkflowContext[dict]) -> None:
-        out, tr = await run_agent(team.narrator, _writer_prompt(c), timeout, 2, team.model_of("narrator"))
+        out, tr = await run_agent(team.narrator, _writer_prompt(c), timeout * WRITER_TIME, 2, team.model_of("narrator"))
         await ctx.send_message({"narrator": out, "trace": [tr], "base": c})
 
     @executor(id="persona_step")
     async def persona_step(c: dict, ctx: WorkflowContext[dict]) -> None:
-        out, tr = await run_agent(team.persona, _writer_prompt(c), timeout, 2, team.model_of("persona"))
+        out, tr = await run_agent(team.persona, _writer_prompt(c), timeout * WRITER_TIME, 2, team.model_of("persona"))
         await ctx.send_message({"persona": out, "trace": [tr], "base": c})
 
     @executor(id="game_master_step")
@@ -185,6 +186,12 @@ def build_press_room(team: Team, timeout: float = 25.0) -> Workflow:
     @executor(id="presser_step")
     async def presser_step(c: dict, ctx: WorkflowContext[None, str]) -> None:
         b = c["brief"]
+        if c.get("scout", {}).get("on_topic") is False:
+            # The Scout judged the question off topic: don't let the writer be tempted to answer it.
+            pkg = {"ask_id": b.get("ask_id"), "answer": "", "off_topic": True, "followups": [], "facts": [],
+                   "trace": c["trace"]}
+            await ctx.yield_output(json.dumps(pkg, ensure_ascii=False))
+            return
         out, tr = await run_agent(team.presser, f"Brief: {json.dumps(b)}\nNotes: {json.dumps(c.get('scout', {}))}",
                                   timeout, 2, team.model_of("presser"))
         pkg = {"ask_id": b.get("ask_id"), "answer": out.get("answer", ""), "followups": out.get("followups", []),
