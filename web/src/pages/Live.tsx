@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Crest, pct } from "../components/bits";
 import { CallIt } from "../components/CallIt";
 import { Back, Chevron } from "../components/Icons";
+import { Touchline } from "../components/Touchline";
 import { Meter } from "../components/Meter";
 import { Feed, StatsPanel } from "../components/Panels";
 import { WhyItMoved } from "../components/WhyItMoved";
@@ -100,6 +101,7 @@ export function MatchPage({ id }: { id: string }) {
         </div>
         <Meter snap={snap} lang={lang} />
       </section>
+      <Touchline snap={snap} lang={lang} />
       {moment && <WhyItMoved snap={snap} moment={moment} lang={lang} />}
       <CallIt snap={snap} lang={lang} />
       {user?.persona === "analyst" && <StatsPanel snap={snap} lang={lang} />}

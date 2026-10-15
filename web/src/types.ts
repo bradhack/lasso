@@ -111,8 +111,30 @@ export interface Market {
   copy: string | null;
 }
 
+/** One ball action for the Touchline view. Home attacks left to right; pitch is 105 x 68 m. */
+export interface Touch {
+  s: number; // event sequence
+  t: "kickoff" | "pass" | "shot" | "tackle" | "interception" | "save" | "corner" | "foul" | "yellow_card" | "red_card" | "substitution";
+  k: 0 | 1; // acting team: 0 home, 1 away
+  m: number; // match minute
+  p: string; // player
+  x?: number;
+  y?: number;
+  ex?: number; // pass end
+  ey?: number;
+  o?: boolean; // pass completed
+  r?: string; // pass receiver
+  xg?: number;
+  g?: boolean; // goal
+  on?: boolean; // on target
+  pos: 0 | 1 | null; // possession after this action
+}
+
 export interface MatchSnapshot extends MatchSummary {
   history: MeterPoint[];
+  touches?: Touch[];
+  shots?: Touch[];
+  possession?: 0 | 1 | null;
   feed: FeedItem[];
   moments: Moment[];
   stats: { match_id: string; teams: [TeamStats, TeamStats] };

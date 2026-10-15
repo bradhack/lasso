@@ -18,6 +18,10 @@ SWING_THRESHOLD = 0.08  # 8 points on either side's win chance triggers a moment
 PULSE_EVERY = 15  # match minutes between "pulse" moments
 MARKET_EVERY = 4  # match minutes between new Call It challenges
 MARKET_OPEN_FOR = 3.0  # match minutes a challenge accepts calls
+PITCH_X, PITCH_Y = 105.0, 68.0  # meters; event coordinates are in each team's attacking frame
+TOUCH_TYPES = {"kickoff", "pass", "shot", "tackle", "interception", "save", "corner", "foul",
+               "yellow_card", "red_card", "substitution"}
+PUSH_NOW = {"kickoff", "shot", "corner", "red_card", "half_time", "full_time"}
 _moment_ids = itertools.count(1)
 
 
@@ -94,6 +98,10 @@ class MatchRoom:
         self.last_market_min = -99.0
         self.last_meter_push = 0.0
         self.started_at: float | None = None
+        self.touches: list[dict] = []  # Touchline: recent ball actions, in absolute pitch coordinates
+        self.shot_map: list[dict] = []  # every shot of the match, for the Touchline shot map
+        self.pending_touches: list[dict] = []
+        self.possession: int | None = None
         self._record_point()
 
     @staticmethod
@@ -160,6 +168,7 @@ class MatchRoom:
 
     def snapshot(self) -> dict:
         return {**self.summary(), "history": self.history[-400:], "feed": self.feed[-60:],
+                "touches": self.touches[-40:], "shots": self.shot_map, "possession": self.possession,
                 "moments": self.moments[-12:], "stats": self.stats_public(),
                 "markets": [m.public() for m in self.markets.values() if m.status != "settled"][-4:]}
 
@@ -183,6 +192,13 @@ class MatchRoom:
             self.status = "live"
             out.append({"type": "status", "match": self.summary()})
         self._update_stats(ev, t)
+        touch = self._touch(ev, t)
+        if touch:
+            self.touches.append(touch)
+            del self.touches[:-80]
+            if touch["t"] == "shot":
+                self.shot_map.append(touch)
+            self.pending_touches.append(touch)
         item = self._feed_item(ev, t)
         if item:
             self.feed.append(item)
@@ -214,13 +230,57 @@ class MatchRoom:
             out.extend(self._close_markets())
 
         now = time.time()
-        if moved or now - self.last_meter_push > 1.0:
+        if moved or etype in PUSH_NOW or now - self.last_meter_push > 1.0:
             self.last_meter_push = now
             pt = self._record_point()
+            # Touchline rides along with the Gauge update: no extra realtime messages.
             out.append({"type": "meter", "match_id": self.match_id, "point": pt,
                         "score": list(self.state.goals), "minute": self.minute(), "period": self.state.period,
-                        "clock": round(self.state.clock, 2), "status": self.status})
+                        "clock": round(self.state.clock, 2), "status": self.status,
+                        "touches": self.pending_touches, "possession": self.possession})
+            self.pending_touches = []
         return out
+
+    # ------------------------------------------------------------- touchline
+    def _abs(self, x, y, t: int) -> tuple[float, float] | None:
+        """Home attacks left to right; flip the away team's attacking frame onto the same pitch."""
+        if x is None or y is None or (isinstance(x, float) and math.isnan(x)) or (isinstance(y, float) and math.isnan(y)):
+            return None
+        x, y = float(x), float(y)
+        return (round(x, 1), round(y, 1)) if t == 0 else (round(PITCH_X - x, 1), round(PITCH_Y - y, 1))
+
+    def _touch(self, ev: dict, t: int | None) -> dict | None:
+        """A compact ball action for the Touchline view."""
+        et = ev["type"]
+        if et not in TOUCH_TYPES or t is None:
+            return None
+        tc: dict = {"s": int(ev["seq"]), "t": et, "k": t, "m": self.minute(),
+                    "p": self.data.player_label(ev.get("player_id"))}
+        start = self._abs(ev.get("x"), ev.get("y"), t)
+        if et == "save" and start is None:
+            start = (2.0, 34.0) if t == 0 else (PITCH_X - 2.0, 34.0)  # the keeper at their own goal
+        if start:
+            tc["x"], tc["y"] = start
+        end = self._abs(ev.get("end_x"), ev.get("end_y"), t)
+        if et == "pass":
+            if end:
+                tc["ex"], tc["ey"] = end
+            tc["o"] = bool(ev.get("outcome"))
+            if ev.get("receiver_id") and tc["o"]:
+                tc["r"] = self.data.player_label(ev.get("receiver_id"))
+        elif et == "shot":
+            tc["xg"] = round(float(ev.get("xg") or 0), 2)
+            tc["g"] = bool(ev.get("outcome"))
+            tc["on"] = bool(ev.get("on_target"))
+        # Possession: passes, shots, corners and won tackles/interceptions belong to the acting team.
+        if et in ("kickoff", "pass", "shot", "corner", "tackle", "interception", "save"):
+            self.possession = t
+        if et == "pass" and not tc.get("o"):
+            self.possession = 1 - t
+        if et == "shot" and (tc.get("g") or not tc.get("on")):
+            self.possession = 1 - t  # restart goes to the other side
+        tc["pos"] = self.possession
+        return tc
 
     def _update_stats(self, ev: dict, t: int | None) -> None:
         if t is None:

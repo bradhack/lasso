@@ -21,6 +21,9 @@
   --away: #6D86B9;
   --draw-bar: #2B3A5C;
   --shadow: rgba(0, 0, 0, 0.45);
+  --pitch: color-mix(in srgb, var(--surface-2) 75%, var(--bg));
+  --pitch-2: color-mix(in srgb, var(--surface-3) 40%, var(--pitch));
+  --pitch-line: color-mix(in srgb, var(--text) 22%, transparent);
   --radius: 22px;
   --num: "Barlow Condensed", system-ui, sans-serif;
   --body: "DM Sans", system-ui, sans-serif;
@@ -90,6 +93,36 @@ a { color: var(--silver); }
 .meter-nums.big .v { font-size: 44px; line-height: 1; }
 .meter-nums.big .l { font-size: 13px; margin-top: 4px; color: var(--soft); }
 .key { display: none; }
+/* Touchline */
+.touchline .poss { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--text-2); }
+.touchline .poss i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.linkbtn { background: none; border: 0; color: var(--muted); font-size: 12px; font-weight: 700; padding: 4px 2px; }
+.pitch { width: 100%; display: block; margin-top: 12px; }
+.pitch .turf { fill: var(--pitch); }
+.pitch .stripe { fill: var(--pitch-2); }
+.pitch .line, .pitch .goalbox { fill: none; stroke: var(--pitch-line); stroke-width: 0.35; }
+.pitch .spot { fill: var(--pitch-line); }
+.pitch .pass { stroke-width: 0.6; stroke-linecap: round; }
+.pitch .pass.cut { stroke-dasharray: 1 1; }
+.pitch .shot { fill: var(--team); fill-opacity: 0.5; stroke: var(--team); stroke-width: 0.35; transform-box: fill-box; transform-origin: center; }
+.pitch .shot.off { fill-opacity: 0; stroke-width: 0.5; }
+.pitch .shot.goal { fill: var(--gold); fill-opacity: 1; stroke: var(--bg); stroke-width: 0.4; }
+.pitch .shot.now { animation: pop 0.7s cubic-bezier(0.2, 1.4, 0.4, 1); }
+.pitch .mk { fill: none; stroke-width: 0.6; stroke-linecap: round; stroke-linejoin: round; }
+.pitch .ball { transition: transform 0.28s cubic-bezier(0.3, 0.7, 0.3, 1); }
+.pitch .ball .core { fill: var(--text); stroke: var(--gold); stroke-width: 0.55; }
+.pitch .ball .halo { opacity: 0.22; }
+.pitch .goalflash circle { fill: none; stroke: var(--gold); stroke-width: 0.8; transform-box: fill-box; transform-origin: center; animation: ring 1.4s ease-out forwards; }
+.pitch .goalflash text { font-family: var(--num); font-weight: 700; font-size: 13px; letter-spacing: 0.12em; fill: var(--gold); animation: flashword 3.2s ease forwards; }
+.pitch-foot { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; margin-top: 8px; font-size: 12px; color: var(--muted); }
+.pitch-foot .dir { display: flex; align-items: center; gap: 5px; font-weight: 700; color: var(--text-2); }
+.pitch-foot .dir b { color: var(--muted); font-weight: 400; }
+.pitch-foot .crest-img.sm { width: 20px; height: 20px; filter: none; }
+.pitch-foot .ticker { text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-2); font-variant-numeric: tabular-nums; }
+@keyframes pop { 0% { transform: scale(0.2); } 100% { transform: scale(1); } }
+@keyframes ring { 0% { transform: scale(0.3); opacity: 1; } 100% { transform: scale(2.6); opacity: 0; } }
+@keyframes flashword { 0% { opacity: 0; } 10% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .pitch .ball { transition: none; } .pitch .shot.now, .pitch .goalflash circle { animation: none; } }
 .winline { margin-top: 14px; }
 .winline .eyebrow { font-size: 11px; }
 .callit-link { display: flex; align-items: center; gap: 4px; color: var(--gold); font-weight: 700; font-size: 13px; }

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { api } from "./api";
 import { Realtime } from "./realtime";
-import type { Call, ClubRef, Lang, Market, MatchSnapshot, MatchSummary, Moment, MomentCard, User } from "./types";
+import type { Call, ClubRef, Lang, Market, MatchSnapshot, MatchSummary, Moment, MomentCard, Touch, User } from "./types";
 
 export type Toast =
   | { id: number; kind: "win"; call: Call }
@@ -185,6 +185,9 @@ function onMessage(d: any) {
     case "meter":
       patchSnap(d.match_id, (s) => ({
         history: [...s.history, d.point].slice(-500),
+        touches: d.touches?.length ? [...(s.touches ?? []), ...d.touches].slice(-60) : s.touches,
+        shots: d.touches?.some((x: Touch) => x.t === "shot") ? [...(s.shots ?? []), ...d.touches.filter((x: Touch) => x.t === "shot")] : s.shots,
+        possession: d.possession ?? s.possession,
         probs: { home: d.point.home, draw: d.point.draw, away: d.point.away },
         score: d.score,
         minute: d.minute,

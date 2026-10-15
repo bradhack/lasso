@@ -47,12 +47,13 @@ Speed up local replays with `LASSO_MINUTE_SECONDS=0.5`. Point the API at the age
 5. **Agents must stay time-boxed and cost-guarded.** Keep `run_agent` timeouts and the API's `_should_enrich` guard-rails (watched matches only, a per-match gap, a daily cap).
 6. **Agents get live data through MCP**, not by importing engine code. New capabilities for agents become new tools in `mcp_tools.py` with clear docstrings, since those docstrings are what the model reads.
 7. Agent prompts live in `services/agents/lasso_agents/team.py` and must ask for **JSON only**. Update `tests/test_director.py` when an output shape changes.
+8. **Touchline adds no realtime messages.** Ball actions (`touches`) ride inside the Gauge `meter` message from `matchroom.py`. Keep them compact and keep them batched there; don't publish one message per pass.
 
 ## Style
 
 - **Python 3.12**, type hints everywhere, `from __future__ import annotations`, dataclasses or Pydantic models. Line length 110 (ruff). Async for I/O. Log with `logging`, never `print`, in services.
 - **TypeScript** in strict mode. State lives in the zustand store (`web/src/store.ts`). No UI component libraries: styling is plain CSS with the tokens in `web/src/styles.css`.
-- **Design language:** deep plum surfaces, silver for the home side and primary actions, gold for rewards and highlights. Numbers use Barlow Condensed, body text DM Sans, the wordmark Sora. Touch targets are at least 44px. Respect `prefers-reduced-motion`.
+- **Design language:** Midnight is the default (deep navy surfaces, silver for the home side and primary actions, brass gold for rewards and highlights); Ivory is the light mode. Use the color tokens in `styles.css`, never literal colors, so both themes work. Numbers use Barlow Condensed, body text DM Sans, the wordmark Sora. Touch targets are at least 44px. Respect `prefers-reduced-motion`.
 - **User-facing copy:** American English (defense, favorite, color, halftime). Don't use em dashes. Keep the tone warm and plain. Nods to the show are fine (biscuits, the Gaffer, Believe, Diamond Dogs, the Goldfish), but never use the show's title, character names, quotes or logos.
 - **Localization:** every user-facing string in `web/src/i18n.ts` and `narrative.py` needs EN, ES (Spain), PT (Brazil) and FR.
 - Keep the engine deterministic for a given seed. If you change the simulator or the model, regenerate and re-evaluate (see the README), then update `docs/model-report.md` with the new numbers.
