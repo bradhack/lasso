@@ -30,7 +30,7 @@ from .training import SNAPSHOT_GRID, TEST_SEASON, TRAIN_SEASONS, load, snapshots
 DEMO_MATCH = "S5-MD07-03"  # ten-man comeback, deterministic with seed 7
 
 # Validated categorical palette (dataviz validator: light surface, all checks pass).
-PLUM, GOLD, BLUE = "#8A3FA0", "#B8862F", "#2F7DC4"
+PLUM, GOLD, BLUE = "#1B2A4A", "#A27A34", "#5B78B0"
 INK, MUTED, GRID, SURFACE = "#1F1A24", "#6B6470", "#E6E2E8", "#FCFCFB"
 
 
@@ -64,7 +64,7 @@ def oracle_prematch(matches: pd.DataFrame, truth: pd.DataFrame, cfg: dict, form_
     return np.array(out)
 
 
-def believe_o_meter_path(match_id: str, events: pd.DataFrame, matches: pd.DataFrame,
+def gaffers_gauge_path(match_id: str, events: pd.DataFrame, matches: pd.DataFrame,
                          pre: pd.DataFrame, params: InPlayParams,
                          club_short: dict | None = None) -> pd.DataFrame:
     """Minute-by-minute and event-by-event probabilities for one match."""
@@ -241,9 +241,9 @@ def main() -> None:
     results["remaining_goals_loglik"] = goal_ll
     results["log_bayes_factor_vs_naive"] = goal_ll["Gaffer"] - goal_ll["Score & clock only"]
 
-    # Believe-o-Meter trajectory for the showcase match.
+    # Gaffer's Gauge trajectory for the showcase match.
     club_tbl = pd.read_parquet(data / "clubs.parquet").set_index("club_id")
-    traj = believe_o_meter_path(DEMO_MATCH, test_ev, test, pre, params, club_tbl["short"].to_dict())
+    traj = gaffers_gauge_path(DEMO_MATCH, test_ev, test, pre, params, club_tbl["short"].to_dict())
     traj.to_json(model_dir / "demo_trajectory.json", orient="records")
     # The showcase chart itself is drawn by docs/charts/render_meter.py from this JSON.
 
@@ -256,7 +256,7 @@ def main() -> None:
     ax.text(0.62, 0.25, "Perfect calibration", color=MUTED, fontsize=8.5, rotation=45)
     ax.set_xlabel("Gaffer's live probability", color=MUTED, fontsize=9)
     ax.set_ylabel("How often it happened", color=MUTED, fontsize=9)
-    ax.set_title("Believe-o-Meter calibration", color=INK, fontsize=11, loc="left")
+    ax.set_title("Gaffer's Gauge calibration", color=INK, fontsize=11, loc="left")
     fig.tight_layout()
     fig.savefig(img / "reliability.png", facecolor=SURFACE)
     plt.close(fig)
@@ -268,7 +268,7 @@ def main() -> None:
         _style(ax)
         lim = max(np.abs(np.r_[est, tr]).max() * 1.15, 0.1)
         ax.plot([-lim, lim], [-lim, lim], color=MUTED, linewidth=1, linestyle="--")
-        ax.errorbar(tr, est, yerr=1.645 * err, fmt="o", color=PLUM, ecolor="#C9A6D4",
+        ax.errorbar(tr, est, yerr=1.645 * err, fmt="o", color=PLUM, ecolor="#93A3C2",
                     elinewidth=1.5, markersize=6, markeredgecolor=SURFACE, markeredgewidth=1.5)
         ax.set_xlim(-lim, lim)
         ax.set_ylim(-lim, lim)

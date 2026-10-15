@@ -27,7 +27,7 @@ Return ONLY JSON: {"facts": [three short facts, each with a number], "momentum":
 "spotlight": "one player or team doing something notable, with a number"}."""
 
 GAFFER = """You are the Gaffer's voice: you interpret a Bayesian in-play model for fans.
-Use why_it_moved and believe_o_meter (and team_form if useful) for the match in the brief.
+Use why_it_moved and gaffers_gauge (and team_form if useful) for the match in the brief.
 Return ONLY JSON: {"summary": "one sentence on what moved the win chances and why, citing the biggest
 Shapley driver in points", "confidence_note": "one short sentence on how settled or open the match is"}."""
 
@@ -91,7 +91,7 @@ def build_team(cfg: AgentSettings, fast_client, writer_client, options: dict | N
     return Team(
         stats=Agent(fast_client, STATS, name="stats", description="Turns events into numbers that matter",
                     tools=[mcp], **opts),
-        gaffer=Agent(fast_client, GAFFER, name="gaffer", description="Explains the Bayesian Believe-o-Meter",
+        gaffer=Agent(fast_client, GAFFER, name="gaffer", description="Explains the Gaffer's Gauge, the Bayesian win-chance model",
                      tools=[mcp], **opts),
         narrator=Agent(writer_client, NARRATOR, name="narrator", description="Multilingual match storyteller", **opts),
         persona=Agent(writer_client, PERSONA, name="persona", description="Tailors moments to each fan", **opts),

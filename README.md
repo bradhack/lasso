@@ -5,7 +5,7 @@
 Lasso is a live, multi-agent match companion for phones and broadcasts, built for the Microsoft and Premier League *Inside the Game* hackathon.
 
 - It ingests synthetic football events in real time.
-- It updates a Bayesian win-probability model, **the Gaffer**, with every chance, card and goal. The model's output is the **Believe-o-Meter**.
+- It updates a Bayesian win-probability model, **the Gaffer**, with every chance, card and goal. The model's output is the **Gaffer's Gauge**.
 - It explains every swing, so fans know *why* it moved.
 - It invites fans to make free-to-play **Call It** predictions against the Gaffer's own odds, with streaks, moment cards, missions and friend leagues. Biscuits are in-app points with no cash value.
 
@@ -77,7 +77,7 @@ flowchart LR
 
 ### What happens when a goal goes in
 
-The Believe-o-Meter and an instant story reach phones in under a second. The five agents' richer version follows a few seconds later, so the app never waits on a language model.
+The Gaffer's Gauge and an instant story reach phones in under a second. The five agents' richer version follows a few seconds later, so the app never waits on a language model.
 
 ```mermaid
 sequenceDiagram
@@ -89,12 +89,12 @@ sequenceDiagram
     participant M as MCP tools
     F->>A: 82' shot, 0.51 xG, goal
     Note over A: Bayesian update + Shapley drivers, in microseconds
-    A-->>P: Believe-o-Meter 11% to 83% + instant story
+    A-->>P: Gaffer's Gauge 11% to 83% + instant story
     A->>D: A2A moment brief
     par Stage one
         D->>M: Stats agent: match_stats, recent_events
     and
-        D->>M: Gaffer agent: why_it_moved, believe_o_meter
+        D->>M: Gaffer agent: why_it_moved, gaffers_gauge
     end
     par Stage two
         Note over D: Narrator writes EN, ES, PT, FR
@@ -121,7 +121,7 @@ Here's how the code covers the brief's five stages:
 ## The model, in numbers (held-out season; see the [model report](docs/model-report.md))
 
 - **85%** of the best possible pre-match accuracy (ranked probability score against an oracle that knows the hidden true strengths)
-- **1.5 points** average calibration error on the live Believe-o-Meter
+- **1.5 points** average calibration error on the live Gaffer's Gauge
 - **0.95 / 0.91** correlation between the estimated and the hidden true attack and defense strengths
 - The fast Laplace posterior matches full NUTS MCMC (posterior means correlate at 0.99996)
 - **2.2M** synthetic events across 1,900 matches and five seasons, with a hidden truth to evaluate against
@@ -164,7 +164,7 @@ python -m lasso_engine.generate --out ../data/league --seed 7
 python -m lasso_engine.training --data ../data/league --out ../data/model
 python -m lasso_engine.evaluate --data ../data/league --model ../data/model --docs ../docs
 python -m lasso_engine.export_demo
-cd .. && python docs/charts/render_meter.py   # the showcase Believe-o-Meter chart
+cd .. && python docs/charts/render_meter.py   # the showcase Gaffer's Gauge chart
 ```
 
 ## Responsible design

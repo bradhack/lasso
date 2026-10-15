@@ -1,6 +1,6 @@
 # Copilot instructions for Lasso
 
-Lasso is a live, multi-agent football match companion built for the Microsoft and Premier League *Inside the Game* hackathon (submission deadline: Oct 27, 2026). It replays synthetic matches and updates a Bayesian win-probability model, **the Gaffer**, with every event. The model's output is the **Believe-o-Meter**. Five AI agents explain each swing, and fans make free-to-play **Call It** predictions against the model.
+Lasso is a live, multi-agent football match companion built for the Microsoft and Premier League *Inside the Game* hackathon (submission deadline: Oct 27, 2026). It replays synthetic matches and updates a Bayesian win-probability model, **the Gaffer**, with every event. The model's output is the **Gaffer's Gauge**. Five AI agents explain each swing, and fans make free-to-play **Call It** predictions against the model.
 
 Read `README.md`, `docs/model-report.md` and `docs/DEPLOY.md` before making non-trivial changes.
 

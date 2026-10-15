@@ -7,7 +7,7 @@ plus goals) updates that Gamma conjugately, with time "exposure" adjusted for
 game state: being a man down, trailing or leading, and the late-game surge
 all change how fast a team creates chances. The number of goals still to come
 is then Negative Binomial (Gamma-Poisson), which gives closed-form win, draw
-and loss probabilities for the Believe-o-Meter in microseconds.
+and loss probabilities for the Gaffer's Gauge in microseconds.
 
     rate_T  ~ Gamma(shape = k + w * evidence_T,  rate = k / r0_T + w * exposure_T)
     remaining_goals_T ~ NegBin(shape, rate / (rate + remaining_minutes * multiplier_T))
@@ -206,7 +206,7 @@ class Gaffer:
 
 
 class LiveMatch:
-    """Replays a stream of events, maintaining state and the Believe-o-Meter."""
+    """Replays a stream of events, maintaining state and the Gaffer's Gauge."""
 
     def __init__(self, gaffer: Gaffer, home_id: str, away_id: str):
         self.g = gaffer

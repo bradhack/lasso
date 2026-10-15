@@ -1,4 +1,4 @@
-"""A live match: state, stats, the Believe-o-Meter, moments and Call It markets."""
+"""A live match: state, stats, the Gaffer's Gauge, moments and Call It markets."""
 
 from __future__ import annotations
 

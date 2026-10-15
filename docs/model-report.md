@@ -74,7 +74,7 @@ The learned score-state effects are pulled toward 1. That is a real confounder: 
 
 ## 4. Explanations: exact Shapley attribution
 
-Each move of the Believe-o-Meter is split across four parts: **goals, red cards, chances (xG) and the clock**. This uses exact Shapley values (16 model evaluations), and the parts sum exactly to the total change.
+Each move of the Gaffer's Gauge is split across four parts: **goals, red cards, chances (xG) and the clock**. This uses exact Shapley values (16 model evaluations), and the parts sum exactly to the total change.
 
 Example (Eastholme Rangers 2-1 Brackenford City, with Eastholme down to ten men from the 5th minute). Eastholme's win chance went from 46% at kickoff to 10% by the 13th minute:
 
@@ -85,7 +85,7 @@ Example (Eastholme Rangers 2-1 Brackenford City, with Eastholme down to ten men 
 | Chances created | +4 pts |
 | Clock | −2 pts |
 
-![Believe-o-Meter](img/believe_o_meter_example.png)
+![Gaffer's Gauge](img/gaffers_gauge_example.png)
 
 ## 5. Call It pricing
 

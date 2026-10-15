@@ -1,4 +1,4 @@
-"""Why did the Believe-o-Meter move? Exact Shapley attribution.
+"""Why did the Gaffer's Gauge move? Exact Shapley attribution.
 
 Between two moments A and B in a match, four things can change:
 

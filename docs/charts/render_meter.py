@@ -1,4 +1,4 @@
-"""Render the showcase Believe-o-Meter chart (docs/img/believe_o_meter_example.png).
+"""Render the showcase Gaffer's Gauge chart (docs/img/gaffers_gauge_example.png).
 
     python docs/charts/render_meter.py
 
@@ -19,8 +19,9 @@ ROOT = Path(__file__).resolve().parents[2]
 MATCH = "S5-MD07-03"
 FONTS = ROOT / "web" / "node_modules" / "@fontsource"
 
-BG, CARD, LINE, INK, MUTED, SOFT = "#1A0B20", "#221028", "#3D2447", "#F4F1F6", "#A99AB0", "#C9BCCF"
-HOME, DRAW, AWAY, RED = "#D3D7DE", "#7E5E8C", "#D8B26E", "#FF6B7A"
+BG, CARD, LINE, INK, MUTED, SOFT = "#0A1020", "#111A2E", "#34466B", "#F2F5FA", "#8E9AB3", "#B8C3D6"
+HOME, DRAW, AWAY, RED = "#E6EBF2", "#34466B", "#7B93C4", "#FF6B7A"
+GOLD = "#C9A45C"
 
 
 def load() -> tuple[list[dict], dict, dict]:
@@ -138,12 +139,12 @@ html,body{{margin:0;background:{BG};}}</style></head><body>
 <svg width="{W}" height="{H}" viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg">
 <rect width="{W}" height="{H}" fill="{BG}"/>
 <g transform="translate(96,0)">
-  <g transform="translate(0,78)" fill="{AWAY}"><g transform="scale(1.6)" fill="none" stroke="{AWAY}"
+  <g transform="translate(0,78)" fill="{GOLD}"><g transform="scale(1.6)" fill="none" stroke="{GOLD}"
     stroke-width="1.8" stroke-linecap="round"><ellipse cx="13.5" cy="9" rx="7.5" ry="5"/>
     <path d="M8.5 12.5c-1.5 2-1.2 4 .6 5s2.2 2.6.6 4.5"/></g></g>
   <text x="48" y="104" fill="{INK}" font-family="Sora" font-weight="700" font-size="28">lasso</text>
-  <text x="150" y="104" fill="{AWAY}" font-family="DM Sans" font-weight="700" font-size="16"
-    letter-spacing="2.4">BELIEVE-O-METER · HELD-OUT SEASON REPLAY</text>
+  <text x="150" y="104" fill="{GOLD}" font-family="DM Sans" font-weight="700" font-size="16"
+    letter-spacing="2.4">GAFFER’S GAUGE · HELD-OUT SEASON REPLAY</text>
   <text x="0" y="172" fill="{INK}" font-family="Barlow Condensed" font-weight="600" font-size="58"
     letter-spacing="0.5">{meta['home'].upper()} {meta['score'][0]} : {meta['score'][1]} {meta['away'].upper()}</text>
   <text x="0" y="214" fill="{SOFT}" font-family="DM Sans" font-size="21">Down to ten men in the 5th minute.
@@ -159,8 +160,8 @@ html,body{{margin:0;background:{BG};}}</style></head><body>
 <text x="{left + pw + 18}" y="{top + ph / 2 + 5}" fill="{MUTED}" font-family="DM Sans" font-size="15">50%</text>
 <text x="{left + pw + 18}" y="{top + ph + 5}" fill="{MUTED}" font-family="DM Sans" font-size="15">0%</text>
 <g transform="translate({fx - 300:.1f},{top + 120})">
-  <rect width="270" height="118" rx="20" fill="{CARD}" stroke="{AWAY}" stroke-width="1.5"/>
-  <text x="22" y="34" fill="{AWAY}" font-family="DM Sans" font-weight="700" font-size="14"
+  <rect width="270" height="118" rx="20" fill="{CARD}" stroke="{GOLD}" stroke-width="1.5"/>
+  <text x="22" y="34" fill="{GOLD}" font-family="DM Sans" font-weight="700" font-size="14"
     letter-spacing="1.6">82' WINNER</text>
   <text x="22" y="88" fill="{INK}" font-family="Barlow Condensed" font-weight="600" font-size="54">
     {round(before['home'] * 100)}%<tspan fill="{MUTED}" font-size="40"> → </tspan>{round(winner['home'] * 100)}%</text>
@@ -176,7 +177,7 @@ async def render(out: Path) -> None:
     from playwright.async_api import async_playwright
 
     traj, meta, events = load()
-    html = ROOT / "docs" / "charts" / "believe_o_meter.html"
+    html = ROOT / "docs" / "charts" / "gaffers_gauge.html"
     html.write_text(page(traj, meta, events))
     async with async_playwright() as p:
         b = await p.chromium.launch()
@@ -188,5 +189,5 @@ async def render(out: Path) -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(render(ROOT / "docs" / "img" / "believe_o_meter_example.png"))
-    print("wrote docs/img/believe_o_meter_example.png")
+    asyncio.run(render(ROOT / "docs" / "img" / "gaffers_gauge_example.png"))
+    print("wrote docs/img/gaffers_gauge_example.png")

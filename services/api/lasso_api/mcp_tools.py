@@ -18,7 +18,7 @@ from .matchroom import MatchRoom
 
 INSTRUCTIONS = (
     "Live football match intelligence from the Gaffer, a Bayesian in-play model. Probabilities are "
-    "calibrated. The Believe-o-Meter is each side's chance of winning, plus the draw. Explanations use exact "
+    "calibrated. The Gaffer's Gauge is each side's chance of winning, plus the draw. Explanations use exact "
     "Shapley attribution across goals, red cards, chances (xG) and the clock. All data is synthetic."
 )
 
@@ -35,12 +35,12 @@ def build_mcp(rooms: dict[str, MatchRoom]) -> FastMCP:
 
     @mcp.tool()
     def list_live_matches() -> list[dict]:
-        """List matches with status, score, minute and the current Believe-o-Meter."""
+        """List matches with status, score, minute and the current Gaffer's Gauge."""
         return [{k: r.summary()[k] for k in ("match_id", "status", "score", "minute", "probs")}
                 | {"home": r.names[0], "away": r.names[1]} for r in rooms.values()]
 
     @mcp.tool()
-    def believe_o_meter(match_id: str) -> dict:
+    def gaffers_gauge(match_id: str) -> dict:
         """Current win/draw/loss probabilities, score, minute, red cards and xG for a match,
         plus the pre-match probabilities for comparison."""
         r = room(match_id)

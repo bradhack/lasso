@@ -88,7 +88,7 @@ def test_gaffer_probabilities_are_coherent():
     assert g.probabilities(s)["home"] == pytest.approx(1.0)
 
 
-def test_red_card_and_goal_move_the_believe_o_meter_the_right_way():
+def test_red_card_and_goal_move_the_gaffers_gauge_the_right_way():
     g = Gaffer(1.4, 1.4, InPlayParams())
     live = LiveMatch(g, "H", "A")
     live.apply({"type": "shot", "period": 1, "clock": 10.0, "team_id": "X", "xg": 0.1, "outcome": False})
