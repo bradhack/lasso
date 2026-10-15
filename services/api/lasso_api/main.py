@@ -45,6 +45,8 @@ mcp = build_mcp(rooms)
 scheduler = Scheduler(data, lambda mid, ev: on_event(mid, ev))
 _last_stats: dict[str, float] = {}
 _background: set[asyncio.Task] = set()
+# Event Hubs health: if the hub stays quiet, the API plays the matches itself so the live demo never goes dark.
+_feed = {"fallback": False, "last_event": 0.0, "started": time.monotonic()}
 
 
 def _spawn(coro) -> None:
@@ -144,8 +146,22 @@ _overrides: set[str] = set()  # matches temporarily replayed locally (demo recor
 
 
 async def on_hub_event(match_id: str, ev: dict) -> None:
-    if match_id not in _overrides:
+    if not _feed["fallback"] and match_id not in _overrides:
         await on_event(match_id, ev)
+
+
+def _hub_heard() -> None:
+    _feed["last_event"] = time.monotonic()
+
+
+async def _feed_watchdog() -> None:
+    while not _feed["fallback"]:
+        await asyncio.sleep(15)
+        quiet = time.monotonic() - (_feed["last_event"] or _feed["started"])
+        if quiet > settings.feed_fallback_seconds:
+            log.warning("No Event Hubs events for %.0fs: falling back to the in-process match feed", quiet)
+            _feed["fallback"] = True
+            scheduler.start()
 
 
 # ------------------------------------------------------------------- app
@@ -154,7 +170,9 @@ async def lifespan(app: FastAPI):
     await game.bootstrap()
     async with mcp.session_manager.run():
         if settings.event_source == "eventhubs":
-            _spawn(consume_forever(on_hub_event))
+            _spawn(consume_forever(on_hub_event, on_received=_hub_heard))
+            if settings.feed_fallback_seconds > 0:
+                _spawn(_feed_watchdog())
         else:
             scheduler.start()
         log.info("Lasso API ready: %d featured matches, agents=%s", len(rooms), bool(agents))
@@ -194,8 +212,13 @@ class LeagueIn(BaseModel):
 
 @app.get("/api/health")
 async def health() -> dict:
+    if settings.event_source != "eventhubs":
+        feed = "local"
+    else:
+        feed = "local-fallback" if _feed["fallback"] else "eventhubs"
+    last = round(time.monotonic() - _feed["last_event"], 1) if _feed["last_event"] else None
     return {"ok": True, "matches": len(rooms), "agents": bool(agents), "model": data.model_meta.get("version"),
-            "agent_calls_today": _enrich_state["count"]}
+            "agent_calls_today": _enrich_state["count"], "feed": feed, "seconds_since_hub_event": last}
 
 
 @app.get("/api/negotiate")
@@ -329,7 +352,7 @@ async def restart(match_id: str, key: str, from_minute: float = 0.0, minute_seco
         raise HTTPException(404, "match not found")
     if match_id not in rooms:
         rooms[match_id] = MatchRoom(match_id, data)
-    if settings.event_source == "eventhubs":
+    if settings.event_source == "eventhubs" and not _feed["fallback"]:
         _overrides.add(match_id)
 
         async def run_once() -> None:

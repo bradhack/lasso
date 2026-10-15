@@ -28,6 +28,8 @@ class Settings:
     event_source: str = field(default_factory=lambda: _env("LASSO_EVENT_SOURCE", "local"))
     eventhub_namespace: str = field(default_factory=lambda: _env("EVENTHUB_FULLY_QUALIFIED_NAMESPACE"))
     eventhub_name: str = field(default_factory=lambda: _env("EVENTHUB_NAME", "match-events"))
+    # Seconds of Event Hubs silence before the API plays matches itself (0 disables the fallback).
+    feed_fallback_seconds: float = field(default_factory=lambda: float(_env("LASSO_FEED_FALLBACK_SECONDS", "120")))
     eventhub_consumer_group: str = field(default_factory=lambda: _env("EVENTHUB_CONSUMER_GROUP", "$Default"))
 
     # Realtime: "local" websocket or Azure Web PubSub.

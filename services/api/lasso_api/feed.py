@@ -94,32 +94,64 @@ async def publish_forever(cfg: Settings = settings) -> None:
     cred = DefaultAzureCredential(managed_identity_client_id=cfg.managed_identity_client_id or None)
     producer = EventHubProducerClient(cfg.eventhub_namespace, cfg.eventhub_name, credential=cred)
 
+    sent = 0
+
     async def send(match_id: str, ev: dict) -> None:
+        nonlocal sent
         batch = await producer.create_batch(partition_key=match_id)
         batch.add(EventData(json.dumps({"match_id": match_id, **ev}, default=float)))
         await producer.send_batch(batch)
+        sent += 1
+        if sent == 1 or sent % 500 == 0:
+            log.info("published %d events to %s/%s", sent, cfg.eventhub_namespace, cfg.eventhub_name)
 
+    log.info("Match Feed starting: %d featured matches -> %s/%s",
+             len(cfg.featured_matches), cfg.eventhub_namespace, cfg.eventhub_name)
     async with producer:
         Scheduler(data, send, cfg).start()
         await asyncio.Event().wait()
 
 
-async def consume_forever(on_event: OnEvent, cfg: Settings = settings) -> None:
+async def consume_forever(on_event: OnEvent, cfg: Settings = settings,
+                          on_received: Callable[[], None] | None = None) -> None:
+    """Consume match events from Event Hubs, reconnecting with backoff if the client ever stops."""
     from azure.eventhub.aio import EventHubConsumerClient
     from azure.identity.aio import DefaultAzureCredential
 
-    cred = DefaultAzureCredential(managed_identity_client_id=cfg.managed_identity_client_id or None)
-    consumer = EventHubConsumerClient(cfg.eventhub_namespace, cfg.eventhub_consumer_group,
-                                      eventhub_name=cfg.eventhub_name, credential=cred)
+    received = 0
 
     async def handle(partition_context, event) -> None:
+        nonlocal received
         if event is None:
             return
         body = json.loads(event.body_as_str())
+        received += 1
+        if received == 1 or received % 500 == 0:
+            log.info("received %d events from Event Hubs", received)
+        if on_received:
+            on_received()
         await on_event(body.pop("match_id"), body)
 
-    async with consumer:
-        await consumer.receive(on_event=handle, starting_position="@latest")
+    async def on_error(partition_context, error) -> None:
+        pid = getattr(partition_context, "partition_id", "-")
+        log.warning("Event Hubs consumer error (partition %s): %r", pid, error)
+
+    backoff = 5.0
+    while True:
+        try:
+            cred = DefaultAzureCredential(managed_identity_client_id=cfg.managed_identity_client_id or None)
+            consumer = EventHubConsumerClient(cfg.eventhub_namespace, cfg.eventhub_consumer_group,
+                                              eventhub_name=cfg.eventhub_name, credential=cred)
+            log.info("Event Hubs consumer connecting to %s/%s", cfg.eventhub_namespace, cfg.eventhub_name)
+            async with consumer, cred:
+                await consumer.receive(on_event=handle, on_error=on_error, starting_position="@latest")
+            log.warning("Event Hubs consumer stopped; reconnecting")
+        except asyncio.CancelledError:
+            raise
+        except Exception:  # noqa: BLE001
+            log.exception("Event Hubs consumer failed; retrying in %.0fs", backoff)
+        await asyncio.sleep(backoff)
+        backoff = min(backoff * 2, 60.0)
 
 
 if __name__ == "__main__":
