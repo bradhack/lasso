@@ -1,6 +1,6 @@
 # Copilot instructions for Lasso
 
-Lasso is a live, multi-agent football match companion built for the Microsoft and Premier League *Inside the Game* hackathon (submission deadline: Oct 27, 2026). It replays synthetic matches and updates a Bayesian win-probability model, **the Gaffer**, with every event. The model's output is the **Gaffer's Gauge**. Five AI agents explain each swing, and fans make free-to-play **Call It** predictions against the model.
+Lasso is a live, multi-agent football match companion built for the Microsoft and Premier League *Inside the Game* hackathon (submission deadline: Oct 27, 2026). It replays synthetic matches and updates a Bayesian win-probability model, **the Gaffer**, with every event. The model's output is the **Gaffer's Gauge**. Seven AI agents in two workflows explain each swing and answer fans' questions (Ask the Gaffer), and fans make free-to-play **Call It** predictions against the model.
 
 Read `README.md`, `docs/model-report.md` and `docs/DEPLOY.md` before making non-trivial changes.
 
@@ -10,7 +10,7 @@ Read `README.md`, `docs/model-report.md` and `docs/DEPLOY.md` before making non-
 |---|---|
 | `engine/lasso_engine/` | Synthetic league + event simulator (`league.py`, `simulator.py`), the Gaffer (`strength.py` pre-match, `inplay.py` live), Shapley explanations (`explain.py`), Call It pricing (`markets.py`), training/evaluation |
 | `services/api/lasso_api/` | FastAPI app: match rooms (`matchroom.py`), game logic (`game.py`), the Gaffer **MCP server** (`mcp_tools.py`, mounted at `/mcp`), realtime hub (`realtime.py`), Match Feed (`feed.py`), A2A client (`agents_client.py`) |
-| `services/agents/lasso_agents/` | Microsoft Agent Framework agents (`team.py`), the Match Director fan-out/fan-in workflow (`director.py`), A2A server (`server.py`) |
+| `services/agents/lasso_agents/` | Microsoft Agent Framework agents (`team.py`), the Match Director fan-out/fan-in workflow and the Press Room (Ask the Gaffer) workflow (`director.py`), A2A server that routes between them (`server.py`) |
 | `web/src/` | React 19 + TypeScript phone app (PWA) and broadcast overlay (`pages/Overlay.tsx`) |
 | `infra/` | Bicep for every Azure resource, deployed with `azd up` |
 | `data/demo/` | Runtime data pack: held-out season events + trained model. `data/league/` is generated and git-ignored |

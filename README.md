@@ -6,6 +6,11 @@ Lasso shows your team's chances live, tells you in plain English why they just c
 
 Lasso is a live, multi-agent match companion for phones and broadcasts, built for the Microsoft and Premier League *Inside the Game* hackathon.
 
+> **Judges start here**
+> - **Live app:** https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io (best on a phone)
+> - **Demo video:** <!-- VIDEO LINK --> on the submission page
+> - **[Lasso for judges](docs/JUDGING.md):** a two-minute tour, and each judging criterion mapped to the screens, files and numbers that back it up
+
 - It ingests synthetic football events in real time.
 - It updates a Bayesian win-probability model, **the Gaffer**, with every chance, card and goal. The model's output is the **Gaffer's Gauge**.
 - It explains every swing, so fans know *why* it moved.
