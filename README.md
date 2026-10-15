@@ -60,19 +60,19 @@ flowchart LR
     WPS --> APP["<b>Phone app</b>"]
     WPS --> OVL["<b>Broadcast overlay</b>"]
 
-    classDef svc fill:#26122D,stroke:#6B4F78,color:#F4F1F6
-    classDef star fill:#2F1838,stroke:#D8B26E,stroke-width:2px,color:#F4F1F6
-    classDef data fill:#1A0B20,stroke:#A99AB0,color:#E2DAE6
-    classDef agent fill:#3A2042,stroke:#D3D7DE,color:#F4F1F6
-    classDef client fill:#D3D7DE,stroke:#D3D7DE,color:#1A0B20
+    classDef svc fill:#111A2E,stroke:#475C85,color:#F2F5FA
+    classDef star fill:#16213A,stroke:#C9A45C,stroke-width:2px,color:#F2F5FA
+    classDef data fill:#0A1020,stroke:#8E9AB3,color:#DCE3EE
+    classDef agent fill:#1D2A48,stroke:#E6EBF2,color:#F2F5FA
+    classDef client fill:#E6EBF2,stroke:#E6EBF2,color:#0A1020
     class FEED,ROOM,MCP,GAME,WPS svc
     class GAFFER star
     class EH,COSMOS,FOUNDRY data
     class STATS,GAF,NAR,PER,GM agent
     class CTX data
     class APP,OVL client
-    style API fill:#1A0B2010,stroke:#6B4F78,stroke-dasharray:4 4,color:#A99AB0
-    style DIRECTOR fill:#1A0B2010,stroke:#D8B26E,stroke-dasharray:4 4,color:#A99AB0
+    style API fill:#0A102010,stroke:#475C85,stroke-dasharray:4 4,color:#8E9AB3
+    style DIRECTOR fill:#0A102010,stroke:#C9A45C,stroke-dasharray:4 4,color:#8E9AB3
 ```
 
 ### What happens when a goal goes in
