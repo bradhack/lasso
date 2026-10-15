@@ -216,6 +216,30 @@ a { color: var(--silver); }
 .believe.won span { color: var(--gold-2); }
 @keyframes signin { from { transform: translateY(-14px) rotate(4deg); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .believe { animation: none; } }
+.pill .fish { display: inline-flex; color: var(--gold); margin-left: 2px; }
+.pill .fish.used { color: var(--muted); opacity: 0.45; }
+button.pill { font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.fishbadge { flex: none; width: 46px; height: 46px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--gold) 18%, transparent); color: var(--gold); }
+.gfcard { display: flex; gap: 14px; align-items: flex-start; }
+.gfcard b { display: block; font-size: 15px; }
+.gfcard p { margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.gfcard.used .fishbadge { background: var(--surface-3); color: var(--muted); }
+.tiers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.tier { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: flex; align-items: baseline; justify-content: space-between; color: var(--muted); }
+.tier b { font-family: var(--num); font-size: 26px; color: var(--text-2); }
+.tier small { font-size: 12px; color: var(--muted); margin-left: 4px; }
+.tier span { font-family: var(--num); font-size: 22px; font-weight: 600; }
+.tier.on { border-color: var(--gold); color: var(--gold-2); }
+.tier.on span { color: var(--gold); }
+.callrow { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--line); }
+.callrow .q { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.callrow .q b { font-size: 14px; }
+.callrow .q span { font-size: 12px; color: var(--muted); }
+.callrow .st { flex: none; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--soft); }
+.callrow.won .st { background: var(--gold); border-color: var(--gold); color: var(--ink-on-gold); font-family: var(--num); font-size: 14px; }
+.callrow.lost .st { color: var(--muted); border-color: var(--line); }
+.callrow.saved .st { color: var(--gold-2); border-color: color-mix(in srgb, var(--gold) 45%, transparent); }
+.toast .fishbadge { width: 42px; height: 42px; }
 .lasso-wrap { position: relative; }
 .lasso-throw { position: absolute; left: -6px; right: -6px; top: 6px; width: calc(100% + 12px); height: 64px; pointer-events: none; overflow: visible; }
 .lasso-throw path { fill: none; stroke: var(--gold); stroke-width: 2.5; stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 100; stroke-dashoffset: 100; }

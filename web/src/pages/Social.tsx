@@ -4,7 +4,7 @@ import { LANGS, t } from "../i18n";
 import { useStore } from "../store";
 import type { Lang, LeaderRow } from "../types";
 import { Crest } from "../components/bits";
-import { Flame } from "../components/Icons";
+import { Fish, Flame } from "../components/Icons";
 import { StickerBadge, stickerText } from "../components/Stickers";
 import { currentAppearance, setAppearance } from "../theme";
 
@@ -170,10 +170,14 @@ export function Profile() {
         <div><div className="v">{user.best_streak}</div><div className="l">Best streak</div></div>
         <div><div className="v">{winRate}%</div><div className="l">Calls won</div></div>
       </div>
-      <section className="card">
-        <div className="row"><span className="eyebrow">Goldfish</span><span className="chip ghost">{user.goldfish_available ? "Ready" : "Used this week"}</span></div>
-        <p className="muted" style={{ margin: "8px 0 0", fontSize: 13, lineHeight: 1.5 }}>Once a week, a missed call won't break a streak of 3 or more. Be a goldfish: forget it and go again.</p>
+      <section className={`card gfcard${user.goldfish_available ? "" : " used"}`}>
+        <span className="fishbadge"><Fish size={30} /></span>
+        <div>
+          <b>{user.goldfish_available ? t("gfReady", lang) : t("gfUsed", lang)}</b>
+          <p>{t("gfHow", lang)}</p>
+        </div>
       </section>
+      <CallHistory />
       <section className="card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <span className="eyebrow gold">{t("missions", lang)}</span>
         {user.missions.map((m) => (
@@ -214,5 +218,48 @@ export function Profile() {
         Biscuits are free in-app points with no cash value. All clubs, players and matches are synthetic.
       </p>
     </div>
+  );
+}
+
+/** Every call you've made, newest first, with where it stands now. */
+function CallHistory() {
+  const calls = useStore((s) => s.calls);
+  const matches = useStore((s) => s.matches);
+  const lang = useStore((s) => s.lang);
+  const [all, setAll] = useState(false);
+  const list = Object.values(calls).sort((a, b) => (b.placed_at ?? 0) - (a.placed_at ?? 0));
+  const label = (id?: string) => {
+    const m = matches.find((x) => x.match_id === (id ?? "").split(":")[0]);
+    return m ? `${m.home.short} v ${m.away.short}` : "";
+  };
+  const won = list.filter((c) => c.status === "won").length;
+  const open = list.filter((c) => c.status === "open").length;
+  const shown = all ? list : list.slice(0, 8);
+  return (
+    <section className="card" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div className="row">
+        <span className="eyebrow gold">{t("myCalls", lang)}</span>
+        {list.length > 0 && (
+          <span className="muted" style={{ fontSize: 12 }}>
+            {t("callsSummary", lang).replace("{n}", String(list.length)).replace("{w}", String(won)).replace("{o}", String(open))}
+          </span>
+        )}
+      </div>
+      {list.length === 0 && <p className="muted" style={{ margin: 0, fontSize: 13 }}>{t("noCalls", lang)}</p>}
+      {shown.map((c) => (
+        <div key={c.id} className={`callrow ${c.status}${c.goldfish ? " saved" : ""}`}>
+          <div className="q">
+            <b>{c.question}</b>
+            <span>{c.label} · {c.stake} @ {c.multiplier.toFixed(1)}x · {label(c.market_id)} {c.minute}'</span>
+          </div>
+          <span className="st">
+            {c.status === "open" && t("stOpen", lang)}
+            {c.status === "won" && `+${c.payout}`}
+            {c.status === "lost" && (c.goldfish ? <><Fish size={14} /> {t("stLost", lang)}</> : t("stLost", lang))}
+          </span>
+        </div>
+      ))}
+      {list.length > 8 && !all && <button className="linkbtn" onClick={() => setAll(true)}>{t("showAll", lang)}</button>}
+    </section>
   );
 }

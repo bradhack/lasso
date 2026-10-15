@@ -79,3 +79,10 @@ export const Moon = ({ size = 18 }: P) => (
     <path d="M19.5 14.6A8 8 0 0 1 9.4 4.5a8 8 0 1 0 10.1 10.1z" />
   </svg>
 );
+
+export const Fish = ({ size = 15, color = "currentColor" }: P) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M2.5 12c3-5 9-6.2 13.2-2.2L21 6.5l-1.4 5.5 1.4 5.5-5.3-3.3C11.5 18.2 5.5 17 2.5 12z" />
+    <circle cx="8" cy="11" r="0.9" fill={color} />
+  </svg>
+);

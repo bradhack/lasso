@@ -9,7 +9,7 @@ export type Toast =
   | { id: number; kind: "sticker"; sticker: Sticker }
   | { id: number; kind: "hope"; call: Call }
   | { id: number; kind: "mission"; label: string; reward: number }
-  | { id: number; kind: "goldfish"; text: string }
+  | { id: number; kind: "goldfish"; streak: number }
   | { id: number; kind: "error"; text: string };
 
 type ToastInput =
@@ -18,7 +18,7 @@ type ToastInput =
   | { kind: "sticker"; sticker: Sticker }
   | { kind: "hope"; call: Call }
   | { kind: "mission"; label: string; reward: number }
-  | { kind: "goldfish"; text: string }
+  | { kind: "goldfish"; streak: number }
   | { kind: "error"; text: string };
 
 interface State {
@@ -228,7 +228,7 @@ function onMessage(d: any) {
       st.toast({ kind: "mission", label: d.label, reward: d.reward });
       break;
     case "goldfish":
-      st.toast({ kind: "goldfish", text: d.text });
+      st.toast({ kind: "goldfish", streak: d.streak });
       break;
   }
 }

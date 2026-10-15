@@ -243,7 +243,7 @@ class GameService:
                     u["goldfish_pending"] = True
                     call["goldfish"] = True
                     msgs.append({"type": "goldfish", "streak": u["streak"],
-                                 "text": "Be a goldfish. Your streak survives this one."})
+                                 "text": "Goldfish: that miss is forgotten and your streak lives on."})
                 else:
                     u["streak"] = 0
                     u["goldfish_pending"] = False

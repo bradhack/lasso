@@ -203,6 +203,8 @@ export interface Call {
   payout: number;
   minute: number;
   goldfish?: boolean;
+  match_id?: string;
+  placed_at?: number;
 }
 
 export interface LeaderRow {

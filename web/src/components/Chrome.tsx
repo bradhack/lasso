@@ -1,10 +1,11 @@
 import confetti from "canvas-confetti";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { t } from "../i18n";
 import { useStore } from "../store";
 import { Animated } from "./bits";
 import { StickerBadge, stickerText } from "./Stickers";
-import { Biscuit, CardsIcon, Flame, LassoMark, LiveIcon, Moon, Sun, Trophy, UserIcon } from "./Icons";
+import { Biscuit, CardsIcon, Fish, Flame, LassoMark, LiveIcon, Moon, Sun, Trophy, UserIcon } from "./Icons";
 import { currentAppearance, setAppearance } from "../theme";
 
 export function TopBar() {
@@ -18,6 +19,7 @@ export function TopBar() {
     return () => window.removeEventListener("lasso-theme", sync);
   }, []);
   const flip = () => setAppearance(mode === "dark" ? "light" : "dark");
+  const [streakOpen, setStreakOpen] = useState(false);
   return (
     <header className="topbar">
       <a className="brand" href="#/" aria-label="Lasso home">
@@ -31,16 +33,19 @@ export function TopBar() {
             <Biscuit />
             <Animated value={user.biscuits} />
           </span>
-          <span className="pill gold" title={t("streak", lang)}>
+          <button className="pill gold" onClick={() => setStreakOpen(true)} aria-label={t("streakTitle", lang)}
+            title={user.goldfish_available ? t("gfReady", lang) : t("gfUsed", lang)}>
             <Flame />
             <span>{user.streak}<span className="lbl"> {t("streak", lang)}</span></span>
-          </span>
+            <span className={`fish${user.goldfish_available ? "" : " used"}`}><Fish size={15} /></span>
+          </button>
           <button className="pill icon" onClick={flip} aria-label={mode === "dark" ? t("light", lang) : t("dark", lang)}
             title={mode === "dark" ? t("light", lang) : t("dark", lang)}>
             {mode === "dark" ? <Sun /> : <Moon />}
           </button>
         </div>
       )}
+      {user && streakOpen && createPortal(<StreakSheet onClose={() => setStreakOpen(false)} />, document.body)}
     </header>
   );
 }
@@ -94,7 +99,7 @@ export function Toasts() {
           {x.kind === "loss" && (
             <div>
               <div className="big" style={{ fontSize: 22 }}>{t("notThisTime", lang)}</div>
-              <div className="sub">{x.call.question} {x.call.goldfish ? "· Goldfish saved your streak" : ""}</div>
+              <div className="sub">{x.call.question}{x.call.goldfish ? ` · ${t("stSaved", lang).split("·")[1]?.trim() ?? ""}` : ""}</div>
             </div>
           )}
           {x.kind === "sticker" && (
@@ -122,14 +127,54 @@ export function Toasts() {
             </div>
           )}
           {x.kind === "goldfish" && (
-            <div>
-              <div className="sub" style={{ color: "var(--gold-2)" }}>GOLDFISH USED</div>
-              <div style={{ fontWeight: 700 }}>{x.text}</div>
-            </div>
+            <>
+              <span className="fishbadge"><Fish size={26} /></span>
+              <div>
+                <div className="sub" style={{ color: "var(--gold-2)", letterSpacing: "0.08em" }}>{t("goldfish", lang).toUpperCase()}!</div>
+                <div style={{ fontWeight: 700 }}>{t("gfToast", lang).replace("{n}", String(x.streak))}</div>
+              </div>
+            </>
           )}
           {x.kind === "error" && <div style={{ fontWeight: 600 }}>{x.text}</div>}
         </div>
       ))}
+    </div>
+  );
+}
+
+/** What a streak is worth and how the Goldfish protects it. Opens from the streak pill. */
+function StreakSheet({ onClose }: { onClose: () => void }) {
+  const user = useStore((s) => s.user)!;
+  const lang = useStore((s) => s.lang);
+  const tiers = [
+    { at: 3, x: "1.25x" },
+    { at: 5, x: "1.5x" },
+  ];
+  return (
+    <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="streak-title" onClick={onClose}>
+      <div className="sheet-inner" onClick={(e) => e.stopPropagation()}>
+        <div className="row">
+          <h2 id="streak-title" className="num" style={{ margin: 0, fontSize: 30 }}>{t("streakTitle", lang).toUpperCase()}</h2>
+          <span className="pill gold"><Flame /> {user.streak}</span>
+        </div>
+        <p className="muted" style={{ margin: 0, lineHeight: 1.5 }}>{t("streakHow", lang)}</p>
+        <div className="tiers">
+          {tiers.map((tr) => (
+            <div key={tr.at} className={`tier${user.streak >= tr.at ? " on" : ""}`}>
+              <b>{tr.at}<small>{t("inARow", lang)}</small></b>
+              <span>{tr.x}</span>
+            </div>
+          ))}
+        </div>
+        <div className={`gfcard${user.goldfish_available ? "" : " used"}`}>
+          <span className="fishbadge"><Fish size={30} /></span>
+          <div>
+            <b>{user.goldfish_available ? t("gfReady", lang) : t("gfUsed", lang)}</b>
+            <p>{t("gfHow", lang)}</p>
+          </div>
+        </div>
+        <button className="cta" onClick={onClose}>{t("gotIt", lang)}</button>
+      </div>
     </div>
   );
 }
