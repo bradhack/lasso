@@ -9,6 +9,14 @@ Lasso is a live, multi-agent match companion for phones and broadcasts, built fo
 - It explains every swing, so fans know *why* it moved.
 - It invites fans to make free-to-play **Call It** predictions against the Gaffer's own odds, with streaks, moment cards, missions and friend leagues. Biscuits are in-app points with no cash value.
 
+![Lasso: see why the odds moved, then out-predict the AI Gaffer](docs/img/submission-1-cover.png)
+
+<p>
+  <img src="docs/img/submission-2-how-it-works.png" width="32%" alt="How Lasso works: five agents, one live pipeline" />
+  <img src="docs/img/submission-3-the-gaffer.png" width="32%" alt="The Gaffer: a Bayesian model you can watch think" />
+  <img src="docs/img/submission-4-beat-the-gaffer.png" width="32%" alt="Beat the Gaffer: call the next moment, earn biscuits" />
+</p>
+
 ## How it works
 
 ```mermaid
