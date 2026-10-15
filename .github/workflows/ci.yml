@@ -9,8 +9,8 @@ jobs:
   python:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - name: Engine tests
@@ -20,7 +20,7 @@ jobs:
       - name: Agents tests
         run: |
           pip install -r services/agents/requirements.txt pytest
-          cd services/agents && pytest -q
+          cd services/agents && python -m pytest -q
       - name: API imports
         run: |
           pip install -r services/api/requirements.txt
@@ -29,8 +29,8 @@ jobs:
   web:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -41,5 +41,5 @@ jobs:
   infra:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: az bicep build --file infra/main.bicep --stdout > /dev/null
