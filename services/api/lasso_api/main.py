@@ -344,6 +344,7 @@ async def match_story(match_id: str) -> list[dict]:
 
 # ------------------------------------------------------------ Ask the Gaffer
 _ask_state: dict = {"day": "", "count": 0, "users": {}}
+KEY_EVENTS = {"goal", "red_card", "yellow_card", "substitution", "half_time"}
 _ASK_FALLBACK = {
     "en": "I can't take questions right now, but here's where it stands at {m}': {score}. My numbers: {h} {ph}%, "
           "draw {pd}%, {a} {pa}%.",
@@ -410,6 +411,9 @@ async def ask(match_id: str, body: AskIn) -> dict:
                  "chances_pct": {room.names[0]: p["home"], "draw": p["draw"], room.names[1]: p["away"]}}
         if any(room.state.reds):
             brief["red_cards"] = {room.names[0]: room.state.reds[0], room.names[1]: room.state.reds[1]}
+        # The authoritative timeline, so basic questions never depend on which tools the Scout picks.
+        brief["key_events"] = [f"{e['minute']}' {e['text']}" for e in room.feed
+                               if e.get("type") in KEY_EVENTS][-24:]
         pkg = await agents.produce(brief)
         # A real answer echoes our id and carries the agents' trace; anything else is an error reply.
         if pkg and pkg.get("ask_id") == ask_id and pkg.get("trace") and isinstance(pkg.get("answer"), str):
