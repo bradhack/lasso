@@ -94,7 +94,12 @@ Where to check: `services/agents/lasso_agents/director.py` (both workflows), `te
 
 ## How it was built
 
-Brad built Lasso with AI pair programmers. **GitHub Copilot** in Agent Mode, with the **Azure MCP Server**, handled deployment and diagnosis against the live Azure resources. For example, it found and fixed an Event Hubs consumer bug from the container logs (commit `f525983`) and a Foundry deployment ordering issue in Bicep (`4967f0c`). Repository guidance for Copilot is in `.github/copilot-instructions.md`. **Claude** helped with design and much of the code; commits record their co-authors.
+Brad designed, directed and shipped Lasso, working with two AI assistants:
+
+- **GitHub Copilot** in Agent Mode, with the **Azure MCP Server**, worked against the live Azure resources: deploying, reading logs and fixing infrastructure. It found and fixed an Event Hubs consumer bug from the container logs (commit `f525983`) and a Foundry deployment ordering issue in Bicep (`4967f0c`). Its repository guidance is in `.github/copilot-instructions.md`.
+- **Claude** helped with design and much of the code: the synthetic league and the scripts that replay matches into the live feed, the Gaffer model and its evaluation, the agents, the app, the club crests and the submission images.
+
+Every commit records its co-authors.
 
 ## Data
 
