@@ -75,6 +75,8 @@ const S = {
     fr: "Une fois par semaine, ton Goldfish oublie un prono raté, et une série de 3 ou plus continue. Il revient chaque lundi.",
   },
   inARow: { en: "in a row", es: "seguidos", pt: "seguidos", fr: "de suite" },
+  updated: { en: "Lasso just got better", es: "Lasso acaba de mejorar", pt: "O Lasso acabou de melhorar", fr: "Lasso vient de s'améliorer" },
+  tapRefresh: { en: "Tap to load the new version", es: "Toca para cargar la nueva versión", pt: "Toque para carregar a nova versão", fr: "Touche pour charger la nouvelle version" },
   gotIt: { en: "Got it", es: "Entendido", pt: "Entendi", fr: "Compris" },
   myCalls: { en: "Your calls", es: "Tus pronósticos", pt: "Seus palpites", fr: "Tes pronos" },
   callsSummary: { en: "{n} calls · {w} won · {o} live", es: "{n} pronósticos · {w} acertados · {o} en juego", pt: "{n} palpites · {w} certos · {o} em jogo", fr: "{n} pronos · {w} gagnés · {o} en cours" },

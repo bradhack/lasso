@@ -446,12 +446,14 @@ _dist: Path = settings.web_dist
 if _dist.exists():
     app.mount("/assets", StaticFiles(directory=_dist / "assets"), name="assets")
 
+    _fresh = {"Cache-Control": "no-cache"}  # always revalidate the shell so a deploy shows up right away
+
     @app.get("/{path:path}", include_in_schema=False)
     async def spa(path: str):
         f = _dist / path
-        if path and f.is_file():
-            return FileResponse(f)
-        return FileResponse(_dist / "index.html")
+        if path and f.is_file() and f.resolve().is_relative_to(_dist.resolve()):
+            return FileResponse(f, headers=_fresh if f.suffix in (".html", ".js", ".webmanifest") else None)
+        return FileResponse(_dist / "index.html", headers=_fresh)
 else:
     @app.get("/", include_in_schema=False)
     async def root():

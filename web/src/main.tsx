@@ -3,6 +3,8 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import { setMeterName } from "./i18n";
 import { applyTheme, savedTheme } from "./theme";
+import { useStore } from "./store";
+import { watchForUpdates } from "./updates";
 import "@fontsource/barlow-condensed/500.css";
 import "@fontsource/barlow-condensed/600.css";
 import "@fontsource/barlow-condensed/700.css";
@@ -16,6 +18,8 @@ import "./styles.css";
 const params = new URLSearchParams(location.search);
 applyTheme(params.get("theme") ?? savedTheme());
 if (params.get("meter")) setMeterName(params.get("meter")!);
+
+watchForUpdates(() => useStore.getState().toast({ kind: "update" }));
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

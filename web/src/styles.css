@@ -241,13 +241,19 @@ button.pill { font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
 .callrow.saved .st { color: var(--gold-2); border-color: color-mix(in srgb, var(--gold) 45%, transparent); }
 .toast .fishbadge { width: 42px; height: 42px; }
 .lasso-wrap { position: relative; }
-.lasso-throw { position: absolute; left: -6px; right: -6px; top: 6px; width: calc(100% + 12px); height: 64px; pointer-events: none; overflow: visible; }
-.lasso-throw path { fill: none; stroke: var(--gold); stroke-width: 2.5; stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 100; stroke-dashoffset: 100; }
-.lasso-throw .loop { animation: rope 0.7s cubic-bezier(0.3, 0.8, 0.3, 1) forwards, ropefade 0.5s ease 1.6s forwards; }
-.lasso-throw .tail { animation: rope 0.35s ease 0.55s forwards, ropefade 0.5s ease 1.6s forwards; }
+.lasso-throw { position: absolute; left: -10px; top: -14px; width: calc(100% + 20px); height: 80px; pointer-events: none; overflow: visible; animation: ropefade 0.45s ease 2.1s forwards; }
+.lasso-throw path { fill: none; stroke: var(--gold); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 100; stroke-dashoffset: 100; filter: drop-shadow(0 2px 3px var(--shadow)); }
+.lasso-throw .rope { animation: rope 0.28s cubic-bezier(0.4, 0, 0.6, 1) forwards; }
+.lasso-throw .loop { animation: rope 0.75s cubic-bezier(0.25, 0.6, 0.3, 1) 0.22s forwards; }
+.lasso-throw .knot { fill: var(--gold); opacity: 0; animation: knot 0.2s ease 0.95s forwards; }
+.lasso-throw .cinch { transform-box: fill-box; transform-origin: 50% 55%; rotate: -1.5deg; animation: cinch 0.32s cubic-bezier(0.3, 1.6, 0.5, 1) 1.02s forwards; }
 @keyframes rope { to { stroke-dashoffset: 0; } }
+@keyframes knot { to { opacity: 1; } }
+@keyframes cinch { 0% { transform: scale(1, 1); } 100% { transform: scale(0.97, 0.8); } }
 @keyframes ropefade { to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .lasso-throw { display: none; } }
+.cta.ghost.locked { display: flex; align-items: center; justify-content: center; padding: 0 14px; }
+.cta.ghost.locked span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cta.ghost { background: transparent; border: 1px solid var(--line-2); color: var(--text); }
 .timer { height: 3px; background: var(--line); border-radius: 2px; margin-top: 12px; overflow: hidden; }
 .timer span { display: block; height: 100%; background: var(--gold); transition: width 1s linear; }

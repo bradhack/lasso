@@ -136,6 +136,12 @@ export function Toasts() {
             </>
           )}
           {x.kind === "error" && <div style={{ fontWeight: 600 }}>{x.text}</div>}
+          {x.kind === "update" && (
+            <div onClick={() => location.reload()} style={{ cursor: "pointer" }}>
+              <div className="sub" style={{ color: "var(--gold-2)", letterSpacing: "0.08em" }}>{t("updated", lang).toUpperCase()}</div>
+              <div style={{ fontWeight: 700 }}>{t("tapRefresh", lang)}</div>
+            </div>
+          )}
         </div>
       ))}
     </div>

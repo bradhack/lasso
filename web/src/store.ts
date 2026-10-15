@@ -10,7 +10,8 @@ export type Toast =
   | { id: number; kind: "hope"; call: Call }
   | { id: number; kind: "mission"; label: string; reward: number }
   | { id: number; kind: "goldfish"; streak: number }
-  | { id: number; kind: "error"; text: string };
+  | { id: number; kind: "error"; text: string }
+  | { id: number; kind: "update" };
 
 type ToastInput =
   | { kind: "win"; call: Call }
@@ -19,7 +20,8 @@ type ToastInput =
   | { kind: "hope"; call: Call }
   | { kind: "mission"; label: string; reward: number }
   | { kind: "goldfish"; streak: number }
-  | { kind: "error"; text: string };
+  | { kind: "error"; text: string }
+  | { kind: "update" };
 
 interface State {
   user: User | null;
@@ -128,7 +130,7 @@ export const useStore = create<State>((set, get) => ({
   toast: (t) => {
     const id = toastId++;
     set((s) => ({ toasts: [...s.toasts, { ...t, id } as Toast] }));
-    setTimeout(() => get().dismiss(id), t.kind === "error" ? 3500 : 5200);
+    setTimeout(() => get().dismiss(id), t.kind === "error" ? 3500 : t.kind === "update" ? 30000 : 5200);
   },
   dismiss: (id) => set((s) => ({ toasts: s.toasts.filter((x) => x.id !== id) })),
 }));
