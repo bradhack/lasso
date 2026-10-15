@@ -11,15 +11,93 @@ Lasso is a live, multi-agent match companion for phones and broadcasts, built fo
 
 ## How it works
 
+```mermaid
+flowchart LR
+    FEED["<b>Match Feed</b><br/>replays synthetic matches"] -->|match events| EH[("<b>Event Hubs</b>")]
+    EH --> ROOM
+
+    subgraph API["API · Azure Container Apps"]
+        direction TB
+        ROOM["<b>Match rooms</b><br/>live state · xG · pass difficulty"]
+        GAFFER["<b>The Gaffer</b><br/>Bayesian live model"]
+        MCP["<b>MCP server</b><br/>/mcp tools"]
+        GAME["<b>Call It game</b><br/>biscuits · streaks · cards"]
+        ROOM --> GAFFER --> MCP
+        ROOM --> GAME
+    end
+
+    subgraph DIRECTOR["Match Director · Microsoft Agent Framework"]
+        direction TB
+        STATS["Stats agent"]
+        GAF["Gaffer agent"]
+        CTX{{"context"}}
+        NAR["Narrator<br/>EN · ES · PT · FR"]
+        PER["Persona<br/>fan or analyst"]
+        GM["Game Master<br/>new challenges"]
+        STATS --> CTX
+        GAF --> CTX
+        CTX --> NAR
+        CTX --> PER
+        CTX --> GM
+    end
+
+    ROOM == "A2A · moment brief" ==> DIRECTOR
+    DIRECTOR == "story · fan angles · challenge" ==> ROOM
+    MCP -. "MCP tools" .-> GAF
+    MCP -. "MCP tools" .-> STATS
+    MCP -. "MCP tools" .-> GM
+    DIRECTOR --- FOUNDRY[("<b>Microsoft Foundry</b><br/>models + tracing")]
+    GAME --- COSMOS[("<b>Cosmos DB</b>")]
+    ROOM --> WPS["<b>Web PubSub</b>"]
+    WPS --> APP["<b>Phone app</b>"]
+    WPS --> OVL["<b>Broadcast overlay</b>"]
+
+    classDef svc fill:#26122D,stroke:#6B4F78,color:#F4F1F6
+    classDef star fill:#2F1838,stroke:#D8B26E,stroke-width:2px,color:#F4F1F6
+    classDef data fill:#1A0B20,stroke:#A99AB0,color:#E2DAE6
+    classDef agent fill:#3A2042,stroke:#D3D7DE,color:#F4F1F6
+    classDef client fill:#D3D7DE,stroke:#D3D7DE,color:#1A0B20
+    class FEED,ROOM,MCP,GAME,WPS svc
+    class GAFFER star
+    class EH,COSMOS,FOUNDRY data
+    class STATS,GAF,NAR,PER,GM agent
+    class CTX data
+    class APP,OVL client
+    style API fill:#1A0B2010,stroke:#6B4F78,stroke-dasharray:4 4,color:#A99AB0
+    style DIRECTOR fill:#1A0B2010,stroke:#D8B26E,stroke-dasharray:4 4,color:#A99AB0
 ```
- Match Feed ──> Event Hubs ──> API (match rooms) ──┬──> Web PubSub ──> phone app / broadcast overlay
- (Container App)               │  the Gaffer        │
-                               │  MCP server /mcp ◄─┼──── agents call tools over MCP
-                               │                    │
-                               └── A2A ──> Match Director workflow (Microsoft Agent Framework, Foundry models)
-                                            ├─ Stats agent ───┐            ┌─ Narrator (EN/ES/PT/FR)
-                                            └─ Gaffer agent ──┴─> context ─┼─ Persona (fan vs analyst, club lines)
-                                                                           └─ Game Master (creates Call It challenges)
+
+### What happens when a goal goes in
+
+The Believe-o-Meter and an instant story reach phones in under a second. The five agents' richer version follows a few seconds later, so the app never waits on a language model.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant F as Match Feed
+    participant A as API + the Gaffer
+    participant P as Phone app
+    participant D as Match Director
+    participant M as MCP tools
+    F->>A: 82' shot, 0.51 xG, goal
+    Note over A: Bayesian update + Shapley drivers, in microseconds
+    A-->>P: Believe-o-Meter 11% to 83% + instant story
+    A->>D: A2A moment brief
+    par Stage one
+        D->>M: Stats agent: match_stats, recent_events
+    and
+        D->>M: Gaffer agent: why_it_moved, believe_o_meter
+    end
+    par Stage two
+        Note over D: Narrator writes EN, ES, PT, FR
+    and
+        Note over D: Persona writes fan and analyst angles
+    and
+        D->>M: Game Master: candidate_challenges
+    end
+    D-->>A: story, angles, challenge (JSON)
+    A-->>P: richer story replaces the instant one
+    A-->>P: new Call It challenge opens
 ```
 
 Here's how the code covers the brief's five stages:
