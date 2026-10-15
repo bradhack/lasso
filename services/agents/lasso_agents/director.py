@@ -157,7 +157,7 @@ def build_press_room(team: Team, timeout: float = 25.0) -> Workflow:
     @executor(id="presser_step")
     async def presser_step(c: dict, ctx: WorkflowContext[None, str]) -> None:
         b = c["brief"]
-        out, tr = await run_agent(team.presser, f"Brief: {json.dumps(b)}\nScout: {json.dumps(c.get('scout', {}))}",
+        out, tr = await run_agent(team.presser, f"Brief: {json.dumps(b)}\nNotes: {json.dumps(c.get('scout', {}))}",
                                   timeout)
         pkg = {"ask_id": b.get("ask_id"), "answer": out.get("answer", ""), "followups": out.get("followups", []),
                "facts": c.get("scout", {}).get("facts", []), "trace": c["trace"] + [tr]}
