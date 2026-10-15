@@ -35,9 +35,29 @@ def parse_json(text: str) -> dict:
         return {}
 
 
-async def run_agent(agent, prompt: str, timeout: float) -> tuple[dict, dict]:
+def tool_calls(resp) -> list[dict]:
+    """The tools an agent called (MCP tools arrive as function calls), with their arguments, for the trace."""
+    calls = []
+    for m in getattr(resp, "messages", None) or []:
+        for c in getattr(m, "contents", None) or []:
+            if getattr(c, "type", "") in ("function_call", "mcp_server_tool_call") and getattr(c, "name", None):
+                args = c.arguments
+                if isinstance(args, str):
+                    try:
+                        args = json.loads(args)
+                    except json.JSONDecodeError:
+                        args = {}
+                args = {k: v for k, v in (args or {}).items() if k != "match_id"}  # same for every call
+                calls.append({"name": c.name, "args": args} if args else {"name": c.name})
+    return calls
+
+
+async def run_agent(agent, prompt: str, timeout: float, stage: int = 1, model: str | None = None
+                    ) -> tuple[dict, dict]:
+    started = time.time()
     t0 = time.perf_counter()
     usage: dict = {}
+    tools: list[dict] = []
     try:
         resp = await asyncio.wait_for(agent.run(prompt), timeout=timeout)
         out = parse_json(resp.text)
@@ -47,13 +67,18 @@ async def run_agent(agent, prompt: str, timeout: float) -> tuple[dict, dict]:
         u = getattr(resp, "usage_details", None) or {}
         usage = {"in": u.get("input_token_count"), "out": u.get("output_token_count"),
                  "reasoning": u.get("reasoning_output_token_count"), "turns": len(getattr(resp, "messages", []) or [])}
+        tools = tool_calls(resp)
     except Exception as e:  # noqa: BLE001
         log.warning("%s failed: %r", agent.name, e)
         out, ok = {}, False
         usage = {"error": type(e).__name__}
     ms = int((time.perf_counter() - t0) * 1000)
-    log.info("agent %s ok=%s %dms %s", agent.name, ok, ms, usage)
-    return out, {"agent": agent.name, "ms": ms, "ok": ok, **{k: v for k, v in usage.items() if v is not None}}
+    log.info("agent %s ok=%s %dms %s tools=%s", agent.name, ok, ms, usage, [t["name"] for t in tools])
+    trace = {"agent": agent.name, "ms": ms, "ok": ok, "stage": stage, "start": round(started, 3), "tools": tools,
+             **{k: v for k, v in usage.items() if v is not None}}
+    if model:
+        trace["model"] = model
+    return out, trace
 
 
 def build_director(team: Team, timeout: float = 25.0) -> Workflow:
@@ -65,13 +90,15 @@ def build_director(team: Team, timeout: float = 25.0) -> Workflow:
     @executor(id="stats_step")
     async def stats_step(msg: dict, ctx: WorkflowContext[dict]) -> None:
         b = msg["brief"]
-        out, tr = await run_agent(team.stats, f"Brief: {json.dumps(b)}\nMatch id: {b.get('match_id')}", timeout)
+        out, tr = await run_agent(team.stats, f"Brief: {json.dumps(b)}\nMatch id: {b.get('match_id')}", timeout,
+                                  1, team.model_of("stats"))
         await ctx.send_message({"brief": b, "stats": out, "trace": [tr]})
 
     @executor(id="gaffer_step")
     async def gaffer_step(msg: dict, ctx: WorkflowContext[dict]) -> None:
         b = msg["brief"]
-        out, tr = await run_agent(team.gaffer, f"Brief: {json.dumps(b)}\nMatch id: {b.get('match_id')}", timeout)
+        out, tr = await run_agent(team.gaffer, f"Brief: {json.dumps(b)}\nMatch id: {b.get('match_id')}", timeout,
+                                  1, team.model_of("gaffer"))
         await ctx.send_message({"brief": b, "gaffer": out, "trace": [tr]})
 
     @executor(id="context")
@@ -88,19 +115,19 @@ def build_director(team: Team, timeout: float = 25.0) -> Workflow:
 
     @executor(id="narrator_step")
     async def narrator_step(c: dict, ctx: WorkflowContext[dict]) -> None:
-        out, tr = await run_agent(team.narrator, _writer_prompt(c), timeout)
+        out, tr = await run_agent(team.narrator, _writer_prompt(c), timeout, 2, team.model_of("narrator"))
         await ctx.send_message({"narrator": out, "trace": [tr], "base": c})
 
     @executor(id="persona_step")
     async def persona_step(c: dict, ctx: WorkflowContext[dict]) -> None:
-        out, tr = await run_agent(team.persona, _writer_prompt(c), timeout)
+        out, tr = await run_agent(team.persona, _writer_prompt(c), timeout, 2, team.model_of("persona"))
         await ctx.send_message({"persona": out, "trace": [tr], "base": c})
 
     @executor(id="game_master_step")
     async def game_master_step(c: dict, ctx: WorkflowContext[dict]) -> None:
         b = c["brief"]
         out, tr = await run_agent(team.game_master, f"Brief: {json.dumps(b)}\nMatch id: {b.get('match_id')}",
-                                  timeout)
+                                  timeout, 2, team.model_of("game_master"))
         await ctx.send_message({"game_master": out, "trace": [tr], "base": c})
 
     @executor(id="package")
@@ -151,14 +178,15 @@ def build_press_room(team: Team, timeout: float = 25.0) -> Workflow:
     @executor(id="scout_step")
     async def scout_step(msg: dict, ctx: WorkflowContext[dict]) -> None:
         b = msg["brief"]
-        out, tr = await run_agent(team.scout, f"Brief: {json.dumps(b)}\nMatch id: {b.get('match_id')}", timeout)
+        out, tr = await run_agent(team.scout, f"Brief: {json.dumps(b)}\nMatch id: {b.get('match_id')}", timeout,
+                                  1, team.model_of("scout"))
         await ctx.send_message({"brief": b, "scout": out, "trace": [tr]})
 
     @executor(id="presser_step")
     async def presser_step(c: dict, ctx: WorkflowContext[None, str]) -> None:
         b = c["brief"]
         out, tr = await run_agent(team.presser, f"Brief: {json.dumps(b)}\nNotes: {json.dumps(c.get('scout', {}))}",
-                                  timeout)
+                                  timeout, 2, team.model_of("presser"))
         pkg = {"ask_id": b.get("ask_id"), "answer": out.get("answer", ""), "followups": out.get("followups", []),
                "facts": c.get("scout", {}).get("facts", []), "trace": c["trace"] + [tr]}
         await ctx.yield_output(json.dumps(pkg, ensure_ascii=False))

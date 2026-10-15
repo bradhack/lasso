@@ -509,7 +509,7 @@ label.f { display: flex; flex-direction: column; gap: 6px; font-size: 13px; colo
 .bubble.me { align-self: flex-end; background: var(--surface-3); color: var(--text); border-bottom-right-radius: 6px; }
 .bubble.gaffer { align-self: flex-start; background: color-mix(in srgb, var(--gold) 10%, var(--surface-2)); border: 1px solid color-mix(in srgb, var(--gold) 28%, transparent); color: var(--text-2); border-bottom-left-radius: 6px; }
 .bubble.gaffer .who { color: var(--gold-2); }
-.bubble .by { margin-top: 4px; display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+.bubble .by { margin-top: 6px; align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line-2); background: none; font-size: 11px; font-weight: 600; color: var(--soft); }
 .bubble.thinking { color: var(--muted); flex-direction: row; flex-wrap: wrap; align-items: baseline; column-gap: 6px; }
 .bubble.thinking .who { flex-basis: 100%; }
 .dots { display: inline-flex; gap: 3px; }
@@ -536,9 +536,32 @@ label.f { display: flex; flex-direction: column; gap: 6px; font-size: 13px; colo
 .st-item.goal .st-tag, .st-item.full_time .st-tag { color: var(--gold-2); }
 .st-item.red_card .st-tag { color: var(--live); }
 .st-score { font-variant-numeric: tabular-nums; color: var(--soft); }
-.st-ai { display: inline-flex; color: var(--silver); }
+.st-ai { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; padding: 2px 8px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--silver) 30%, transparent); background: none; color: var(--silver); font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: none; }
 .st-chance { display: inline-flex; align-items: center; gap: 6px; margin-top: 2px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .st-chance i { width: 8px; height: 8px; border-radius: 50%; }
 .st-chance .up { color: var(--text-2); font-weight: 700; }
 .st-chance .down { color: var(--soft); }
 @media (prefers-reduced-motion: reduce) { .dots i { animation: none; } }
+
+/* Under the hood */
+button.chip { cursor: pointer; font-family: inherit; }
+.chip .chev, .by .chev { font-size: 14px; line-height: 0; margin-left: 2px; opacity: 0.8; }
+.uth-path { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 12px; }
+.uth-path span { display: inline-flex; align-items: center; gap: 6px; }
+.uth-path b { padding: 4px 9px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line-2); color: var(--text-2); font-weight: 600; }
+.uth-path i { font-style: normal; color: var(--muted); }
+.uth-stage { display: flex; flex-direction: column; gap: 8px; }
+.uth-agent { padding: 12px 14px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+.uth-agent b { font-size: 15px; }
+.uth-agent.failed { opacity: 0.7; }
+.uth-ms { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--gold-2); font-size: 13px; }
+.uth-role { font-size: 13px; color: var(--soft); }
+.uth-bar { position: relative; height: 6px; border-radius: 3px; background: var(--line); }
+.uth-bar span { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: var(--gold); }
+.uth-agent.failed .uth-bar span { background: var(--line-3); }
+.uth-tools { display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px; }
+.uth-tools code { padding: 3px 7px; border-radius: 8px; background: var(--surface-3); color: var(--silver); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11.5px; overflow-wrap: anywhere; }
+.uth-meta { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.uth-total { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--gold) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent); font-size: 13px; color: var(--soft); }
+.uth-total b { font-size: 20px; color: var(--text); font-variant-numeric: tabular-nums; }
+.uth-note { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }

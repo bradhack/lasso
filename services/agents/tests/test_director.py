@@ -78,3 +78,15 @@ def test_press_room_answers_a_question():
     assert len(pkg["followups"]) == 2
     assert [t["agent"] for t in pkg["trace"]] == ["scout", "presser"]
     assert all(t["ok"] for t in pkg["trace"])
+
+
+def test_tool_calls_are_traced_without_the_match_id():
+    from types import SimpleNamespace as NS
+
+    from lasso_agents.director import tool_calls
+
+    resp = NS(messages=[NS(contents=[NS(type="function_call", name="chances_at",
+                                        arguments='{"match_id": "S5-MD07-03", "minute": 45}'),
+                                     NS(type="function_call", name="match_story", arguments={"match_id": "x"}),
+                                     NS(type="text", name=None, arguments=None)])])
+    assert tool_calls(resp) == [{"name": "chances_at", "args": {"minute": 45}}, {"name": "match_story"}]

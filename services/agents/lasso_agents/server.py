@@ -44,8 +44,11 @@ else:  # local plumbing tests without a model deployment
 
     log.warning("FOUNDRY_PROJECT_ENDPOINT not set: running agents in offline mode")
     fast = writer = OfflineChatClient()
+_fast_agents = ("stats", "gaffer", "game_master", "scout")
 team = build_team(settings, fast, writer,
-                  model_options(settings) if settings.foundry_endpoint else None)
+                  model_options(settings) if settings.foundry_endpoint else None,
+                  {a: (settings.fast_model if a in _fast_agents else settings.writer_model) if settings.foundry_endpoint
+                   else "offline" for a in (*_fast_agents, "narrator", "persona", "presser")})
 
 
 def new_director():

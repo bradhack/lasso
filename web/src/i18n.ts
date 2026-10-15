@@ -181,6 +181,30 @@ const S = {
     fr: "Les croyants avaient raison. {team} est revenu, et {n} supporters l'avaient senti.",
   },
   believeRightShort: { en: "Believers were right", es: "Los creyentes tenían razón", pt: "Quem acreditou acertou", fr: "Les croyants avaient raison" },
+  uth: { en: "Under the hood", es: "Bajo el capó", pt: "Por dentro", fr: "Sous le capot" },
+  uthStory: {
+    en: "{n} AI agents made this story in two rounds, with Microsoft Agent Framework on Microsoft Foundry.",
+    es: "{n} agentes IA crearon esta historia en dos rondas, con Microsoft Agent Framework en Microsoft Foundry.",
+    pt: "{n} agentes de IA criaram esta história em duas etapas, com Microsoft Agent Framework no Microsoft Foundry.",
+    fr: "{n} agents IA ont écrit ce récit en deux temps, avec Microsoft Agent Framework sur Microsoft Foundry.",
+  },
+  uthAnswer: {
+    en: "{n} AI agents answered your question, with Microsoft Agent Framework on Microsoft Foundry.",
+    es: "{n} agentes IA respondieron tu pregunta, con Microsoft Agent Framework en Microsoft Foundry.",
+    pt: "{n} agentes de IA responderam sua pergunta, com Microsoft Agent Framework no Microsoft Foundry.",
+    fr: "{n} agents IA ont répondu à ta question, avec Microsoft Agent Framework sur Microsoft Foundry.",
+  },
+  uthRound: { en: "Round {n}", es: "Ronda {n}", pt: "Etapa {n}", fr: "Temps {n}" },
+  uthParallel: { en: "{n} in parallel", es: "{n} en paralelo", pt: "{n} em paralelo", fr: "{n} en parallèle" },
+  uthNoTools: { en: "No tools: writes from what it's given", es: "Sin herramientas: escribe con lo que recibe", pt: "Sem ferramentas: escreve com o que recebe", fr: "Sans outils : écrit à partir de ce qu'il reçoit" },
+  uthFailed: { en: "Didn't finish in time, so the instant version stayed", es: "No terminó a tiempo; se quedó la versión instantánea", pt: "Não terminou a tempo; ficou a versão instantânea", fr: "Pas fini à temps ; la version instantanée est restée" },
+  uthTotal: { en: "Total", es: "Total", pt: "Total", fr: "Total" },
+  uthNote: {
+    en: "The numbers come from the Gaffer's Bayesian model through MCP tools. The agents explain them; they never make up statistics.",
+    es: "Los números salen del modelo bayesiano del Gaffer mediante herramientas MCP. Los agentes los explican; nunca inventan estadísticas.",
+    pt: "Os números vêm do modelo bayesiano do Gaffer por meio de ferramentas MCP. Os agentes os explicam; nunca inventam estatísticas.",
+    fr: "Les chiffres viennent du modèle bayésien du Gaffer via des outils MCP. Les agents les expliquent ; ils n'inventent jamais de statistiques.",
+  },
 } satisfies Record<string, Record<Lang, string>>;
 
 export type Key = keyof typeof S;

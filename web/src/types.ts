@@ -52,6 +52,13 @@ export interface AgentTrace {
   agent: string;
   ms: number;
   ok: boolean;
+  stage?: number;
+  start?: number; // epoch seconds
+  tools?: { name: string; args?: Record<string, unknown> }[];
+  in?: number;
+  out?: number;
+  reasoning?: number;
+  model?: string;
 }
 
 export interface Moment {
@@ -70,6 +77,7 @@ export interface Moment {
   club_lines: { home?: Localized; away?: Localized };
   source: "template" | "agents";
   agent_trace?: AgentTrace[];
+  latency_ms?: number;
 }
 
 export interface AskAnswer {

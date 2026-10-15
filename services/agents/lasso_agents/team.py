@@ -104,6 +104,10 @@ class Team:
     mcp: MCPStreamableHTTPTool
     scout: Agent | None = None  # Ask the Gaffer: researches a fan's question over MCP
     presser: Agent | None = None  # Ask the Gaffer: answers it, with no tools of its own
+    models: dict[str, str] | None = None  # agent name -> model deployment, shown in the trace
+
+    def model_of(self, agent: str) -> str | None:
+        return (self.models or {}).get(agent)
 
     @property
     def all(self) -> list[Agent]:
@@ -127,7 +131,8 @@ def model_options(cfg: AgentSettings) -> dict:
     return {"reasoning": {"effort": cfg.reasoning_effort}, "verbosity": "low"} if cfg.reasoning_effort else {}
 
 
-def build_team(cfg: AgentSettings, fast_client, writer_client, options: dict | None = None) -> Team:
+def build_team(cfg: AgentSettings, fast_client, writer_client, options: dict | None = None,
+               models: dict[str, str] | None = None) -> Team:
     opts = {"default_options": options} if options else {}
     mcp = MCPStreamableHTTPTool(
         name="gaffer", url=cfg.mcp_url, description="Lasso live match intelligence (the Gaffer)",
@@ -146,4 +151,5 @@ def build_team(cfg: AgentSettings, fast_client, writer_client, options: dict | N
                     tools=[mcp], **opts),
         presser=Agent(writer_client, PRESSER, name="presser",
                       description="The Gaffer answering fans' questions, in their language", **opts),
+        models=models,
     )

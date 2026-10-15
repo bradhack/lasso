@@ -1,13 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { loc, t } from "../i18n";
 import { useStore } from "../store";
 import type { Lang, MatchSnapshot, Moment, User } from "../types";
 import { Sparkle } from "./Icons";
+import { UnderTheHood } from "./UnderTheHood";
 
 export function WhyItMoved({ snap, moment, lang }: { snap: MatchSnapshot; moment: Moment; lang: Lang }) {
   const user = useStore((s) => s.user);
   const counted = useRef<string | null>(null);
+  const [hood, setHood] = useState(false);
   const max = Math.max(1, ...moment.drivers.map((d) => Math.abs(d.delta)));
   const side = user?.club_id === snap.home.club_id ? "home" : user?.club_id === snap.away.club_id ? "away" : null;
   const clubLine = side ? loc(moment.club_lines?.[side], lang) : "";
@@ -34,9 +36,9 @@ export function WhyItMoved({ snap, moment, lang }: { snap: MatchSnapshot; moment
       <div className="row">
         <span className="eyebrow gold">{t("whyMoved", lang)} · {moment.minute}'</span>
         {moment.source === "agents" ? (
-          <span className="chip agents" title={(moment.agent_trace ?? []).map((a) => `${a.agent} ${a.ms}ms`).join(", ")}>
-            <Sparkle /> {t("agents", lang)}
-          </span>
+          <button className="chip agents" onClick={() => setHood(true)} aria-label={t("uth", lang)}>
+            <Sparkle /> {t("agents", lang)} <span className="chev">›</span>
+          </button>
         ) : (
           <span className="chip ghost">{t("gaffer", lang)}</span>
         )}
@@ -67,6 +69,9 @@ export function WhyItMoved({ snap, moment, lang }: { snap: MatchSnapshot; moment
         </div>
       )}
       {analyst && loc(moment.analyst, lang) && <div className="analyst">{loc(moment.analyst, lang)}</div>}
+      {hood && moment.agent_trace?.length ? (
+        <UnderTheHood kind="story" trace={moment.agent_trace} latencyMs={moment.latency_ms} onClose={() => setHood(false)} />
+      ) : null}
     </section>
   );
 }

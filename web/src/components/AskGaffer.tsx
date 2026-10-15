@@ -5,6 +5,7 @@ import { t } from "../i18n";
 import { useStore } from "../store";
 import type { AskAnswer, Lang, MatchSnapshot } from "../types";
 import { Sparkle } from "./Icons";
+import { UnderTheHood } from "./UnderTheHood";
 
 const NO_ASKS: AskAnswer[] = [];
 
@@ -19,6 +20,7 @@ export function AskGaffer({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
   const [q, setQ] = useState("");
   const [note, setNote] = useState<string | null>(null);
   const [all, setAll] = useState(false);
+  const [hood, setHood] = useState<AskAnswer | null>(null);
   const busy = items.some((i) => i.pending);
 
   // The match loops in the demo: when it starts again, earlier answers no longer apply.
@@ -79,9 +81,9 @@ export function AskGaffer({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
                   <span className="who">Gaffer</span>
                   {i.answer}
                   {i.source === "agents" && i.trace.length > 0 && (
-                    <span className="by" title={i.trace.map((a) => `${a.agent} ${(a.ms / 1000).toFixed(1)}s`).join(" · ")}>
-                      <Sparkle size={11} /> {t("askBy", lang).replace("{n}", String(i.trace.length)).replace("{s}", (i.latency_ms / 1000).toFixed(1))}
-                    </span>
+                    <button className="by" onClick={() => setHood(i)} aria-label={t("uth", lang)}>
+                      <Sparkle size={11} /> {t("askBy", lang).replace("{n}", String(i.trace.length)).replace("{s}", (i.latency_ms / 1000).toFixed(1))} <span className="chev">›</span>
+                    </button>
                   )}
                 </div>
               )}
@@ -100,6 +102,7 @@ export function AskGaffer({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
         <button className="cta" type="submit" disabled={busy || q.trim().length < 3}>{t("askSend", lang)}</button>
       </form>
       {note && <p className="ask-note" role="status">{note}</p>}
+      {hood && <UnderTheHood kind="answer" trace={hood.trace} latencyMs={hood.latency_ms} onClose={() => setHood(null)} />}
     </section>
   );
 }
