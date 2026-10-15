@@ -81,6 +81,12 @@ CANT_REPLACE = ["can't be replaced", "cannot be replaced", "can not be replaced"
                 "no substitute", "ten men", "10 men", "man short", "a man down", "not allowed"]
 NO_TRACK = re.compile(r"(don't|do not|doesn't|does not|can't|cannot|not) (track|see|follow)|no (formation|position)"
                       r"|isn't tracked|aren't tracked")
+ENGLISH_LEAK = {"es": re.compile(r"\b(chance|chances|possession|read|the|my)\b"),
+                "pt": re.compile(r"\b(possession|read|the|my)\b"),
+                "fr": re.compile(r"\bune \d+ ?% chance\b|\b(read|the|my)\b")}
+EUROPEAN_PT = re.compile(r"\b(golo|golos|equipa|equipas|a jogar|a correr)\b")
+GARBLED = re.compile(r"\d\s?%\d")
+POSSESSION = re.compile(r"possession|posesi[oó]n|posse", re.I)
 PCT = re.compile(r"(\d{1,3})\s?%")
 MINUTE = re.compile(r"(\d{1,3})\s?(?:'|’|st minute|nd minute|rd minute|th minute|e minute|º|ª)|minut[eo]s?\s(\d{1,3})")
 
@@ -204,6 +210,11 @@ def check_answer(a: dict, f: dict, story: list[dict], names: dict) -> dict[str, 
     c["no_meta"] = not any(m in low for m in META[lang])
     c["neutral"] = not re.search(PARTISAN[lang], low)
     c["length"] = len(text.split()) <= LIMIT[a["persona"]]
+    c["clean_numbers"] = not GARBLED.search(text)
+    if lang in ENGLISH_LEAK:
+        c["no_english_words"] = not ENGLISH_LEAK[lang].search(low)
+    if lang == "pt":
+        c["brazilian_portuguese"] = not EUROPEAN_PT.search(low)
     if a["persona"] == "fan":
         c["plain"] = not re.search(r"\d\.\d\d", text) and not any(j in low for j in JARGON)
     ok_pcts = valid_pcts(a, story)
@@ -243,7 +254,14 @@ def check_story(m: dict) -> dict[str, bool]:
     allowed = {round(100 * v) for v in (*m["before"].values(), *m["after"].values())}
     allowed = {v + d for v in allowed for d in (-1, 0, 1)}
     texts = [m["story"].get(k, "") for k in ("en", "es", "pt", "fr")] + [m["headline"].get(k, "") for k in ("en",)]
-    c["real_percentages"] = all(int(p) in allowed for t in texts for p in PCT.findall(t))
+    # Win chances must be the Gaffer's; possession percentages are checked by the stats, not here.
+    chance_pcts = [int(x.group(1)) for t in texts for x in PCT.finditer(t)
+                   if not POSSESSION.search(t[max(0, x.start() - 30):x.end() + 30])]
+    c["real_win_chances"] = all(p in allowed for p in chance_pcts)
+    c["no_flat_change"] = not re.search(r"(\d+) ?% (?:to|al|para|à) \1 ?%", " ".join(texts))
+    c["clean_numbers"] = not any(GARBLED.search(t) for t in texts)
+    c["no_english_words"] = not any(ENGLISH_LEAK[k].search(m["story"].get(k, "").lower()) for k in ("es", "pt", "fr"))
+    c["brazilian_portuguese"] = not EUROPEAN_PT.search(m["story"].get("pt", "").lower())
     en = m["story"].get("en", "")
     c["states_the_change"] = before == after or (f"{before}%" in en and f"{after}%" in en)
     c["no_dashes"] = not any(re.search("[—–]", t) for t in texts)
