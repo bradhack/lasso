@@ -47,8 +47,6 @@ const S = {
     pt: "(opcional, para ver cada virada pelo lado do seu clube)", fr: "(facultatif, pour voir chaque bascule côté club)",
   },
   biscuitTin: { en: "Biscuit Tin", es: "Lata de galletas", pt: "Lata de biscoitos", fr: "Boîte à biscuits" },
-  behind: { en: "{team} are behind. Believe.", es: "{team} va perdiendo. A creer.", pt: "{team} está perdendo. Acredite.", fr: "{team} est mené. Y croire." },
-  backedIt: { en: "You backed the comeback.", es: "Apostaste por la remontada.", pt: "Você apostou na virada.", fr: "Tu as cru au retour." },
   cameBack: { en: "{team} came back.", es: "{team} remontó.", pt: "{team} reagiu.", fr: "{team} est revenu." },
   menLeft: { en: "{n} men", es: "{n} jugadores", pt: "{n} jogadores", fr: "{n} joueurs" },
   redCards: { en: "Red card: playing a player short", es: "Roja: juega con uno menos", pt: "Vermelho: joga com um a menos", fr: "Carton rouge : joue à dix" },
@@ -162,6 +160,27 @@ const S = {
   trSwing: { en: "Big swing", es: "Gran vuelco", pt: "Grande mudança", fr: "Gros basculement" },
   trPulse: { en: "Update", es: "Actualización", pt: "Atualização", fr: "Point du match" },
   showLess: { en: "Show less", es: "Ver menos", pt: "Ver menos", fr: "Voir moins" },
+  touchSign: { en: "Touch the sign", es: "Toca el cartel", pt: "Toque na placa", fr: "Touche le panneau" },
+  believeAsk: {
+    en: "{team} is behind. Touch the sign if you still believe. If they draw level, every believer gets {r} biscuits.",
+    es: "{team} va perdiendo. Toca el cartel si aún crees. Si empatan, cada creyente gana {r} galletas.",
+    pt: "{team} está perdendo. Toque na placa se você ainda acredita. Se empatar, quem acreditou ganha {r} biscoitos.",
+    fr: "{team} est mené. Touche le panneau si tu y crois encore. S'ils égalisent, chaque croyant gagne {r} biscuits.",
+  },
+  believeYou: {
+    en: "You and {n} fans believe in {team}.",
+    es: "Tú y {n} aficionados creéis en {team}.",
+    pt: "Você e {n} torcedores acreditam no {team}.",
+    fr: "Toi et {n} supporters croyez en {team}.",
+  },
+  believeCount: { en: "{n} fans believe so far", es: "{n} aficionados ya creen", pt: "{n} torcedores já acreditam", fr: "{n} supporters y croient déjà" },
+  believeRight: {
+    en: "Believers were right. {team} came back, and {n} fans called it.",
+    es: "Los creyentes tenían razón. {team} remontó y {n} aficionados lo vieron venir.",
+    pt: "Quem acreditou estava certo. {team} reagiu, e {n} torcedores previram.",
+    fr: "Les croyants avaient raison. {team} est revenu, et {n} supporters l'avaient senti.",
+  },
+  believeRightShort: { en: "Believers were right", es: "Los creyentes tenían razón", pt: "Quem acreditou acertou", fr: "Les croyants avaient raison" },
 } satisfies Record<string, Record<Lang, string>>;
 
 export type Key = keyof typeof S;

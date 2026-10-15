@@ -17,6 +17,7 @@ from .store import Store
 
 START_BISCUITS = 1000
 STAKES = (50, 100, 250)
+BELIEVE_REWARD = 50  # Touch the sign: paid to believers when their side draws level
 MISSIONS = {
     "correct_calls": {"target": 3, "reward": 150, "label": "Win 3 calls"},
     "underdog": {"target": 1, "reward": 200, "label": "Win a call the Gaffer gave under 25%"},
@@ -149,6 +150,30 @@ class GameService:
         elif kind == "halftime":
             out += self._sticker(u, "halftime_tea")
         await self.store.put_user(u)
+        return out
+
+    async def touched_sign(self, user_id: str, room: MatchRoom, side: int) -> list[dict]:
+        """Touching the sign for a side that's behind earns the Believe sticker (the first time)."""
+        u = await self.store.get_user(user_id)
+        if not u:
+            return []
+        msgs = self._sticker(u, "believe", f"{room.names[side]}, {room.minute()}'")
+        if msgs:
+            await self.store.put_user(u)
+        return msgs
+
+    async def pay_believers(self, room: MatchRoom, user_ids: list[str], side: int) -> list[tuple[str, dict]]:
+        """They drew level: everyone who touched the sign gets the believers' bonus."""
+        out = []
+        for uid in user_ids:
+            u = await self.store.get_user(uid)
+            if not u or u.get("bot"):
+                continue
+            u["biscuits"] += BELIEVE_REWARD
+            u["xp"] += 10
+            await self.store.put_user(u)
+            out.append((uid, {"type": "believe_paid", "match_id": room.match_id, "team": room.names[side],
+                              "reward": BELIEVE_REWARD, "biscuits": u["biscuits"]}))
         return out
 
     @staticmethod

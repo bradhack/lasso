@@ -11,6 +11,7 @@ Lasso is a live, multi-agent match companion for phones and broadcasts, built fo
 - It explains every swing, so fans know *why* it moved.
 - **Fan or analyst:** fans get the story in plain English and their club's angle; analysts get every driver in points, xG and field tilt.
 - **Ask the Gaffer:** fans ask anything about the match in their own words ("Why did our chances drop at 5'?") and get an answer in their language. A Scout agent picks the Gaffer's MCP tools that answer it, and the Gaffer replies from those facts alone.
+- **Touch the sign:** when a side falls behind, a BELIEVE sign goes up. Fans who still believe touch it, see how many others believe, and get a biscuit bonus if their side draws level.
 - **Match story** keeps every story told during the match, newest first, with how each one moved the chances.
 - **Touchline** shows the ball live on the pitch: every pass, shot, tackle, save and corner, with the move in progress and a whole-match shot map.
 - It invites fans to make free-to-play **Call It** predictions priced at the Gaffer's own chances, with streaks, a sticker book of 17 achievements, missions and friend leagues. Biscuits are in-app points with no cash value.

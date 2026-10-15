@@ -86,6 +86,11 @@ async def on_event(match_id: str, ev: dict) -> None:
 async def publish(room: MatchRoom, msg: dict) -> None:
     group = f"match:{room.match_id}"
     kind = msg["type"]
+    if kind == "believe_result":  # pay the believers privately; tell the room without the list of fans
+        if msg["users"]:
+            _spawn(pay_believers(room, msg["users"], msg["side"]))
+        await hub.to_group(group, {k: v for k, v in msg.items() if k != "users"} | {"type": "believe"})
+        return
     await hub.to_group(group, msg)
     if kind in ("status", "meter"):
         if kind == "status" or int(time.time()) % 3 == 0:
@@ -119,6 +124,11 @@ async def _should_enrich(room: MatchRoom, moment: dict) -> bool:
     _enrich_state["last"][room.match_id] = time.time()
     _enrich_state["count"] += 1
     return True
+
+
+async def pay_believers(room: MatchRoom, users: list[str], side: int) -> None:
+    for user_id, msg in await game.pay_believers(room, users, side):
+        await hub.to_user(user_id, msg)
 
 
 async def settle(room: MatchRoom, market_id: str) -> None:
@@ -282,6 +292,11 @@ class AskIn(BaseModel):
     lang: str | None = Field(None, pattern="^(en|es|pt|fr)$")
 
 
+class BelieveIn(BaseModel):
+    user_id: str = Field(..., max_length=40)
+    side: int = Field(..., ge=0, le=1)
+
+
 class LeagueIn(BaseModel):
     user_id: str
     name: str | None = None
@@ -340,6 +355,23 @@ async def match_story(match_id: str) -> list[dict]:
     if match_id not in rooms:
         raise HTTPException(404, "match not found")
     return [{k: v for k, v in m.items() if k != "window"} for m in rooms[match_id].moments]
+
+
+@app.post("/api/matches/{match_id}/believe")
+async def touch_the_sign(match_id: str, body: BelieveIn) -> dict:
+    """Touch the sign: believe in a side that's behind. If they draw level, believers get a bonus."""
+    room = rooms.get(match_id)
+    if room is None:
+        raise HTTPException(404, "match not found")
+    if not await store.get_user(body.user_id):
+        raise HTTPException(404, "user not found")
+    r = room.touch_sign(body.user_id, body.side)
+    if r is None:
+        raise HTTPException(409, "not_behind")
+    msgs = await game.touched_sign(body.user_id, room, body.side) if r["new"] else []
+    for m in msgs:
+        await hub.to_user(body.user_id, m)
+    return {**r, "events": msgs}
 
 
 # ------------------------------------------------------------ Ask the Gaffer

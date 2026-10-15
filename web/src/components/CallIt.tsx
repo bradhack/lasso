@@ -102,7 +102,8 @@ export function CallIt({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
       {mine && (
         <div className="lasso-wrap">
           <div className="cta ghost locked">
-            <span>{t("lockedIn", lang)} · {mine.label} · {mine.stake} → {Math.round(mine.stake * mine.multiplier)}</span>
+            <small>{t("lockedIn", lang)}</small>
+            <span>{mine.label} · {mine.stake} → {Math.round(mine.stake * mine.multiplier)}</span>
           </div>
           {thrown === market?.market_id && <LassoThrow key={thrown} />}
         </div>
@@ -121,15 +122,16 @@ export function CallIt({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
  * closes at the knot, then cinches tight.
  */
 function LassoThrow() {
-  // Loop: an ellipse around the button that starts at the knot and overshoots it slightly, so it visibly closes.
-  const loop = "M372 22 A186 30 0 1 1 28 58 A186 30 0 1 1 380 27";
-  const rope = "M430 -46 C418 -30 404 -10 388 8 C382 14 377 18 372 22";
+  // Loop: an ellipse wide and tall enough to pass outside the button's text, starting at the knot and
+  // overshooting it slightly, so it visibly closes. Centered on the button (viewBox y 52 = button middle).
+  const loop = "M374 33.4 A192 44 0 1 1 26 70.6 A192 44 0 1 1 382.6 38.4";
+  const rope = "M432 -40 C420 -24 406 -2 390 18 C384 25 379 29 374 33.4";
   return (
-    <svg className="lasso-throw" viewBox="0 0 400 80" preserveAspectRatio="none" aria-hidden="true">
+    <svg className="lasso-throw" viewBox="0 0 400 104" preserveAspectRatio="none" aria-hidden="true">
       <g className="cinch">
         <path className="rope" pathLength={100} d={rope} />
         <path className="loop" pathLength={100} d={loop} />
-        <ellipse className="knot" cx="373" cy="22" rx="5" ry="4" />
+        <ellipse className="knot" cx="375" cy="33.4" rx="5" ry="4" />
       </g>
     </svg>
   );

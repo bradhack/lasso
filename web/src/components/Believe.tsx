@@ -1,59 +1,74 @@
-import { useEffect, useRef, useState } from "react";
 import { t } from "../i18n";
 import { useStore } from "../store";
 import type { Lang, MatchSnapshot } from "../types";
 
+const REWARD = 50;
+const fmt = (n: number) => n.toLocaleString();
+
 /**
- * A taped-up BELIEVE sign. It goes up when your club falls behind, or when you back a comeback,
- * and stays up (gold) if they come back.
+ * Touch the sign. When a side falls behind, a taped-up BELIEVE sign goes up. Fans who still believe touch it
+ * (your club if it's playing; otherwise whoever is behind). If that side draws level, every believer gets a
+ * biscuit bonus and the sign turns gold.
  */
 export function Believe({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
   const user = useStore((s) => s.user);
-  const calls = useStore((s) => s.calls);
-  const side = user?.club_id === snap.home.club_id ? 0 : user?.club_id === snap.away.club_id ? 1 : null;
-  const backedComeback = Object.values(calls).some(
-    (c) => c.market_id.startsWith(`${snap.match_id}:comeback`) && c.option_id === "yes",
-  );
+  const believed = useStore((s) => s.believed);
+  const touchSign = useStore((s) => s.touchSign);
+  const mySide = user?.club_id === snap.home.club_id ? 0 : user?.club_id === snap.away.club_id ? 1 : null;
   const diff = snap.score[0] - snap.score[1];
-  const trailingSide = diff === 0 ? null : diff > 0 ? 1 : 0;
-  const myBehind = side !== null && trailingSide === side;
-  const believing = snap.status !== "scheduled" && (myBehind || (backedComeback && trailingSide !== null));
+  const trailing: 0 | 1 | null = diff === 0 ? null : diff > 0 ? 1 : 0;
+  const side = mySide ?? trailing;
+  const open = snap.status === "live" || snap.status === "half_time";
+  const spell = side !== null && open ? snap.believe?.[side] ?? null : null;
+  const won = snap.believe_won && (mySide === null || snap.believe_won.side === mySide) && snap.status !== "scheduled"
+    ? snap.believe_won : null;
 
-  // Remember who we were believing in, so we can celebrate when they draw level or go ahead.
-  const believedIn = useRef<number | null>(null);
-  const [cameBack, setCameBack] = useState(false);
-  useEffect(() => {
-    if (believing && trailingSide !== null) believedIn.current = trailingSide;
-    const who = believedIn.current;
-    if (who !== null && !believing) {
-      const mine = who === 0 ? snap.score[0] : snap.score[1];
-      const theirs = who === 0 ? snap.score[1] : snap.score[0];
-      if (mine >= theirs) setCameBack(true);
-    }
-  }, [believing, trailingSide, snap.score[0], snap.score[1]]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    // A new replay of the match starts fresh.
-    if (snap.score[0] === 0 && snap.score[1] === 0 && snap.minute < 2) {
-      believedIn.current = null;
-      setCameBack(false);
-    }
-  }, [snap.score, snap.minute]);
-
-  if (!believing && !cameBack) return null;
-  const team = believedIn.current === 1 ? snap.away.name : believedIn.current === 0 ? snap.home.name : "";
-  const caption = cameBack
-    ? t("cameBack", lang).replace("{team}", team)
-    : myBehind
-      ? t("behind", lang).replace("{team}", side === 0 ? snap.home.name : snap.away.name)
-      : t("backedIt", lang);
-  return (
-    <div className={`believe${cameBack ? " won" : ""}`} role="status">
-      <div className="sign" aria-label="Believe">
+  if (spell && side !== null && user) {
+    const team = side === 0 ? snap.home.name : snap.away.name;
+    const touched = !!believed[`${snap.match_id}:${side}:${spell.spell}`];
+    const touch = () => !touched && touchSign(snap.match_id, side);
+    const sign = (
+      <button className="sign" onClick={touch} disabled={touched} aria-label={t("touchSign", lang)}>
         <i className="tape l" />
         <i className="tape r" />
         BELIEVE
-      </div>
-      <span>{caption}</span>
-    </div>
-  );
+      </button>
+    );
+    return (
+      <section className={`believe card${touched ? " lit" : ""}`} aria-label={t("touchSign", lang)}>
+        {touched ? (
+          <div className="believe-top">
+            {sign}
+            <p className="believe-you">{t("believeYou", lang).replace("{n}", fmt(Math.max(0, spell.count - 1))).replace("{team}", team)}</p>
+          </div>
+        ) : (
+          <>
+            <div className="believe-top">
+              {sign}
+              <button className="believe-cta" onClick={touch}>{t("touchSign", lang)}</button>
+            </div>
+            <p className="believe-ask">{t("believeAsk", lang).replace("{team}", team).replace("{r}", String(REWARD))}</p>
+            <span className="believe-count">{t("believeCount", lang).replace("{n}", fmt(spell.count))}</span>
+          </>
+        )}
+      </section>
+    );
+  }
+
+  if (won) {
+    const team = won.side === 0 ? snap.home.name : snap.away.name;
+    return (
+      <section className="believe card won" role="status">
+        <div className="believe-top">
+          <div className="sign">
+            <i className="tape l" />
+            <i className="tape r" />
+            BELIEVE
+          </div>
+          <p className="believe-you">{t("believeRight", lang).replace("{team}", team).replace("{n}", fmt(won.count))}</p>
+        </div>
+      </section>
+    );
+  }
+  return null;
 }

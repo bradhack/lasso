@@ -5,6 +5,7 @@ from __future__ import annotations
 import itertools
 import math
 import time
+import zlib
 from dataclasses import dataclass, field
 
 from lasso_engine.explain import shapley
@@ -103,6 +104,8 @@ class MatchRoom:
         self.pending_touches: list[dict] = []
         self.possession: int | None = None
         self.cards: list[dict] = []  # bookings for the scoreboard: team, yellow/red, surname, minute
+        # Touch the sign: per side, the open "behind" spell and the fans who believe in a comeback.
+        self.believe: list[dict | None] = [None, None]
         self.last_seq = 0
         self._record_point()
 
@@ -159,7 +162,7 @@ class MatchRoom:
             "home": {"club_id": self.home_id, "name": self.names[0], **self._club(self.home_id)},
             "away": {"club_id": self.away_id, "name": self.names[1], **self._club(self.away_id)},
             "score": list(s.goals), "reds": list(s.reds), "period": s.period, "clock": round(s.clock, 2),
-            "minute": self.minute(), "probs": self.probs(), "cards": self.cards,
+            "minute": self.minute(), "probs": self.probs(), "cards": self.cards, "believe": self.believe_public(),
             "prematch": {"home": self.pre["p_home"], "draw": self.pre["p_draw"], "away": self.pre["p_away"]},
         }
 
@@ -229,6 +232,7 @@ class MatchRoom:
                                          "player": self.data.player_label(ev.get("player_id"))})
             out.extend(self._resolve_markets(goal_team=t))
             out.extend(self._moment("goal", scorer=self.data.player_label(ev.get("player_id")), focus=t))
+            out.extend(self._update_believe())
         elif etype == "red_card" and t is not None:
             self.window["reds"].append({"team": t, "minute": self.minute()})
             out.extend(self._moment("red_card", red_team=t, focus=1 - t))
@@ -238,6 +242,7 @@ class MatchRoom:
             out.extend(self._moment("half_time", force=True))
         elif etype == "full_time":
             self.status = "finished"
+            self.believe = [None, None]  # still behind at the final whistle: the sign comes down, no reward
             out.extend(self._resolve_markets(full_time=True))
             out.append({"type": "status", "match": self.summary()})
             out.extend(self._moment("full_time", force=True))
@@ -257,7 +262,8 @@ class MatchRoom:
             out.append({"type": "meter", "match_id": self.match_id, "point": pt,
                         "score": list(self.state.goals), "minute": self.minute(), "period": self.state.period,
                         "clock": round(self.state.clock, 2), "status": self.status,
-                        "touches": self.pending_touches, "possession": self.possession})
+                        "touches": self.pending_touches, "possession": self.possession,
+                        "believe": self.believe_public()})
             self.pending_touches = []
         return out
 
@@ -359,6 +365,43 @@ class MatchRoom:
         if et == "full_time":
             return {**base, "text": f"Full time {self.state.goals[0]}-{self.state.goals[1]}"}
         return None
+
+    # ---------------------------------------------------------- touch the sign
+    def _believers(self, spell: dict) -> int:
+        """Real fans who touched the sign, plus the simulated crowd (like the bot players in Call It),
+        which grows the longer the side is behind."""
+        minutes = max(0.0, self.state.elapsed - spell["since"])
+        return len(spell["users"]) + spell["base"] + int(spell["rate"] * minutes)
+
+    def believe_public(self) -> list[dict | None]:
+        return [None if b is None else {"spell": b["spell"], "count": self._believers(b)} for b in self.believe]
+
+    def _update_believe(self) -> list[dict]:
+        """After a goal: open a spell for a side that just fell behind; close it for a side that drew level
+        or went ahead, so its believers can be paid."""
+        out: list[dict] = []
+        g = self.state.goals
+        for side in (0, 1):
+            behind = g[side] < g[1 - side]
+            spell = self.believe[side]
+            if behind and spell is None:
+                seed = zlib.crc32(f"{self.match_id}:{side}:{self.last_seq}".encode())
+                self.believe[side] = {"spell": self.last_seq, "users": set(), "base": 180 + seed % 520,
+                                      "rate": 14 + seed % 19, "since": self.state.elapsed}
+            elif not behind and spell is not None:
+                self.believe[side] = None
+                out.append({"type": "believe_result", "match_id": self.match_id, "side": side,
+                            "minute": self.minute(), "count": self._believers(spell),
+                            "users": sorted(spell["users"])})
+        return out
+
+    def touch_sign(self, user_id: str, side: int) -> dict | None:
+        spell = self.believe[side]
+        if spell is None or self.status not in ("live", "half_time"):
+            return None
+        new = user_id not in spell["users"]
+        spell["users"].add(user_id)
+        return {"side": side, "spell": spell["spell"], "count": self._believers(spell), "new": new}
 
     # --------------------------------------------------------------- moments
     def _maybe_swing_or_pulse(self) -> list[dict]:

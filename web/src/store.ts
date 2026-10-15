@@ -10,6 +10,7 @@ export type Toast =
   | { id: number; kind: "hope"; call: Call }
   | { id: number; kind: "mission"; label: string; reward: number }
   | { id: number; kind: "goldfish"; streak: number }
+  | { id: number; kind: "believe"; team: string; reward: number }
   | { id: number; kind: "error"; text: string }
   | { id: number; kind: "update" };
 
@@ -20,6 +21,7 @@ type ToastInput =
   | { kind: "hope"; call: Call }
   | { kind: "mission"; label: string; reward: number }
   | { kind: "goldfish"; streak: number }
+  | { kind: "believe"; team: string; reward: number }
   | { kind: "error"; text: string }
   | { kind: "update" };
 
@@ -29,7 +31,8 @@ interface State {
   matches: MatchSummary[];
   snapshots: Record<string, MatchSnapshot>;
   calls: Record<string, Call>; // by market_id
-  asks: Record<string, AskAnswer[]>; // Ask the Gaffer, by match_id (only the asker sees these)
+  asks: Record<string, AskAnswer[]>;
+  believed: Record<string, boolean>; // Touch the sign: `${match}:${side}:${spell}` this fan touched // Ask the Gaffer, by match_id (only the asker sees these)
   toasts: Toast[];
   connected: boolean;
   rt: Realtime | null;
@@ -40,6 +43,7 @@ interface State {
   updatePrefs: (p: Partial<Pick<User, "name" | "club_id" | "persona" | "lang">>) => Promise<void>;
   watch: (matchId: string) => Promise<void>;
   setAsks: (matchId: string, fn: (list: AskAnswer[]) => AskAnswer[]) => void;
+  touchSign: (matchId: string, side: 0 | 1) => Promise<void>;
   unwatch: (matchId: string) => void;
   placeCall: (m: Market, optionId: string, stake: number) => Promise<void>;
   toast: (t: ToastInput) => void;
@@ -72,6 +76,7 @@ export const useStore = create<State>((set, get) => ({
   snapshots: {},
   calls: {},
   asks: {},
+  believed: {},
   toasts: [],
   connected: false,
   rt: null,
@@ -117,6 +122,23 @@ export const useStore = create<State>((set, get) => ({
     const [snap, story] = await Promise.all([api.match(matchId), api.story(matchId).catch(() => null)]);
     if (story?.length) snap.moments = story.slice(-MAX_MOMENTS);
     set((s) => ({ snapshots: { ...s.snapshots, [matchId]: snap } }));
+  },
+
+  touchSign: async (matchId, side) => {
+    const u = get().user;
+    const spell = get().snapshots[matchId]?.believe?.[side];
+    if (!u || !spell) return;
+    const key = `${matchId}:${side}:${spell.spell}`;
+    set((s) => ({ believed: { ...s.believed, [key]: true } }));
+    navigator.vibrate?.(25);
+    try {
+      const r = await api.believe(matchId, { user_id: u.id, side });
+      patchSnap(matchId, (s) => ({
+        believe: (s.believe ?? [null, null]).map((b, i) => (i === side && b ? { ...b, count: Math.max(b.count, r.count) } : b)),
+      }));
+    } catch {
+      set((s) => ({ believed: { ...s.believed, [key]: false } }));
+    }
   },
 
   setAsks: (matchId, fn) => set((s) => ({ asks: { ...s.asks, [matchId]: fn(s.asks[matchId] ?? []) } })),
@@ -192,6 +214,7 @@ function onMessage(d: any) {
       break;
     }
     case "reset":
+      patchSnap(d.match.match_id, () => ({ believe_won: null }));
       if (st.snapshots[d.match.match_id]) st.watch(d.match.match_id);
       break;
     case "meter":
@@ -200,6 +223,7 @@ function onMessage(d: any) {
         touches: d.touches?.length ? [...(s.touches ?? []), ...d.touches].slice(-60) : s.touches,
         shots: d.touches?.some((x: Touch) => x.t === "shot") ? [...(s.shots ?? []), ...d.touches.filter((x: Touch) => x.t === "shot")] : s.shots,
         possession: d.possession ?? s.possession,
+        believe: d.believe ?? s.believe,
         probs: { home: d.point.home, draw: d.point.draw, away: d.point.away },
         score: d.score,
         minute: d.minute,
@@ -214,6 +238,13 @@ function onMessage(d: any) {
     case "moment":
     case "moment_update":
       patchSnap(d.moment.match_id, (s) => ({ moments: upsertMoment(s.moments, d.moment) }));
+      break;
+    case "believe":
+      patchSnap(d.match_id, () => ({ believe_won: { side: d.side, count: d.count, minute: d.minute } }));
+      break;
+    case "believe_paid":
+      if (st.user && typeof d.biscuits === "number") useStore.setState({ user: { ...st.user, biscuits: d.biscuits } });
+      st.toast({ kind: "believe", team: d.team, reward: d.reward });
       break;
     case "stats":
       patchSnap(d.stats.match_id, () => ({ stats: d.stats }));

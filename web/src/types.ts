@@ -24,6 +24,8 @@ export interface MatchSummary {
   probs: Probs;
   prematch: Probs;
   cards?: Booking[];
+  /** Touch the sign: per side, the open "behind" spell and how many fans believe. */
+  believe?: ({ spell: number; count: number } | null)[];
 }
 
 /** A booking on the scoreboard: team (0 home, 1 away), yellow or red, surname, minute. */
@@ -151,7 +153,14 @@ export interface Touch {
   pos: 0 | 1 | null; // possession after this action
 }
 
+export interface BelieveWin {
+  side: 0 | 1;
+  count: number;
+  minute: number;
+}
+
 export interface MatchSnapshot extends MatchSummary {
+  believe_won?: BelieveWin | null;
   history: MeterPoint[];
   touches?: Touch[];
   shots?: Touch[];
