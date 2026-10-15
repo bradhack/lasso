@@ -72,9 +72,22 @@ Design choices worth a look:
 - **The right amount of thinking.** Short, structured jobs use the model's fastest setting, which cut a story from about 30 seconds to under 15.
 - **One shared toolbox.** The Gaffer's nine tools are the only way any agent reaches live data. Any other MCP client, GitHub Copilot for example, can use the same tools.
 - **Nothing hidden.** Every agent run records what it looked up, how long it took and how many tokens it used. Fans can see this in the app (**Under the hood**), and it's also sent to Azure Application Insights for monitoring.
-- **Measured, not assumed.** An evaluation script asks the agents 24 set questions during a replayed match, in all four languages, and checks every answer and story against the match data. *Where:* `services/api/tests/agent_eval.py`, results in [agent-eval.md](agent-eval.md).
+- **Measured, not assumed.** An evaluation script replays the showcase match on the live app, asks the agents 24 set questions at set minutes from five test fans (four languages, fan and analyst), and checks every answer and every story automatically against the match's own data. See "How good are the agents?" below.
 
-*Where to look:* `services/agents/lasso_agents/director.py` (both teams), `team.py` (the seven agents and their instructions), `server.py` (the A2A front door), `services/api/lasso_api/mcp_tools.py` (the Gaffer's tools).
+### How good are the agents?
+
+Every answer and story is checked by code, not by eye: the right language, real percentages and minutes, the correct scorers, red card and halftime chances, that a sent-off player can't be replaced, no invented tactics, staying on topic, ignoring an instruction hidden in a question, neutral wording, no talk of its own machinery, plain words for fans, clean translations (Brazilian Portuguese, no stray English) and length.
+
+| | Passed every check | Typical time | Slowest |
+|---|---|---|---|
+| Ask the Gaffer answers | **24 of 24** | 7.9 seconds | 10.3 seconds |
+| Match stories (each in four languages) | **13 of 13** | 9.6 seconds | 15.6 seconds |
+
+An answer uses about 6,000 tokens across both agents, well under a cent. Full results, with every answer word for word: [agent-eval.md](agent-eval.md). The story figures are from the run before the latest one, because the latest replay ran without agent stories.
+
+**The evaluation made the agents better.** The first run looked fine at a glance but, under strict checks, only 14 of 24 answers passed: English words slipped into translations, the Gaffer invented tactics, answered off-topic questions, and once got a red-card minute wrong. Five runs later, each fix is in the code, not just the instructions: the true events, numbers and rules travel with every question; an off-topic question never reaches the writer; and translations are corrected automatically.
+
+*Where to look:* `services/api/tests/agent_eval.py` (the checks), `services/agents/lasso_agents/director.py` (both teams), `team.py` (the seven agents and their instructions), `server.py` (the A2A front door), `services/api/lasso_api/mcp_tools.py` (the Gaffer's tools).
 
 ## 3. Real-world impact
 

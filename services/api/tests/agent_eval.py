@@ -132,6 +132,12 @@ def run(base: str, key: str, minute_seconds: float) -> dict:
         sys.exit(f"restart failed ({status}): check the admin key")
     print(f"Replaying {names['home']} v {names['away']} at {minute_seconds}s per minute...")
     time.sleep(minute_seconds * 2)
+    # Right after a deploy, the restart can land on the old version just before it shuts down, and the
+    # replay (with the agents switched on for it) never happens. Make sure it did.
+    s = http(base, "GET", f"/api/matches/{MATCH}")[1]
+    if s.get("minute", 99) > 5:
+        sys.exit(f"The restart didn't take (the match is at {s.get('minute')}'). If you just deployed, wait a "
+                 "minute for the new version to take over, then run this again.")
 
     results: list[dict] = []
     pending = {}
@@ -375,4 +381,7 @@ if __name__ == "__main__":
         r = run(args.base.rstrip("/"), args.key, args.minute_seconds)
         out.mkdir(parents=True, exist_ok=True)
         (out / "agent-eval-run.json").write_text(json.dumps(r, ensure_ascii=False), encoding="utf-8")
+    if not args.rescore and not any(m.get("source") == "agents" for m in r["story"]):
+        sys.exit("No stories were written by the agents in this replay, so this run is incomplete and was not "
+                 "saved as the report. If you just deployed, wait a minute and run it again.")
     print(report(r, out))

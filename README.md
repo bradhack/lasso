@@ -158,6 +158,7 @@ Here's how the code covers the brief's five stages:
 - **0.95 / 0.91** correlation between the estimated and the hidden true attack and defense strengths
 - The fast Laplace posterior matches full NUTS MCMC (posterior means correlate at 0.99996)
 - **2.2M** synthetic events across 1,900 matches and five seasons, with a hidden truth to evaluate against
+- **24 of 24** Ask the Gaffer answers and **13 of 13** match stories pass every automated check against the match data, in four languages (see the [agent evaluation](docs/agent-eval.md))
 
 ### The league
 
