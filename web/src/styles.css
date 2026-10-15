@@ -1,25 +1,25 @@
 :root {
-  --bg: #1a0b20;
-  --surface: #26122d;
-  --surface-2: #2f1838;
-  --surface-3: #3a2042;
-  --line: #3d2447;
-  --line-2: #5a3e66;
-  --line-3: #6b4f78;
-  --text: #f4f1f6;
-  --text-2: #e2dae6;
-  --muted: #a99ab0;
-  --soft: #c9bccf;
-  --silver: #d3d7de;
-  --gold: #d8b26e;
-  --gold-2: #e6c98f;
-  --bronze: #c08a5a;
-  --draw: #9a7aa8;
-  --live: #ff6b7a;
-  --ink-on-gold: #1a0b20;
-  --home: #d3d7de;
-  --away: #8e7398;
-  --draw-bar: #4a2f55;
+  --bg: #0A1020;
+  --surface: #111A2E;
+  --surface-2: #16213A;
+  --surface-3: #1D2A48;
+  --line: #22304D;
+  --line-2: #34466B;
+  --line-3: #475C85;
+  --text: #F2F5FA;
+  --text-2: #DCE3EE;
+  --muted: #8E9AB3;
+  --soft: #B8C3D6;
+  --silver: #E6EBF2;
+  --gold: #C9A45C;
+  --gold-2: #DDBF85;
+  --bronze: #B98457;
+  --draw: #6F7FA3;
+  --live: #FF6B7A;
+  --ink-on-gold: #0A1020;
+  --home: #E6EBF2;
+  --away: #6D86B9;
+  --draw-bar: #2B3A5C;
   --shadow: rgba(0, 0, 0, 0.45);
   --radius: 22px;
   --num: "Barlow Condensed", system-ui, sans-serif;
@@ -203,7 +203,7 @@ label.f { display: flex; flex-direction: column; gap: 6px; font-size: 13px; colo
 .mission .bar span { display: block; height: 100%; background: var(--silver); }
 .mission.done .bar span { background: var(--gold); }
 .statgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.statgrid div { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+.statgrid > div { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
 .statgrid .v { font-family: var(--num); font-size: 28px; font-weight: 600; line-height: 1; }
 .statgrid .l { font-size: 11px; color: var(--muted); margin-top: 4px; }
 .seg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -251,30 +251,30 @@ label.f { display: flex; flex-direction: column; gap: 6px; font-size: 13px; colo
 .lower-third h3 { font-size: 26px; margin: 14px 0 4px; }
 .lower-third p { font-size: 18px; color: var(--text-2); margin: 0; }
 
-/* ---------------------------------------------------------------- alternative themes (data-theme on <html>) */
-/* Midnight: navy and brass */
-:root[data-theme="midnight"] {
-  --bg: #0A1020;
-  --surface: #111A2E;
-  --surface-2: #16213A;
-  --surface-3: #1D2A48;
-  --line: #22304D;
-  --line-2: #34466B;
-  --line-3: #475C85;
-  --text: #F2F5FA;
-  --text-2: #DCE3EE;
-  --muted: #8E9AB3;
-  --soft: #B8C3D6;
-  --silver: #E6EBF2;
-  --gold: #C9A45C;
-  --gold-2: #DDBF85;
-  --bronze: #B98457;
-  --draw: #6F7FA3;
-  --live: #FF6B7A;
-  --ink-on-gold: #0A1020;
-  --home: #E6EBF2;
-  --away: #6D86B9;
-  --draw-bar: #2B3A5C;
+/* ---------------------------------------------------------------- themes: Midnight is the default (:root); Ivory is the light mode */
+/* Royal Plum (the original look) */
+:root[data-theme="plum"] {
+  --bg: #1a0b20;
+  --surface: #26122d;
+  --surface-2: #2f1838;
+  --surface-3: #3a2042;
+  --line: #3d2447;
+  --line-2: #5a3e66;
+  --line-3: #6b4f78;
+  --text: #f4f1f6;
+  --text-2: #e2dae6;
+  --muted: #a99ab0;
+  --soft: #c9bccf;
+  --silver: #d3d7de;
+  --gold: #d8b26e;
+  --gold-2: #e6c98f;
+  --bronze: #c08a5a;
+  --draw: #9a7aa8;
+  --live: #ff6b7a;
+  --ink-on-gold: #1a0b20;
+  --home: #d3d7de;
+  --away: #8e7398;
+  --draw-bar: #4a2f55;
 }
 /* Pitch: racing green and cream */
 :root[data-theme="pitch"] {

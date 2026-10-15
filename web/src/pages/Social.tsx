@@ -5,6 +5,7 @@ import { useStore } from "../store";
 import type { Lang, LeaderRow } from "../types";
 import { Crest } from "../components/bits";
 import { Flame } from "../components/Icons";
+import { currentAppearance, setAppearance } from "../theme";
 
 export function Leagues() {
   const user = useStore((s) => s.user);
@@ -123,6 +124,7 @@ export function Profile() {
   const clubs = useStore((s) => s.clubs);
   const updatePrefs = useStore((s) => s.updatePrefs);
   const setUser = useStore((s) => s.setUser);
+  const [appearance, setAppearanceState] = useState(currentAppearance);
   useEffect(() => {
     if (user) api.user(user.id).then(setUser).catch(() => undefined);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -178,6 +180,12 @@ export function Profile() {
             {LANGS.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
           </select>
         </label>
+        <div className="f" style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "var(--muted)" }}>{t("appearance", lang)}
+          <div className="seg">
+            <button className={`tab${appearance === "dark" ? " sel" : ""}`} onClick={() => { setAppearance("dark"); setAppearanceState("dark"); }}>{t("dark", lang)}</button>
+            <button className={`tab${appearance === "light" ? " sel" : ""}`} onClick={() => { setAppearance("light"); setAppearanceState("light"); }}>{t("light", lang)}</button>
+          </div>
+        </div>
         <div className="f" style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "var(--muted)" }}>{t("depth", lang)}
           <div className="seg">
             <button className={`tab${user.persona === "fan" ? " sel" : ""}`} onClick={() => updatePrefs({ persona: "fan" })}>{t("fan", lang)}</button>
