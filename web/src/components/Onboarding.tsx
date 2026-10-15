@@ -18,12 +18,12 @@ export function Onboarding() {
   return (
     <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="ob-title">
       <div className="sheet-inner">
-        <div style={{ display: "flex", alignItems: "center", gap: 10, color: "#D8B26E" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, color: "var(--gold)" }}>
           <LassoMark size={34} />
-          <span style={{ fontFamily: "Sora", fontWeight: 700, fontSize: 30, color: "#F4F1F6" }}>lasso</span>
+          <span style={{ fontFamily: "Sora", fontWeight: 700, fontSize: 30, color: "var(--text)" }}>lasso</span>
         </div>
         <h2 id="ob-title" className="num" style={{ fontSize: 34, margin: 0, lineHeight: 1.05 }}>
-          SEE WHY THE ODDS MOVED.<br /><span style={{ color: "#D8B26E" }}>THEN OUT-PREDICT THE GAFFER.</span>
+          SEE WHY THE ODDS MOVED.<br /><span style={{ color: "var(--gold)" }}>THEN OUT-PREDICT THE GAFFER.</span>
         </h2>
         <p className="muted" style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>
           Free to play. You start with 1,000 biscuits (points with no cash value). Call the next moment, build a streak, collect cards.
@@ -32,7 +32,7 @@ export function Onboarding() {
           Your name
           <input value={name} maxLength={24} onChange={(e) => setName(e.target.value)} placeholder="Fan name" autoComplete="nickname" />
         </label>
-        <div className="f" style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "#A99AB0" }}>
+        <div className="f" style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "var(--muted)" }}>
           {t("yourClub", lang)} <span style={{ fontSize: 12 }}>(optional, for a personal angle on every moment)</span>
           <div className="clubgrid">
             {clubs.map((c) => (
@@ -43,7 +43,7 @@ export function Onboarding() {
             ))}
           </div>
         </div>
-        <div className="f" style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "#A99AB0" }}>
+        <div className="f" style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "var(--muted)" }}>
           {t("depth", lang)}
           <div className="seg">
             <button className={`tab${persona === "fan" ? " sel" : ""}`} onClick={() => setPersona("fan")}>{t("fan", lang)}</button>

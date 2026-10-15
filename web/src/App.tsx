@@ -38,7 +38,7 @@ export default function App() {
     return ready ? <OverlayGate id={arg} lang={lang} /> : null;
   }
   if (error) return <div className="app"><div className="page"><div className="empty">Can't reach the match server. Retrying shortly…</div></div></div>;
-  if (!ready) return <div className="app"><div className="page"><div className="empty">Warming up the Believe-o-Meter…</div></div></div>;
+  if (!ready) return <div className="app"><div className="page"><div className="empty">Warming up…</div></div></div>;
 
   return (
     <div className="app">

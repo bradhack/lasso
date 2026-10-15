@@ -7,12 +7,12 @@ export const LassoMark = ({ size = 24, color = "currentColor" }: P) => (
   </svg>
 );
 
-export const Biscuit = ({ size = 15, color = "#D8B26E" }: P) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} aria-hidden="true">
+export const Biscuit = ({ size = 15, color = "var(--gold)" }: P) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ stroke: color }} strokeWidth={2} aria-hidden="true">
     <circle cx="12" cy="12" r="8.5" />
-    <circle cx="9" cy="10" r="0.9" fill={color} />
-    <circle cx="14.5" cy="9" r="0.9" fill={color} />
-    <circle cx="12" cy="14.5" r="0.9" fill={color} />
+    <circle cx="9" cy="10" r="0.9" style={{ fill: color }} />
+    <circle cx="14.5" cy="9" r="0.9" style={{ fill: color }} />
+    <circle cx="12" cy="14.5" r="0.9" style={{ fill: color }} />
   </svg>
 );
 

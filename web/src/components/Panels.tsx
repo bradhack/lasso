@@ -49,8 +49,8 @@ export function StatsPanel({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) 
               <span className="lbl">{r.label}</span>
               <span className="v r">{fmt(av)}</span>
               <div className="bars">
-                <span style={{ flex: hv / total, background: "#D3D7DE" }} />
-                <span style={{ flex: av / total, background: "#8E7398" }} />
+                <span style={{ flex: hv / total, background: "var(--home)" }} />
+                <span style={{ flex: av / total, background: "var(--away)" }} />
               </div>
             </div>
           );

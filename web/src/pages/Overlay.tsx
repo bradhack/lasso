@@ -28,8 +28,8 @@ export function Overlay({ id, lang }: { id: string; lang: Lang }) {
             <Crest club={snap.away} round />
             <span className="num" style={{ fontSize: 34, marginLeft: 8 }}>{snap.minute}'</span>
           </div>
-          <span style={{ display: "flex", alignItems: "center", gap: 8, color: "#D8B26E" }}>
-            <LassoMark size={30} /><span style={{ fontFamily: "Sora", fontWeight: 700, fontSize: 24, color: "#F4F1F6" }}>lasso</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--gold)" }}>
+            <LassoMark size={30} /><span style={{ fontFamily: "Sora", fontWeight: 700, fontSize: 24, color: "var(--text)" }}>lasso</span>
           </span>
         </div>
         <Meter snap={snap} lang={lang} compact />

@@ -61,7 +61,8 @@ export function Toasts() {
   useEffect(() => {
     if (!last) return;
     if (last.kind === "win" || last.kind === "card") {
-      const gold = ["#D8B26E", "#E6C98F", "#D3D7DE", "#F4F1F6"];
+      const css = getComputedStyle(document.documentElement);
+      const gold = ["--gold", "--gold-2", "--silver", "--text"].map((v) => css.getPropertyValue(v).trim() || "#D8B26E");
       confetti({ particleCount: last.kind === "card" ? 140 : 80, spread: 70, origin: { y: 0.15 }, colors: gold, disableForReducedMotion: true });
       navigator.vibrate?.([20, 40, 20]);
     }
@@ -85,7 +86,7 @@ export function Toasts() {
           )}
           {x.kind === "card" && (
             <div>
-              <div className="sub" style={{ letterSpacing: "0.08em", color: x.card.rarity === "gold" ? "#D8B26E" : "#D3D7DE" }}>
+              <div className="sub" style={{ letterSpacing: "0.08em", color: x.card.rarity === "gold" ? "var(--gold)" : "var(--silver)" }}>
                 {x.card.rarity.toUpperCase()} MOMENT CARD
               </div>
               <div className="big" style={{ fontSize: 22 }}>{x.card.pick} at {Math.round(x.card.p * 100)}%</div>
@@ -94,13 +95,13 @@ export function Toasts() {
           )}
           {x.kind === "mission" && (
             <div>
-              <div className="sub" style={{ color: "#E6C98F" }}>MISSION COMPLETE · +{x.reward}</div>
+              <div className="sub" style={{ color: "var(--gold-2)" }}>MISSION COMPLETE · +{x.reward}</div>
               <div style={{ fontWeight: 700 }}>{x.label}</div>
             </div>
           )}
           {x.kind === "goldfish" && (
             <div>
-              <div className="sub" style={{ color: "#E6C98F" }}>GOLDFISH USED</div>
+              <div className="sub" style={{ color: "var(--gold-2)" }}>GOLDFISH USED</div>
               <div style={{ fontWeight: 700 }}>{x.text}</div>
             </div>
           )}

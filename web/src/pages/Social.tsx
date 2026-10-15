@@ -50,7 +50,7 @@ export function Leagues() {
               <span className={`rk r${r.rank}`}>{r.rank}</span>
               <span style={{ fontWeight: r.id === user?.id ? 700 : 500 }}>
                 {r.id === user?.id ? `${r.name} (you)` : r.name}
-                {r.streak >= 3 && <span style={{ color: "#E6C98F", marginLeft: 8, fontSize: 12 }}><Flame size={12} /> {r.streak}</span>}
+                {r.streak >= 3 && <span style={{ color: "var(--gold-2)", marginLeft: 8, fontSize: 12 }}><Flame size={12} /> {r.streak}</span>}
               </span>
               <span className="num" style={{ fontSize: 20 }}>{r.biscuits.toLocaleString("en-US")}</span>
             </div>
@@ -178,7 +178,7 @@ export function Profile() {
             {LANGS.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
           </select>
         </label>
-        <div className="f" style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "#A99AB0" }}>{t("depth", lang)}
+        <div className="f" style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "var(--muted)" }}>{t("depth", lang)}
           <div className="seg">
             <button className={`tab${user.persona === "fan" ? " sel" : ""}`} onClick={() => updatePrefs({ persona: "fan" })}>{t("fan", lang)}</button>
             <button className={`tab${user.persona === "analyst" ? " sel" : ""}`} onClick={() => updatePrefs({ persona: "analyst" })}>{t("analystMode", lang)}</button>

@@ -3,8 +3,8 @@ import { t } from "../i18n";
 import type { Lang, MatchSnapshot, MeterPoint } from "../types";
 import { pct } from "./bits";
 
-const HOME = "#D3D7DE";
-const AWAY = "#8E7398";
+const HOME = "var(--home)";
+const AWAY = "var(--away)";
 
 export function Meter({ snap, lang, compact = false }: { snap: MatchSnapshot; lang: Lang; compact?: boolean }) {
   const p = snap.probs;
@@ -26,23 +26,23 @@ export function Meter({ snap, lang, compact = false }: { snap: MatchSnapshot; la
           </span>
         )}
       </div>
-      <div className="meter-bar" role="img" aria-label={`${snap.home.name} ${pct(p.home)}, draw ${pct(p.draw)}, ${snap.away.name} ${pct(p.away)}`}>
+      <div className={`meter-bar${compact ? "" : " big"}`} role="img" aria-label={`${snap.home.name} ${pct(p.home)}, draw ${pct(p.draw)}, ${snap.away.name} ${pct(p.away)}`}>
         <div className="h" style={{ width: `${p.home * 100}%` }} />
         <div className="d" style={{ width: `${p.draw * 100}%` }} />
-        <div className="a" style={{ width: `${p.away * 100}%`, background: AWAY }} />
+        <div className="a" style={{ width: `${p.away * 100}%` }} />
       </div>
-      <div className="meter-nums">
+      <div className={`meter-nums${compact ? "" : " big"}`}>
         <div>
           <div className="v">{pct(p.home)}</div>
-          <div className="l">{snap.home.name}</div>
+          <div className="l"><i className="key h" />{snap.home.name}</div>
         </div>
         <div style={{ textAlign: "center" }}>
-          <div className="v" style={{ color: "#C9BCCF" }}>{pct(p.draw)}</div>
-          <div className="l">{t("draw", lang)}</div>
+          <div className="v" style={{ color: "var(--soft)" }}>{pct(p.draw)}</div>
+          <div className="l"><i className="key d" />{t("draw", lang)}</div>
         </div>
         <div style={{ textAlign: "right" }}>
-          <div className="v" style={{ color: "#C9BCCF" }}>{pct(p.away)}</div>
-          <div className="l">{snap.away.name}</div>
+          <div className="v" style={{ color: "var(--soft)" }}>{pct(p.away)}</div>
+          <div className="l"><i className="key a" />{snap.away.name}</div>
         </div>
       </div>
       {!compact && snap.history.length > 2 && <Spark history={snap.history} />}
@@ -66,13 +66,21 @@ function Spark({ history: raw }: { history: MeterPoint[] }) {
   for (const pt of raw) byTime.set(pt.elapsed, pt);
   const history = [...byTime.values()].sort((a, b) => a.elapsed - b.elapsed);
   const maxX = Math.max(96, history[history.length - 1].elapsed);
-  const path = (k: "home" | "away") =>
-    history.map((pt, i) => `${i ? "L" : "M"}${((pt.elapsed / maxX) * 100).toFixed(2)},${(30 - pt[k] * 30).toFixed(2)}`).join(" ");
+  const x = (pt: MeterPoint) => ((pt.elapsed / maxX) * 100).toFixed(2);
+  // A 100% stacked river: home on top, the draw in the middle, away below, matching the bar.
+  const band = (lo: (pt: MeterPoint) => number, hi: (pt: MeterPoint) => number) => {
+    const top = history.map((pt) => `${x(pt)},${(hi(pt) * 40).toFixed(2)}`);
+    const bottom = [...history].reverse().map((pt) => `${x(pt)},${(lo(pt) * 40).toFixed(2)}`);
+    return `M${top.join(" L")} L${bottom.join(" L")} Z`;
+  };
+  const end = x(history[history.length - 1]);
   return (
-    <svg className="spark" viewBox="0 -1 100 32" preserveAspectRatio="none" role="img" aria-label="Win chance over the match">
-      <line x1="0" y1="15" x2="100" y2="15" stroke="#3D2447" strokeWidth="1" vectorEffect="non-scaling-stroke" strokeDasharray="2 4" />
-      <path d={path("away")} fill="none" stroke={AWAY} strokeWidth="2" vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
-      <path d={path("home")} fill="none" stroke={HOME} strokeWidth="2.5" vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
+    <svg className="spark" viewBox="0 0 100 40" preserveAspectRatio="none" role="img" aria-label="Win chance over the match">
+      <path d={band(() => 0, (pt) => pt.home)} style={{ fill: HOME }} />
+      <path d={band((pt) => pt.home, (pt) => pt.home + pt.draw)} style={{ fill: "var(--draw-bar)" }} />
+      <path d={band((pt) => pt.home + pt.draw, () => 1)} style={{ fill: AWAY }} />
+      <line x1={end} y1="0" x2={end} y2="40" style={{ stroke: "var(--bg)" }} strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+      <rect x={end} y="0" width={100 - Number(end)} height="40" style={{ fill: "var(--surface-3)", opacity: 0.35 }} />
     </svg>
   );
 }

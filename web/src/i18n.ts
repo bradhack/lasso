@@ -23,10 +23,10 @@ const S = {
   closes: { en: "Closes", es: "Cierra", pt: "Fecha", fr: "Ferme" },
   closed: { en: "Calls closed", es: "Cerrado", pt: "Fechado", fr: "Fermé" },
   waiting: {
-    en: "Next challenge soon. Watch the Believe-o-Meter.",
-    es: "Pronto llega otro reto. Mira el Believe-o-Meter.",
-    pt: "Novo desafio em breve. De olho no Believe-o-Meter.",
-    fr: "Prochain défi bientôt. Surveille le Believe-o-Meter.",
+    en: "Next challenge soon. Keep an eye on the {meter}.",
+    es: "Pronto llega otro reto. Atento al {meter}.",
+    pt: "Novo desafio em breve. De olho no {meter}.",
+    fr: "Prochain défi bientôt. Surveille le {meter}.",
   },
   feed: { en: "Match feed", es: "Jugadas", pt: "Lances", fr: "Le fil du match" },
   analyst: { en: "Analyst view", es: "Vista analista", pt: "Visão analista", fr: "Vue analyste" },
@@ -53,8 +53,16 @@ const S = {
 
 export type Key = keyof typeof S;
 
+// Design reviews can preview another name for the live win-chance meter with ?meter=<name>.
+let meterOverride = "";
+export function setMeterName(name: string) {
+  meterOverride = name.trim().slice(0, 30);
+}
+
 export function t(key: Key, lang: Lang): string {
-  return S[key][lang] ?? S[key].en;
+  if (key === "meter" && meterOverride) return meterOverride;
+  const text = S[key][lang] ?? S[key].en;
+  return text.includes("{meter}") ? text.replace("{meter}", t("meter", lang)) : text;
 }
 
 export function loc(text: Localized | undefined, lang: Lang): string {
