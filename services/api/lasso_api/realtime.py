@@ -75,14 +75,21 @@ class WebPubSubHub:
         from azure.messaging.webpubsubservice.aio import WebPubSubServiceClient
 
         self._cred = DefaultAzureCredential(managed_identity_client_id=client_id or None)
-        self.client = WebPubSubServiceClient(endpoint=endpoint, hub=hub, credential=self._cred)
+        # A realtime push must never hold up a match: retry once, briefly, and never wait out a long
+        # "try again later" (which is what a used-up message allowance returns).
+        self.client = WebPubSubServiceClient(endpoint=endpoint, hub=hub, credential=self._cred,
+                                             retry_total=1, retry_backoff_factor=0.3, retry_backoff_max=1,
+                                             retry_mode="fixed")
         self._sem = asyncio.Semaphore(32)
         self._viewers: dict[str, tuple[float, bool]] = {}
+        self._failures = 0
 
     async def has_viewers(self, group: str) -> bool:
         now = asyncio.get_event_loop().time()
         hit = self._viewers.get(group)
-        if hit and now - hit[0] < 15:
+        # Remember "watched" for 15s, but re-check an empty group after 5s so a new viewer starts getting
+        # live updates quickly (they load the full snapshot when they open the match anyway).
+        if hit and now - hit[0] < (15 if hit[1] else 5):
             return hit[1]
         try:
             exists = bool(await self.client.group_exists(group))
@@ -97,20 +104,28 @@ class WebPubSubHub:
         return {"url": token["url"]}
 
     async def to_group(self, group: str, data: dict) -> None:
-        async with self._sem:
-            try:
-                await self.client.send_to_group(group, message=json.dumps(data, default=float),
-                                                content_type="application/json")
-            except Exception as e:  # noqa: BLE001
-                log.warning("web pubsub send failed: %s", e)
+        # Nobody in the group: skip the send. This saves most of the message allowance when no one is watching.
+        if not await self.has_viewers(group):
+            return
+        await self._send(self.client.send_to_group(group, message=json.dumps(data, default=float),
+                                                   content_type="application/json"))
 
     async def to_user(self, user_id: str, data: dict) -> None:
+        await self._send(self.client.send_to_user(user_id, message=json.dumps(data, default=float),
+                                                  content_type="application/json"))
+
+    async def _send(self, call) -> None:
         async with self._sem:
             try:
-                await self.client.send_to_user(user_id, message=json.dumps(data, default=float),
-                                               content_type="application/json")
+                await asyncio.wait_for(call, timeout=SEND_TIMEOUT)
+                self._failures = 0
             except Exception as e:  # noqa: BLE001
-                log.warning("web pubsub send failed: %s", e)
+                self._failures += 1
+                if self._failures == 1 or self._failures % 200 == 0:  # don't flood the logs during an outage
+                    log.warning("web pubsub send failed (%d in a row): %r", self._failures, e)
+
+
+SEND_TIMEOUT = 3.0  # seconds; a slow or refused push is dropped rather than delaying the match
 
 
 def make_hub(endpoint: str, hub: str, client_id: str = ""):
