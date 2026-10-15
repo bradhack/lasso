@@ -79,6 +79,7 @@ resource project 'Microsoft.CognitiveServices/accounts/projects@2025-06-01' = {
   location: location
   identity: { type: 'SystemAssigned' }
   properties: { displayName: 'Lasso', description: 'Lasso multi-agent match companion' }
+  dependsOn: [fastDeployment, writerDeployment]
 }
 
 resource fastDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = {
@@ -93,7 +94,6 @@ resource writerDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025
   name: writerModelName
   sku: { name: 'GlobalStandard', capacity: modelCapacity }
   properties: { model: { format: 'OpenAI', name: writerModelName, version: writerModelVersion } }
-  dependsOn: [fastDeployment]
 }
 
 resource foundryUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {

@@ -12,3 +12,4 @@ web/e2e-shots/
 engine/build/
 *.egg-info/
 docs/charts/*.html
+/.vscode/settings.json
