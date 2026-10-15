@@ -42,6 +42,8 @@ async def run_agent(agent, prompt: str, timeout: float) -> tuple[dict, dict]:
         resp = await asyncio.wait_for(agent.run(prompt), timeout=timeout)
         out = parse_json(resp.text)
         ok = bool(out)
+        if not ok:
+            log.warning("%s returned no JSON: %r", agent.name, (resp.text or "")[:300])
         u = getattr(resp, "usage_details", None) or {}
         usage = {"in": u.get("input_token_count"), "out": u.get("output_token_count"),
                  "reasoning": u.get("reasoning_output_token_count"), "turns": len(getattr(resp, "messages", []) or [])}

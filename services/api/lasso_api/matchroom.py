@@ -102,6 +102,7 @@ class MatchRoom:
         self.shot_map: list[dict] = []  # every shot of the match, for the Touchline shot map
         self.pending_touches: list[dict] = []
         self.possession: int | None = None
+        self.last_seq = 0
         self._record_point()
 
     @staticmethod
@@ -173,9 +174,22 @@ class MatchRoom:
                 "markets": [m.public() for m in self.markets.values() if m.status != "settled"][-4:]}
 
     # ---------------------------------------------------------------- ingest
+    def catch_up(self, upto_seq: int) -> int:
+        """Silently apply any events we missed before `upto_seq` (e.g. the API restarted mid-match).
+
+        The synthetic match is in our own data, so state, score, stats and the Gauge stay correct even
+        when the live stream is joined part-way through. Returns how many events were replayed.
+        """
+        missed = [e for e in self.data.events_for(self.match_id) if self.last_seq < int(e["seq"]) < upto_seq]
+        for e in missed:
+            self.ingest(e)
+        self.pending_touches = []
+        return len(missed)
+
     def ingest(self, ev: dict) -> list[dict]:
         """Apply one event; return realtime messages to publish."""
         out: list[dict] = []
+        self.last_seq = max(self.last_seq, int(ev.get("seq") or 0))
         if self.status == "scheduled":
             self.status = "live"
             self.started_at = time.time()

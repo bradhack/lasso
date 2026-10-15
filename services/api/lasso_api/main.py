@@ -66,6 +66,14 @@ async def on_event(match_id: str, ev: dict) -> None:
         await hub.to_group(f"match:{match_id}", {"type": "reset", "match": room.summary()})
         await hub.to_group("lobby", {"type": "status", "match": room.summary()})
         return
+    seq = int(ev.get("seq") or 0)
+    if seq and seq <= room.last_seq:
+        return  # already applied (a duplicate delivery)
+    if seq > room.last_seq + 1:
+        n = room.catch_up(seq)
+        if n:
+            log.info("caught up %s: replayed %d missed events before seq %d", match_id, n, seq)
+            await hub.to_group(f"match:{match_id}", {"type": "reset", "match": room.summary()})
     for msg in room.ingest(ev):
         await publish(room, msg)
     now = time.time()
@@ -164,6 +172,11 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
     brief = {k: moment[k] for k in ("moment_id", "match_id", "trigger", "minute", "score")}
     brief["teams"] = list(room.names)
     brief["focus_team"] = room.names[moment["focus"]]
+    h, a = moment["score"]
+    brief["score_text"] = f"{room.names[0]} {h}-{a} {room.names[1]}"
+    reds = list(room.state.reds)
+    if any(reds):
+        brief["red_cards"] = {room.names[0]: reds[0], room.names[1]: reds[1]}
     brief["before_pct"], brief["after_pct"] = _pct(moment["before"]), _pct(moment["after"])
     brief["focus_change"] = f"{brief['before_pct'][side]}% to {brief['after_pct'][side]}%"
     brief["drivers"] = [{"label": d["label"]["en"], "points": round(float(d["delta"]), 1)}
