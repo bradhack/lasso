@@ -1,4 +1,4 @@
-import type { Call, ClubRef, LeaderRow, MatchSnapshot, MatchSummary, User } from "./types";
+import type { AskAnswer, Call, ClubRef, LeaderRow, MatchSnapshot, MatchSummary, Moment, User } from "./types";
 
 export const API_BASE: string = (import.meta.env.VITE_API_BASE as string | undefined) ?? "";
 
@@ -23,6 +23,9 @@ export const api = {
   clubs: () => req<ClubRef[]>("/api/clubs"),
   matches: () => req<MatchSummary[]>("/api/matches"),
   match: (id: string) => req<MatchSnapshot>(`/api/matches/${id}`),
+  story: (id: string) => req<Moment[]>(`/api/matches/${id}/story`),
+  ask: (id: string, body: { user_id: string; question: string; lang: string }) =>
+    req<AskAnswer>(`/api/matches/${id}/ask`, { method: "POST", body: JSON.stringify(body) }),
   createUser: (name: string, club_id: string | null) =>
     req<User>("/api/users", { method: "POST", body: JSON.stringify({ name, club_id }) }),
   user: (id: string) => req<User>(`/api/users/${id}`),

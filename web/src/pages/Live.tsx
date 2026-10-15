@@ -1,9 +1,11 @@
 import { useEffect } from "react";
+import { AskGaffer } from "../components/AskGaffer";
 import { Crest, pct } from "../components/bits";
 import { CallIt } from "../components/CallIt";
 import { Back, Chevron } from "../components/Icons";
 import { Believe } from "../components/Believe";
 import { Touchline } from "../components/Touchline";
+import { MatchStory } from "../components/MatchStory";
 import { Meter } from "../components/Meter";
 import { Feed, StatsPanel } from "../components/Panels";
 import { WhyItMoved } from "../components/WhyItMoved";
@@ -106,6 +108,8 @@ export function MatchPage({ id }: { id: string }) {
       <Touchline snap={snap} lang={lang} />
       {moment && <WhyItMoved snap={snap} moment={moment} lang={lang} />}
       <CallIt snap={snap} lang={lang} />
+      <AskGaffer snap={snap} lang={lang} />
+      <MatchStory snap={snap} lang={lang} />
       {user?.persona === "analyst" && <StatsPanel snap={snap} lang={lang} />}
       <Feed snap={snap} lang={lang} />
       {user?.persona !== "analyst" && <StatsPanel snap={snap} lang={lang} />}

@@ -20,7 +20,7 @@ from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from .director import build_director
+from .director import build_director, build_press_room, parse_json
 from .settings import settings
 from .team import build_team, make_clients, model_options
 
@@ -55,9 +55,23 @@ def new_director():
         name="Match Director", description="Lasso's multi-agent moment producer")
 
 
+def new_press_room():
+    return build_press_room(team, settings.agent_timeout).as_agent(
+        name="Press Room", description="Ask the Gaffer: answers fans' questions about a live match")
+
+
+def route(context: RequestContext):
+    """One A2A endpoint, two skills: a moment brief goes to the Director, a fan's question to the Press Room."""
+    try:
+        kind = parse_json(context.get_user_input()).get("kind")
+    except Exception:  # noqa: BLE001
+        kind = None
+    return new_press_room() if kind == "ask" else new_director()
+
+
 class DirectorExecutor(AgentExecutor):
     async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
-        await A2AExecutor(new_director()).execute(context, event_queue)
+        await A2AExecutor(route(context)).execute(context, event_queue)
 
     async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
         await A2AExecutor(new_director()).cancel(context, event_queue)
@@ -66,7 +80,8 @@ class DirectorExecutor(AgentExecutor):
 card = AgentCard(
     name="Lasso Match Director",
     description="Turns a live football moment into a multilingual story, personal fan angles and a "
-                "'Call It' challenge, using five cooperating agents and the Gaffer's Bayesian model over MCP.",
+                "'Call It' challenge, using five cooperating agents and the Gaffer's Bayesian model over MCP. "
+                "Also answers fans' questions about the match (Ask the Gaffer).",
     version="1.0.0",
     default_input_modes=["text"],
     default_output_modes=["text"],
@@ -74,7 +89,11 @@ card = AgentCard(
     supported_interfaces=[AgentInterface(url=settings.public_url, protocol_binding="JSONRPC")],
     skills=[AgentSkill(id="produce_moment", name="Produce moment",
                        description="Input: JSON moment brief. Output: JSON moment package.",
-                       tags=["football", "explainability", "multilingual", "gamification"])],
+                       tags=["football", "explainability", "multilingual", "gamification"]),
+            AgentSkill(id="answer_question", name="Ask the Gaffer",
+                       description='Input: JSON with "kind": "ask", the match and a fan\'s question. '
+                                   "Output: JSON answer in the fan's language, with follow-up questions.",
+                       tags=["football", "explainability", "multilingual", "q&a"])],
 )
 handler = DefaultRequestHandler(agent_executor=DirectorExecutor(), task_store=InMemoryTaskStore(),
                                 agent_card=card)

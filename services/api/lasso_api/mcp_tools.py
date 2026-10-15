@@ -68,6 +68,40 @@ def build_mcp(rooms: dict[str, MatchRoom]) -> FastMCP:
         return out
 
     @mcp.tool()
+    def match_story(match_id: str) -> list[dict]:
+        """Every story Lasso has published in this match so far, oldest first: the minute, what happened
+        (goal, red_card, swing, pulse, half_time, full_time), the score, the team in focus with its win chance
+        before and after (in %), the two biggest drivers in points, and the headline."""
+        r = room(match_id)
+        out = []
+        for m in r.moments:
+            side = "home" if m["focus"] == 0 else "away"
+            top = sorted(m["drivers"], key=lambda d: abs(float(d["delta"])), reverse=True)[:2]
+            out.append({"minute": m["minute"], "trigger": m["trigger"], "score": m["score"],
+                        "focus_team": r.names[m["focus"]], "chance_before_pct": round(100 * m["before"][side]),
+                        "chance_after_pct": round(100 * m["after"][side]),
+                        "drivers": [{"label": d["label"]["en"], "points": round(float(d["delta"]), 1)} for d in top],
+                        "headline": (m.get("headline") or {}).get("en", "")})
+        return out
+
+    @mcp.tool()
+    def chances_at(match_id: str, minute: int) -> dict:
+        """The Gaffer's Gauge as it stood at a given match minute (0 to 90+): each side's win chance and the
+        draw, in %. Minute 45 means the end of the first half."""
+        r = room(match_id)
+        if minute > r.minute() and not r.state.finished:
+            return {"minute": minute, "note": f"not played yet; the match is at minute {r.minute()}",
+                    "chances_now_pct": {r.names[0]: round(100 * r.probs()["home"]),
+                                        "draw": round(100 * r.probs()["draw"]),
+                                        r.names[1]: round(100 * r.probs()["away"])}}
+        period = 1 if minute <= 45 else 2
+        past = [p for p in r.history if (p["period"], p["clock"]) <= (period, float(minute))]
+        p = past[-1] if past else r.summary()["prematch"]
+        return {"minute": minute if past else 0, "note": "" if past else "before kickoff",
+                "chances_pct": {r.names[0]: round(100 * p["home"]), "draw": round(100 * p["draw"]),
+                                r.names[1]: round(100 * p["away"])}}
+
+    @mcp.tool()
     def match_stats(match_id: str) -> dict:
         """Team stats: possession, field tilt, pass accuracy and difficulty, shots, xG, xG in the last
         10 minutes (momentum), fastest shot speed, longest pass, cards and corners."""

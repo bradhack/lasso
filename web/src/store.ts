@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { api } from "./api";
 import { Realtime } from "./realtime";
-import type { Call, ClubRef, Lang, Market, MatchSnapshot, MatchSummary, Moment, Sticker, Touch, User } from "./types";
+import type { AskAnswer, Call, ClubRef, Lang, Market, MatchSnapshot, MatchSummary, Moment, Sticker, Touch, User } from "./types";
 
 export type Toast =
   | { id: number; kind: "win"; call: Call }
@@ -29,6 +29,7 @@ interface State {
   matches: MatchSummary[];
   snapshots: Record<string, MatchSnapshot>;
   calls: Record<string, Call>; // by market_id
+  asks: Record<string, AskAnswer[]>; // Ask the Gaffer, by match_id (only the asker sees these)
   toasts: Toast[];
   connected: boolean;
   rt: Realtime | null;
@@ -38,6 +39,7 @@ interface State {
   setUser: (u: User) => void;
   updatePrefs: (p: Partial<Pick<User, "name" | "club_id" | "persona" | "lang">>) => Promise<void>;
   watch: (matchId: string) => Promise<void>;
+  setAsks: (matchId: string, fn: (list: AskAnswer[]) => AskAnswer[]) => void;
   unwatch: (matchId: string) => void;
   placeCall: (m: Market, optionId: string, stake: number) => Promise<void>;
   toast: (t: ToastInput) => void;
@@ -45,6 +47,7 @@ interface State {
 }
 
 const KEY = "lasso.user";
+const MAX_MOMENTS = 60;
 let toastId = 1;
 
 function readId(): string | null {
@@ -68,6 +71,7 @@ export const useStore = create<State>((set, get) => ({
   matches: [],
   snapshots: {},
   calls: {},
+  asks: {},
   toasts: [],
   connected: false,
   rt: null,
@@ -109,9 +113,13 @@ export const useStore = create<State>((set, get) => ({
 
   watch: async (matchId) => {
     get().rt?.join(`match:${matchId}`);
-    const snap = await api.match(matchId);
+    // The snapshot carries the latest few stories; the match story needs all of them.
+    const [snap, story] = await Promise.all([api.match(matchId), api.story(matchId).catch(() => null)]);
+    if (story?.length) snap.moments = story.slice(-MAX_MOMENTS);
     set((s) => ({ snapshots: { ...s.snapshots, [matchId]: snap } }));
   },
+
+  setAsks: (matchId, fn) => set((s) => ({ asks: { ...s.asks, [matchId]: fn(s.asks[matchId] ?? []) } })),
 
   unwatch: (matchId) => get().rt?.leave(`match:${matchId}`),
 
@@ -164,7 +172,7 @@ function upsertMarket(list: Market[], m: Market): Market[] {
 
 function upsertMoment(list: Moment[], m: Moment): Moment[] {
   const i = list.findIndex((x) => x.moment_id === m.moment_id);
-  if (i < 0) return [...list, m].slice(-12);
+  if (i < 0) return [...list, m].slice(-MAX_MOMENTS);
   const copy = list.slice();
   copy[i] = m;
   return copy;

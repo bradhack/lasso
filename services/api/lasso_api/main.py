@@ -8,6 +8,7 @@ import logging
 import os
 import re
 import time
+import uuid
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query, Request, WebSocket
@@ -275,6 +276,12 @@ class NewCall(BaseModel):
     confidence: float | None = Field(None, ge=0.5, le=1.0)
 
 
+class AskIn(BaseModel):
+    user_id: str = Field(..., max_length=40)
+    question: str = Field(..., min_length=3, max_length=200)
+    lang: str | None = Field(None, pattern="^(en|es|pt|fr)$")
+
+
 class LeagueIn(BaseModel):
     user_id: str
     name: str | None = None
@@ -289,7 +296,8 @@ async def health() -> dict:
         feed = "local-fallback" if _feed["fallback"] else "eventhubs"
     last = round(time.monotonic() - _feed["last_event"], 1) if _feed["last_event"] else None
     return {"ok": True, "matches": len(rooms), "agents": bool(agents), "model": data.model_meta.get("version"),
-            "agent_calls_today": _enrich_state["count"], "feed": feed, "seconds_since_hub_event": last}
+            "agent_calls_today": _enrich_state["count"], "asks_today": _ask_state["count"], "feed": feed,
+            "seconds_since_hub_event": last}
 
 
 @app.get("/api/negotiate")
@@ -324,6 +332,97 @@ async def match(match_id: str) -> dict:
     if match_id not in rooms:
         raise HTTPException(404, "match not found")
     return rooms[match_id].snapshot()
+
+
+@app.get("/api/matches/{match_id}/story")
+async def match_story(match_id: str) -> list[dict]:
+    """Every story published in this match so far, oldest first (the snapshot only carries the latest few)."""
+    if match_id not in rooms:
+        raise HTTPException(404, "match not found")
+    return [{k: v for k, v in m.items() if k != "window"} for m in rooms[match_id].moments]
+
+
+# ------------------------------------------------------------ Ask the Gaffer
+_ask_state: dict = {"day": "", "count": 0, "users": {}}
+_ASK_FALLBACK = {
+    "en": "I can't take questions right now, but here's where it stands at {m}': {score}. My numbers: {h} {ph}%, "
+          "draw {pd}%, {a} {pa}%.",
+    "es": "Ahora no puedo responder preguntas, pero así está en el minuto {m}: {score}. Mis números: {h} {ph}%, "
+          "empate {pd}%, {a} {pa}%.",
+    "pt": "Não consigo responder perguntas agora, mas o jogo está assim aos {m}': {score}. Meus números: {h} "
+          "{ph}%, empate {pd}%, {a} {pa}%.",
+    "fr": "Je ne peux pas répondre pour l'instant, mais voici le match à la {m}e minute : {score}. Mes chiffres : "
+          "{h} {ph} %, nul {pd} %, {a} {pa} %.",
+}
+
+
+def _ask_allowed(user_id: str) -> str | None:
+    """Cost guard-rails for questions: a shared daily cap, and a pace and daily allowance per fan."""
+    day = time.strftime("%Y-%m-%d")
+    if _ask_state["day"] != day:
+        _ask_state.update(day=day, count=0, users={})
+    if _ask_state["count"] >= settings.asks_daily_limit:
+        return "busy"
+    mine = _ask_state["users"].setdefault(user_id, {"n": 0, "last": 0.0})
+    if mine["n"] >= settings.asks_per_user_daily:
+        return "daily_limit"
+    if time.time() - mine["last"] < settings.asks_min_gap_seconds:
+        return "slow_down"
+    mine["n"] += 1
+    mine["last"] = time.time()
+    _ask_state["count"] += 1
+    return None
+
+
+def _ask_fallback(room: MatchRoom, lang: str) -> str:
+    p = _pct(room.probs())
+    h, a = room.state.goals
+    return _ASK_FALLBACK.get(lang, _ASK_FALLBACK["en"]).format(
+        m=room.minute(), score=f"{room.names[0]} {h}-{a} {room.names[1]}", h=room.names[0], a=room.names[1],
+        ph=p["home"], pd=p["draw"], pa=p["away"])
+
+
+@app.post("/api/matches/{match_id}/ask")
+async def ask(match_id: str, body: AskIn) -> dict:
+    """Ask the Gaffer: a fan's question goes over A2A to the Press Room (the Scout researches it with the
+    Gaffer's MCP tools, the Gaffer answers in the fan's language). Only the asker sees the answer."""
+    room = rooms.get(match_id)
+    if room is None:
+        raise HTTPException(404, "match not found")
+    u = await store.get_user(body.user_id)
+    if not u:
+        raise HTTPException(404, "user not found")
+    if err := _ask_allowed(body.user_id):
+        raise HTTPException(429, err)
+    lang = body.lang or u.get("lang") or "en"
+    question = _clean(body.question)[:200]
+    ask_id = uuid.uuid4().hex[:12]
+    t0 = time.time()
+    answer, followups, trace, source = "", [], [], "gaffer"
+    if agents is not None:
+        h, a = room.state.goals
+        side = 0 if u.get("club_id") == room.home_id else 1 if u.get("club_id") == room.away_id else None
+        p = _pct(room.probs())
+        brief = {"kind": "ask", "ask_id": ask_id, "match_id": match_id, "question": question, "lang": lang,
+                 "version": u.get("persona") or "fan", "fan_of": room.names[side] if side is not None else None,
+                 "status": room.status, "minute": room.minute(), "teams": list(room.names),
+                 "score_text": f"{room.names[0]} {h}-{a} {room.names[1]}",
+                 "chances_pct": {room.names[0]: p["home"], "draw": p["draw"], room.names[1]: p["away"]}}
+        if any(room.state.reds):
+            brief["red_cards"] = {room.names[0]: room.state.reds[0], room.names[1]: room.state.reds[1]}
+        pkg = await agents.produce(brief)
+        # A real answer echoes our id and carries the agents' trace; anything else is an error reply.
+        if pkg and pkg.get("ask_id") == ask_id and pkg.get("trace") and isinstance(pkg.get("answer"), str):
+            answer = _localize(lang, _clean(pkg["answer"]))[:700]
+            followups = [_localize(lang, _clean(f))[:60] for f in (pkg.get("followups") or [])
+                         if isinstance(f, str) and f.strip()][:2]
+            trace = pkg["trace"]
+            source = "agents" if answer else "gaffer"
+    if not answer:
+        answer = _ask_fallback(room, lang)
+    log.info("ask %s %s source=%s %dms", match_id, ask_id, source, int((time.time() - t0) * 1000))
+    return {"ask_id": ask_id, "question": question, "answer": answer, "followups": followups, "source": source,
+            "trace": trace, "minute": room.minute(), "latency_ms": int((time.time() - t0) * 1000)}
 
 
 @app.post("/api/users")

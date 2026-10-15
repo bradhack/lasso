@@ -131,3 +131,42 @@ def build_director(team: Team, timeout: float = 25.0) -> Workflow:
         .add_fan_in_edges([narrator_step, persona_step, game_master_step], package)
         .build()
     )
+
+
+def build_press_room(team: Team, timeout: float = 25.0) -> Workflow:
+    """Ask the Gaffer: a fan's question goes to the Scout, who picks the MCP tools that answer it; the
+    Gaffer (the presser) then answers in the fan's language from the Scout's facts alone.
+
+        question ─> Scout (MCP tools) ─> Presser (no tools) ─> answer
+
+    The Presser has no tools, so a question can't steer it into calling anything; the Scout's tools are
+    read-only. Both are time-boxed and traced like the Director's agents.
+    """
+
+    @executor(id="question")
+    async def question(messages: list[Message], ctx: WorkflowContext[dict]) -> None:
+        text = messages[-1].text if messages else "{}"
+        await ctx.send_message({"brief": parse_json(text)})
+
+    @executor(id="scout_step")
+    async def scout_step(msg: dict, ctx: WorkflowContext[dict]) -> None:
+        b = msg["brief"]
+        out, tr = await run_agent(team.scout, f"Brief: {json.dumps(b)}\nMatch id: {b.get('match_id')}", timeout)
+        await ctx.send_message({"brief": b, "scout": out, "trace": [tr]})
+
+    @executor(id="presser_step")
+    async def presser_step(c: dict, ctx: WorkflowContext[None, str]) -> None:
+        b = c["brief"]
+        out, tr = await run_agent(team.presser, f"Brief: {json.dumps(b)}\nScout: {json.dumps(c.get('scout', {}))}",
+                                  timeout)
+        pkg = {"ask_id": b.get("ask_id"), "answer": out.get("answer", ""), "followups": out.get("followups", []),
+               "facts": c.get("scout", {}).get("facts", []), "trace": c["trace"] + [tr]}
+        await ctx.yield_output(json.dumps(pkg, ensure_ascii=False))
+
+    return (
+        WorkflowBuilder(name="press-room", description="Answers a fan's question about a live match",
+                        start_executor=question)
+        .add_edge(question, scout_step)
+        .add_edge(scout_step, presser_step)
+        .build()
+    )

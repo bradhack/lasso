@@ -70,6 +70,18 @@ export interface Moment {
   agent_trace?: AgentTrace[];
 }
 
+export interface AskAnswer {
+  ask_id: string;
+  question: string;
+  answer: string;
+  followups: string[];
+  source: "agents" | "gaffer";
+  trace: AgentTrace[];
+  minute: number;
+  latency_ms: number;
+  pending?: boolean;
+}
+
 export interface FeedItem {
   seq: number;
   type: string;

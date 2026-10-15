@@ -46,6 +46,10 @@ class Settings:
     # Cost guard-rails: only enrich watched matches, at most one call per match per N seconds, and a daily cap.
     agents_min_gap_seconds: float = field(default_factory=lambda: float(_env("LASSO_AGENTS_MIN_GAP", "20")))
     agents_daily_limit: int = field(default_factory=lambda: int(_env("LASSO_AGENTS_DAILY_LIMIT", "600")))
+    # Ask the Gaffer: a shared daily cap, plus a per-fan pace and daily allowance.
+    asks_daily_limit: int = field(default_factory=lambda: int(_env("LASSO_ASKS_DAILY_LIMIT", "500")))
+    asks_per_user_daily: int = field(default_factory=lambda: int(_env("LASSO_ASKS_PER_USER_DAILY", "30")))
+    asks_min_gap_seconds: float = field(default_factory=lambda: float(_env("LASSO_ASKS_MIN_GAP", "6")))
 
     managed_identity_client_id: str = field(default_factory=lambda: _env("AZURE_CLIENT_ID"))
 

@@ -10,6 +10,8 @@ Lasso is a live, multi-agent match companion for phones and broadcasts, built fo
 - It updates a Bayesian win-probability model, **the Gaffer**, with every chance, card and goal. The model's output is the **Gaffer's Gauge**.
 - It explains every swing, so fans know *why* it moved.
 - **Fan or analyst:** fans get the story in plain English and their club's angle; analysts get every driver in points, xG and field tilt.
+- **Ask the Gaffer:** fans ask anything about the match in their own words ("Why did our chances drop at 5'?") and get an answer in their language. A Scout agent picks the Gaffer's MCP tools that answer it, and the Gaffer replies from those facts alone.
+- **Match story** keeps every story told during the match, newest first, with how each one moved the chances.
 - **Touchline** shows the ball live on the pitch: every pass, shot, tackle, save and corner, with the move in progress and a whole-match shot map.
 - It invites fans to make free-to-play **Call It** predictions priced at the Gaffer's own chances, with streaks, a sticker book of 17 achievements, missions and friend leagues. Biscuits are in-app points with no cash value.
 
@@ -79,6 +81,26 @@ flowchart LR
     style DIRECTOR fill:#0A102010,stroke:#C9A45C,stroke-dasharray:4 4,color:#8E9AB3
 ```
 
+### Ask the Gaffer
+
+A second workflow on the same A2A endpoint answers fans' questions. The Scout chooses which of the Gaffer's MCP tools answer the question (up to three, called in parallel), and the Gaffer writes the answer in the fan's language with no tools of its own, so a question can't steer it into calling anything. Answers go only to the fan who asked, with per-fan and daily caps.
+
+```mermaid
+flowchart LR
+    Q["Fan's question<br/>EN · ES · PT · FR"] --> API["API<br/>caps + brief"]
+    API == "A2A · kind: ask" ==> SC["Scout<br/>picks tools"]
+    SC -. "MCP: gaffers_gauge, why_it_moved,<br/>match_story, chances_at, match_stats" .-> MCP["Gaffer MCP server"]
+    SC --> PR["The Gaffer<br/>answers from the facts"]
+    PR ==> API --> A["Answer + follow-up questions"]
+
+    classDef svc fill:#111A2E,stroke:#475C85,color:#F2F5FA
+    classDef agent fill:#1D2A48,stroke:#E6EBF2,color:#F2F5FA
+    classDef client fill:#E6EBF2,stroke:#E6EBF2,color:#0A1020
+    class API,MCP svc
+    class SC,PR agent
+    class Q,A client
+```
+
 ### What happens when a goal goes in
 
 The Gaffer's Gauge and an instant story reach phones in under a second. The five agents' richer version follows a few seconds later, so the app never waits on a language model.
@@ -120,7 +142,7 @@ Here's how the code covers the brief's five stages:
 | **Interpret** | `matchroom.py` keeps live stats (xG, pass difficulty, field tilt, shot speed, momentum). The Stats agent picks out what matters |
 | **Explain** | `engine/lasso_engine/inplay.py` (Bayesian live model) and `explain.py` (exact Shapley attribution). The Gaffer and Narrator agents turn those into words |
 | **Render** | Realtime push to the mobile web app (`web/`): the Gaffer's Gauge, the Touchline live pitch, and a transparent broadcast overlay (`#/overlay/<match>`). Touchline's ball actions ride inside the Gauge updates, so they add no realtime messages |
-| **Personalize** | Persona agent (fan or analyst depth, favorite-club lines), language choice, Game Master challenges, missions |
+| **Personalize** | Persona agent (fan or analyst depth, favorite-club lines), language choice, Game Master challenges, missions, and Ask the Gaffer answers to each fan's own questions |
 
 ## The model, in numbers (held-out season; see the [model report](docs/model-report.md))
 
@@ -142,7 +164,7 @@ Twenty fictional clubs, each with an original crest designed as one set: a disti
 |---|---|
 | `engine/` | `lasso_engine`: synthetic league and event simulator, the Gaffer (hierarchical Poisson team strengths plus Gamma-Poisson live updating), Shapley explanations, Call It pricing, evaluation |
 | `services/api/` | FastAPI: match rooms, the game (biscuits, streaks, the Goldfish, stickers, missions, leagues), the Gaffer **MCP server**, realtime hub, A2A client |
-| `services/agents/` | **Microsoft Agent Framework** agents and the Match Director fan-out / fan-in workflow, hosted over **A2A**, on **Microsoft Foundry** models |
+| `services/agents/` | **Microsoft Agent Framework** agents: the Match Director fan-out / fan-in workflow (five agents) and the Ask the Gaffer press room (two agents), hosted over **A2A**, on **Microsoft Foundry** models |
 | `web/` | React + TypeScript phone app (installable PWA) and broadcast overlay |
 | `infra/` | Bicep for the whole stack, deployed with `azd up`. Keyless managed identity throughout |
 | `data/demo/` | The held-out season the app replays, plus the trained model |
@@ -176,4 +198,5 @@ cd .. && python docs/charts/render_meter.py   # the showcase Gaffer's Gauge char
 - **Free to play.** Biscuits have no cash value and cannot be bought. There's a daily top-up if you run out.
 - **No real-world data.** All clubs, players and matches are synthetic, as the hackathon rules require.
 - **Honest scoring.** The calibration bonus uses a proper scoring rule, so stating your true confidence is always your best strategy.
-- **Cost guard-rails.** Agents only run for matches someone is watching, with a per-match gap and a daily cap.
+- **Cost guard-rails.** Agents only run for matches someone is watching, with a per-match gap and a daily cap. Ask the Gaffer has its own daily cap plus a per-fan pace and allowance.
+- **Questions are data, not instructions.** The agent that answers a fan's question has no tools, and the Scout's tools only read match data.

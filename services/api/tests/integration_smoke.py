@@ -58,6 +58,13 @@ async def main(seconds: float = 40) -> None:
         print("leaderboard", [(r["name"], r["biscuits"]) for r in lb["rows"]])
         snap = (await c.get(f"/api/matches/{MATCH}")).json()
         print("snapshot", list(snap), "history", len(snap["history"]))
+        story = (await c.get(f"/api/matches/{MATCH}/story")).json()
+        print("story", len(story), [(m["minute"], m["trigger"], m.get("source")) for m in story])
+        r = await c.post(f"/api/matches/{MATCH}/ask", json={"user_id": uid, "question": "Can we still win this?",
+                                                            "lang": "en"}, timeout=60)
+        a = r.json()
+        print("ASK", r.status_code, a.get("source"), a.get("latency_ms"), "ms |", a.get("answer"), "|",
+              a.get("followups"), [(t["agent"], t["ms"], t["ok"]) for t in a.get("trace", [])])
     async with streamablehttp_client(B + "/mcp/") as (r, w, _):
         async with ClientSession(r, w) as s:
             await s.initialize()
@@ -65,6 +72,8 @@ async def main(seconds: float = 40) -> None:
             print("MCP tools", [t.name for t in tools.tools])
             res = await s.call_tool("why_it_moved", {"match_id": MATCH})
             print("why_it_moved", res.content[0].text[:300])
+            res = await s.call_tool("chances_at", {"match_id": MATCH, "minute": 45})
+            print("chances_at 45", res.content[0].text[:200])
 
 
 if __name__ == "__main__":
