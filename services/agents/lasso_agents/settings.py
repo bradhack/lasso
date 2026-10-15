@@ -16,6 +16,8 @@ class AgentSettings:
     mcp_url: str = field(default_factory=lambda: _env("LASSO_MCP_URL", "http://localhost:8000/mcp/"))
     public_url: str = field(default_factory=lambda: _env("LASSO_AGENTS_PUBLIC_URL", "http://localhost:8100/"))
     client_id: str = field(default_factory=lambda: _env("AZURE_CLIENT_ID"))
+    # Reasoning effort for GPT-5-family models (minimal, low, medium, high); empty to leave the model default.
+    reasoning_effort: str = field(default_factory=lambda: _env("LASSO_REASONING_EFFORT", "minimal"))
     agent_timeout: float = field(default_factory=lambda: float(_env("LASSO_AGENT_TIMEOUT", "25")))
 
 

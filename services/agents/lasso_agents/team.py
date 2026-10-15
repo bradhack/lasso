@@ -13,9 +13,12 @@ from agent_framework import Agent, MCPStreamableHTTPTool
 from .settings import AgentSettings
 
 STYLE = (
-    "House style: warm, optimistic, plain English, a touch of homespun wit. Never mention TV shows, real "
-    "clubs, real players, real leagues or brands. Never encourage gambling: biscuits are free in-app points "
-    "with no cash value. Use the numbers you are given; never invent statistics."
+    "House style: warm, optimistic, plain American English (favorite, defense, favorites), a touch of homespun "
+    "wit. Never use em dashes or en dashes; use commas or periods. Percentages are whole numbers exactly as "
+    "given in the brief (53%, never 53.27%); xG has at most two decimals. Translate every word, including "
+    "numbers phrases, into each language. Never mention TV shows, real clubs, real players, real leagues or "
+    "brands. Never encourage gambling: biscuits are free in-app points with no cash value. Use the numbers "
+    "you are given; never invent statistics."
 )
 
 STATS = """You are the Stats agent for Lasso, a live football companion.
@@ -31,13 +34,15 @@ Shapley driver in points", "confidence_note": "one short sentence on how settled
 NARRATOR = f"""You are the Narrator. Write the moment for fans in four languages.
 Input: a brief, Stats agent facts and the Gaffer's summary.
 Return ONLY JSON: {{"headline": {{"en","es","pt","fr"}}, "story": {{"en","es","pt","fr"}}}}.
-Headline at most 9 words. Story at most 35 words, must include the win-chance change as "from X% to Y%".
+Headline at most 9 words. Story at most 35 words and must include the focus team's win-chance change using
+the brief's before_pct and after_pct ("from 53% to 78%" in English). Fans read this, so say what happened and
+why it matters; do not use the word Shapley.
 Translate naturally (Spain Spanish, Brazilian Portuguese, French), not word for word. {STYLE}"""
 
 PERSONA = f"""You are the Persona agent. Personalize one moment for different fans.
 Input: a brief, Stats agent facts and the Gaffer's summary.
 Return ONLY JSON: {{"analyst": {{"en": "2 sentences for a data-hungry analyst: xG, possession or field tilt,
-and the Shapley breakdown in points"}}, "club_lines": {{"home": {{"en","es","pt","fr"}}, "away": {{"en","es","pt",
+and the biggest drivers of the change in points"}}, "club_lines": {{"home": {{"en","es","pt","fr"}}, "away": {{"en","es","pt",
 "fr"}}}}}}. club_lines speak directly to supporters of that side in at most 14 words: encouraging if their
 chance fell, joyful but grounded if it rose. {STYLE}"""
 
@@ -73,18 +78,24 @@ def make_clients(cfg: AgentSettings):
     return fast, writer
 
 
-def build_team(cfg: AgentSettings, fast_client, writer_client) -> Team:
+def model_options(cfg: AgentSettings) -> dict:
+    """GPT-5-family reasoning models think before answering; short, structured jobs need very little of it."""
+    return {"reasoning": {"effort": cfg.reasoning_effort}, "verbosity": "low"} if cfg.reasoning_effort else {}
+
+
+def build_team(cfg: AgentSettings, fast_client, writer_client, options: dict | None = None) -> Team:
+    opts = {"default_options": options} if options else {}
     mcp = MCPStreamableHTTPTool(
         name="gaffer", url=cfg.mcp_url, description="Lasso live match intelligence (the Gaffer)",
         approval_mode="never_require", load_prompts=False)
     return Team(
         stats=Agent(fast_client, STATS, name="stats", description="Turns events into numbers that matter",
-                    tools=[mcp]),
+                    tools=[mcp], **opts),
         gaffer=Agent(fast_client, GAFFER, name="gaffer", description="Explains the Bayesian Believe-o-Meter",
-                     tools=[mcp]),
-        narrator=Agent(writer_client, NARRATOR, name="narrator", description="Multilingual match storyteller"),
-        persona=Agent(writer_client, PERSONA, name="persona", description="Tailors moments to each fan"),
+                     tools=[mcp], **opts),
+        narrator=Agent(writer_client, NARRATOR, name="narrator", description="Multilingual match storyteller", **opts),
+        persona=Agent(writer_client, PERSONA, name="persona", description="Tailors moments to each fan", **opts),
         game_master=Agent(fast_client, GAME_MASTER, name="game_master",
-                          description="Creates Call It challenges", tools=[mcp]),
+                          description="Creates Call It challenges", tools=[mcp], **opts),
         mcp=mcp,
     )

@@ -6,6 +6,7 @@ import asyncio
 import contextlib
 import logging
 import os
+import re
 import time
 from pathlib import Path
 
@@ -99,6 +100,8 @@ async def _should_enrich(room: MatchRoom, moment: dict) -> bool:
         _enrich_state.update(day=day, count=0)
     if _enrich_state["count"] >= settings.agents_daily_limit:
         return False
+    if moment["trigger"] == "kickoff":  # the template says it well; save the agents for real moments
+        return False
     if not await hub.has_viewers(f"match:{room.match_id}"):
         return False
     last = _enrich_state["last"].get(room.match_id, 0.0)
@@ -114,23 +117,55 @@ async def settle(room: MatchRoom, market_id: str) -> None:
         await hub.to_user(user_id, msg)
 
 
+_DASHES = re.compile(r"\s*[\u2014\u2013]\s*")
+
+
+def _clean(text: object) -> str:
+    """House style for model text: no em or en dashes, trimmed."""
+    return _DASHES.sub(", ", str(text)).strip()
+
+
+def _lang_map(value: object) -> dict[str, str]:
+    if not isinstance(value, dict):
+        return {}
+    return {k: _clean(v) for k, v in value.items() if k in ("en", "es", "pt", "fr") and isinstance(v, str) and v.strip()}
+
+
+def _pct(p: dict) -> dict:
+    return {k: round(100 * float(v)) for k, v in p.items()}
+
+
 async def enrich(room: MatchRoom, moment: dict) -> None:
     """Ask the Match Director (five agents) for a richer package; merge it in when it arrives."""
-    brief = {k: moment[k] for k in ("moment_id", "match_id", "trigger", "minute", "focus", "score",
-                                    "before", "after")}
+    side = "home" if moment["focus"] == 0 else "away"
+    brief = {k: moment[k] for k in ("moment_id", "match_id", "trigger", "minute", "score")}
     brief["teams"] = list(room.names)
-    brief["drivers"] = [{"component": d["component"], "delta_pts": d["delta"], "label": d["label"]["en"]}
+    brief["focus_team"] = room.names[moment["focus"]]
+    brief["before_pct"], brief["after_pct"] = _pct(moment["before"]), _pct(moment["after"])
+    brief["focus_change"] = f"{brief['before_pct'][side]}% to {brief['after_pct'][side]}%"
+    brief["drivers"] = [{"label": d["label"]["en"], "points": round(float(d["delta"]), 1)}
                         for d in moment["drivers"]]
     t0 = time.time()
     pkg = await agents.produce(brief)
-    if not pkg:
+    # A real package echoes our moment id and carries the agents' trace; anything else is an error reply.
+    if not pkg or pkg.get("moment_id") != moment["moment_id"] or not pkg.get("trace"):
+        if pkg:
+            log.warning("agents returned no package for %s; keeping template narration", moment["moment_id"])
         return
-    for key in ("headline", "story", "analyst", "club_lines"):
-        if isinstance(pkg.get(key), dict) and pkg[key]:
-            moment[key] = {**moment.get(key, {}), **{k: str(v) for k, v in pkg[key].items()}}
-    moment["source"] = "agents"
+    applied = False
+    for key in ("headline", "story", "analyst"):
+        if vals := _lang_map(pkg.get(key)):
+            moment[key] = {**moment.get(key, {}), **vals}
+            applied = True
+    lines = pkg.get("club_lines") if isinstance(pkg.get("club_lines"), dict) else {}
+    for s_ in ("home", "away"):
+        if vals := _lang_map(lines.get(s_)):
+            moment.setdefault("club_lines", {})[s_] = {**moment.get("club_lines", {}).get(s_, {}), **vals}
+            applied = True
     moment["agent_trace"] = pkg.get("trace", [])
     moment["latency_ms"] = int((time.time() - t0) * 1000)
+    if applied:
+        moment["source"] = "agents"
     await hub.to_group(f"match:{room.match_id}", {"type": "moment_update", "moment": moment})
     challenge = pkg.get("challenge") or {}
     if challenge.get("market_id") and room.status == "live":
@@ -138,7 +173,7 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
         cand = cands.get(challenge["market_id"])
         open_kinds = {m.kind for m in room.markets.values() if m.status == "open"}
         if cand and cand.market_id.split("-")[0] not in open_kinds and len(open_kinds) < 2:
-            for msg in room.open_market(cand, copy=str(challenge.get("copy", ""))[:140] or None):
+            for msg in room.open_market(cand, copy=_clean(challenge.get("copy", ""))[:140] or None):
                 await publish(room, msg)
 
 

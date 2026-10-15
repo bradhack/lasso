@@ -31,7 +31,7 @@ class OfflineChatClient(BaseChatClient):
             instructions = str(options.get("instructions") or "") + text
             if "Gaffer's voice" in instructions and brief.get("drivers"):
                 d = brief["drivers"][0]
-                out = {"summary": f"Biggest driver: {d['label']} ({d['delta_pts']:+d} pts).",
+                out = {"summary": f"Biggest driver: {d['label']} ({d.get('points', d.get('delta_pts', 0)):+} pts).",
                        "confidence_note": "offline mode"}
             elif "Stats agent" in instructions:
                 out = {"facts": [], "momentum": "even", "spotlight": ""}

@@ -9,6 +9,8 @@ import contextlib
 import logging
 import os
 
+from a2a.server.agent_execution import AgentExecutor, RequestContext
+from a2a.server.events import EventQueue
 from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.routes import create_agent_card_routes, create_jsonrpc_routes
 from a2a.server.tasks import InMemoryTaskStore
@@ -20,7 +22,7 @@ from starlette.routing import Route
 
 from .director import build_director
 from .settings import settings
-from .team import build_team, make_clients
+from .team import build_team, make_clients, model_options
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("lasso.agents")
@@ -42,9 +44,24 @@ else:  # local plumbing tests without a model deployment
 
     log.warning("FOUNDRY_PROJECT_ENDPOINT not set: running agents in offline mode")
     fast = writer = OfflineChatClient()
-team = build_team(settings, fast, writer)
-director = build_director(team, settings.agent_timeout).as_agent(
-    name="Match Director", description="Lasso's multi-agent moment producer")
+team = build_team(settings, fast, writer,
+                  model_options(settings) if settings.foundry_endpoint else None)
+
+
+def new_director():
+    """A fresh workflow per request: a workflow instance runs one request at a time, and goals in
+    different matches can arrive together. Building one is cheap; the five agents are shared."""
+    return build_director(team, settings.agent_timeout).as_agent(
+        name="Match Director", description="Lasso's multi-agent moment producer")
+
+
+class DirectorExecutor(AgentExecutor):
+    async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
+        await A2AExecutor(new_director()).execute(context, event_queue)
+
+    async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
+        await A2AExecutor(new_director()).cancel(context, event_queue)
+
 
 card = AgentCard(
     name="Lasso Match Director",
@@ -59,7 +76,7 @@ card = AgentCard(
                        description="Input: JSON moment brief. Output: JSON moment package.",
                        tags=["football", "explainability", "multilingual", "gamification"])],
 )
-handler = DefaultRequestHandler(agent_executor=A2AExecutor(director), task_store=InMemoryTaskStore(),
+handler = DefaultRequestHandler(agent_executor=DirectorExecutor(), task_store=InMemoryTaskStore(),
                                 agent_card=card)
 
 
