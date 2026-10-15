@@ -125,10 +125,33 @@ def _clean(text: object) -> str:
     return _DASHES.sub(", ", str(text)).strip()
 
 
+_US = {"favourite": "favorite", "equaliser": "equalizer", "equalise": "equalize", "defence": "defense",
+       "colour": "color", "centre": "center", "honour": "honor", "organise": "organize", "realise": "realize",
+       "neighbour": "neighbor", "behaviour": "behavior", "offence": "offense", "programme": "program"}
+_US_RE = re.compile(r"\b(" + "|".join(_US) + r")", re.IGNORECASE)
+_FROM_TO = re.compile(r"\bfrom (\d+) ?% to (\d+) ?%")
+_FROM_TO_LANG = {"es": "del {}% al {}%", "pt": "de {}% para {}%", "fr": "de {} % à {} %"}
+
+
+def _us(m: re.Match) -> str:
+    word = _US[m.group(1).lower()]
+    return word.capitalize() if m.group(1)[0].isupper() else word
+
+
+def _localize(lang: str, text: str) -> str:
+    """Deterministic fixes for what models still slip on: US spelling, and English left in translations."""
+    if lang == "en":
+        return _US_RE.sub(_us, text)
+    if fmt := _FROM_TO_LANG.get(lang):
+        return _FROM_TO.sub(lambda m: fmt.format(m.group(1), m.group(2)), text)
+    return text
+
+
 def _lang_map(value: object) -> dict[str, str]:
     if not isinstance(value, dict):
         return {}
-    return {k: _clean(v) for k, v in value.items() if k in ("en", "es", "pt", "fr") and isinstance(v, str) and v.strip()}
+    return {k: _localize(k, _clean(v)) for k, v in value.items()
+            if k in ("en", "es", "pt", "fr") and isinstance(v, str) and v.strip()}
 
 
 def _pct(p: dict) -> dict:
