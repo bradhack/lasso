@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { t } from "../i18n";
+import { useStore } from "../store";
 import type { Lang, MatchSnapshot, Touch } from "../types";
 import { Crest } from "./bits";
 
@@ -72,7 +73,12 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
     return () => window.clearTimeout(tm);
   }, [lastGoal?.s]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const [view, setView] = useState<"live" | "shots">(() => (readPref(VIEW_KEY) === "shots" ? "shots" : "live"));
+  const persona = useStore((s) => s.user?.persona);
+  // A saved choice wins; otherwise analysts open on the shot map and fans on the live ball.
+  const [view, setView] = useState<"live" | "shots">(() => {
+    const saved = readPref(VIEW_KEY);
+    return saved === "shots" || saved === "live" ? saved : persona === "analyst" ? "shots" : "live";
+  });
   const [picked, setPicked] = useState<number | null>(null);
   const recentShot = [...shown.slice(-8)].reverse().find((x) => x.t === "shot");
   const selected = shots.find((x) => x.s === picked) ?? shots[shots.length - 1];

@@ -150,15 +150,14 @@ export interface Mission {
   done: boolean;
 }
 
-export interface MomentCard {
+export interface Sticker {
   id: string;
-  rarity: "bronze" | "silver" | "gold";
-  title: string;
-  pick: string;
-  p: number;
-  minute: number;
-  match: string;
-  score: [number, number];
+  tier: "bronze" | "silver" | "gold";
+  name: Record<string, string>;
+  how: Record<string, string>;
+  earned: boolean;
+  count: number;
+  detail?: string | null;
 }
 
 export interface User {
@@ -178,7 +177,7 @@ export interface User {
   calibration_points: number;
   leagues: string[];
   goldfish_available: boolean;
-  cards: MomentCard[];
+  stickers: Sticker[];
   missions: Mission[];
 }
 

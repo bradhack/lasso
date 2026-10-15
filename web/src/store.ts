@@ -1,12 +1,13 @@
 import { create } from "zustand";
 import { api } from "./api";
 import { Realtime } from "./realtime";
-import type { Call, ClubRef, Lang, Market, MatchSnapshot, MatchSummary, Moment, MomentCard, Touch, User } from "./types";
+import type { Call, ClubRef, Lang, Market, MatchSnapshot, MatchSummary, Moment, Sticker, Touch, User } from "./types";
 
 export type Toast =
   | { id: number; kind: "win"; call: Call }
   | { id: number; kind: "loss"; call: Call }
-  | { id: number; kind: "card"; card: MomentCard }
+  | { id: number; kind: "sticker"; sticker: Sticker }
+  | { id: number; kind: "hope"; call: Call }
   | { id: number; kind: "mission"; label: string; reward: number }
   | { id: number; kind: "goldfish"; text: string }
   | { id: number; kind: "error"; text: string };
@@ -14,7 +15,8 @@ export type Toast =
 type ToastInput =
   | { kind: "win"; call: Call }
   | { kind: "loss"; call: Call }
-  | { kind: "card"; card: MomentCard }
+  | { kind: "sticker"; sticker: Sticker }
+  | { kind: "hope"; call: Call }
   | { kind: "mission"; label: string; reward: number }
   | { kind: "goldfish"; text: string }
   | { kind: "error"; text: string };
@@ -214,11 +216,12 @@ function onMessage(d: any) {
     case "call_settled": {
       const call: Call = d.call;
       useStore.setState((s) => ({ user: d.user, calls: { ...s.calls, [call.market_id]: call } }));
-      st.toast(call.status === "won" ? { kind: "win", call } : { kind: "loss", call });
+      // A long shot that just missed gets the terrace consolation instead of a plain loss.
+      st.toast(call.status === "won" ? { kind: "win", call } : call.p < 0.15 ? { kind: "hope", call } : { kind: "loss", call });
       break;
     }
-    case "card":
-      st.toast({ kind: "card", card: d.card });
+    case "sticker":
+      st.toast({ kind: "sticker", sticker: { ...d.sticker, earned: true, count: 1 } });
       break;
     case "mission_complete":
       if (st.user && typeof d.biscuits === "number") useStore.setState({ user: { ...st.user, biscuits: d.biscuits } });

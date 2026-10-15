@@ -23,17 +23,17 @@ export function Onboarding() {
           <span style={{ fontFamily: "Sora", fontWeight: 700, fontSize: 30, color: "var(--text)" }}>lasso</span>
         </div>
         <h2 id="ob-title" className="num" style={{ fontSize: 34, margin: 0, lineHeight: 1.05 }}>
-          SEE WHY THE ODDS MOVED.<br /><span style={{ color: "var(--gold)" }}>THEN OUT-PREDICT THE GAFFER.</span>
+          {t("heroA", lang)}<br /><span style={{ color: "var(--gold)" }}>{t("heroB", lang)}</span>
         </h2>
         <p className="muted" style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>
-          Free to play. You start with 1,000 biscuits (points with no cash value). Call the next moment, build a streak, collect cards.
+          {t("obSub", lang)}
         </p>
         <label className="f">
           Your name
           <input value={name} maxLength={24} onChange={(e) => setName(e.target.value)} placeholder="Fan name" autoComplete="nickname" />
         </label>
         <div className="f" style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "var(--muted)" }}>
-          {t("yourClub", lang)} <span style={{ fontSize: 12 }}>(optional, for a personal angle on every moment)</span>
+          {t("yourClub", lang)} <span style={{ fontSize: 12 }}>{t("clubHint", lang)}</span>
           <div className="clubgrid">
             {clubs.map((c) => (
               <button key={c.club_id} className={`clubpick${club === c.club_id ? " sel" : ""}`} onClick={() => setClub(club === c.club_id ? null : c.club_id)} aria-pressed={club === c.club_id} title={c.name}>
@@ -49,6 +49,7 @@ export function Onboarding() {
             <button className={`tab${persona === "fan" ? " sel" : ""}`} onClick={() => setPersona("fan")}>{t("fan", lang)}</button>
             <button className={`tab${persona === "analyst" ? " sel" : ""}`} onClick={() => setPersona("analyst")}>{t("analystMode", lang)}</button>
           </div>
+          <span style={{ fontSize: 12 }}>{t(persona === "fan" ? "fanHint" : "analystHint", lang)}</span>
         </div>
         <label className="f">
           {t("language", lang)}

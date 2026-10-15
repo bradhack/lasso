@@ -46,7 +46,9 @@ Input: a brief, Stats agent facts and the Gaffer's summary.
 Return ONLY JSON: {{"analyst": {{"en": "2 sentences for a data-hungry analyst: xG, possession or field tilt,
 and the biggest drivers of the change in points"}}, "club_lines": {{"home": {{"en","es","pt","fr"}}, "away": {{"en","es","pt",
 "fr"}}}}}}. club_lines speak directly to supporters of that side in at most 14 words: encouraging if their
-chance fell, joyful but grounded if it rose. {STYLE}"""
+chance fell, joyful but grounded if it rose. When the brief's trigger is "half_time", each club line is
+instead a short halftime team talk to that side's fans (at most 22 words): warm, honest about the score,
+encouraging if they are behind, humble if ahead. {STYLE}"""
 
 GAME_MASTER = f"""You are the Game Master of "Call It", where fans try to out-predict the Gaffer.
 Use candidate_challenges for the match in the brief and pick the ONE challenge that is most fun right now:

@@ -14,6 +14,7 @@ export function CallIt({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
   const calls = useStore((s) => s.calls);
   const user = useStore((s) => s.user);
   const placeCall = useStore((s) => s.placeCall);
+  const [thrown, setThrown] = useState<string | null>(null);
 
   // Prefer an open market the fan has not called yet; otherwise show their latest locked call.
   const market: Market | undefined = useMemo(() => {
@@ -91,6 +92,7 @@ export function CallIt({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
               setBusy(true);
               await placeCall(market, chosen.id, stake);
               setBusy(false);
+              setThrown(market.market_id);
             }}
           >
             {chosen ? `${t("lassoIt", lang)} · ${t("win", lang)} ${payout} ${t("biscuits", lang)}` : t("lassoIt", lang)}
@@ -98,8 +100,11 @@ export function CallIt({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
         </>
       )}
       {mine && (
-        <div className="cta ghost" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {t("lockedIn", lang)} · {mine.label} · {mine.stake} → {Math.round(mine.stake * mine.multiplier)}
+        <div className="lasso-wrap">
+          <div className="cta ghost" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {t("lockedIn", lang)} · {mine.label} · {mine.stake} → {Math.round(mine.stake * mine.multiplier)}
+          </div>
+          {thrown === market?.market_id && <LassoThrow key={thrown} />}
         </div>
       )}
       {open && (
@@ -108,5 +113,15 @@ export function CallIt({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
         </div>
       )}
     </section>
+  );
+}
+
+/** The rope loop that drops over a call when you lasso it. */
+function LassoThrow() {
+  return (
+    <svg className="lasso-throw" viewBox="0 0 400 70" preserveAspectRatio="none" aria-hidden="true">
+      <path className="loop" pathLength={100} d="M200 6C318 6 394 18 394 35S318 64 200 64 6 52 6 35 82 6 200 6" />
+      <path className="tail" pathLength={100} d="M330 60c18 6 30 2 42-6s20-6 26 2" />
+    </svg>
   );
 }

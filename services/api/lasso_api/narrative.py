@@ -45,6 +45,19 @@ T = {
                    "fr": "Les chances de {team} restent à {b} %. Match serré."},
     "up": {"en": "Believe! {team} are up to {p}%.", "es": "¡A creer! {team} sube al {p}%.",
            "pt": "Acredite! {team} sobe para {p}%.", "fr": "Y croire ! {team} grimpe à {p} %."},
+    # Halftime team talks for each side's fans, by the score at the break.
+    "talk_behind": {"en": "Heads up. One half to turn it around, and the Gaffer still gives {team} {p}%. Believe.",
+                    "es": "Cabeza alta. Queda un tiempo para darle la vuelta y el Gaffer aún da a {team} un {p}%. A creer.",
+                    "pt": "Cabeça erguida. Ainda há um tempo para virar, e o Gaffer dá {p}% ao {team}. Acredite.",
+                    "fr": "Tête haute. Il reste une mi-temps pour renverser ça, et le Gaffer donne encore {p} % à {team}. Y croire."},
+    "talk_ahead": {"en": "Good half. Stay humble, stay hungry. {team} are at {p}% with 45 to play.",
+                   "es": "Buena primera parte. Humildad y hambre. {team} está al {p}% con 45 por jugar.",
+                   "pt": "Bom primeiro tempo. Humildade e fome. {team} está com {p}% e 45 minutos pela frente.",
+                   "fr": "Belle mi-temps. Humbles et affamés. {team} est à {p} % avec 45 minutes à jouer."},
+    "talk_level": {"en": "All square. Cup of tea, deep breath, and go win the second half. {team}: {p}%.",
+                   "es": "Todo igualado. Un té, respirar hondo y a ganar la segunda parte. {team}: {p}%.",
+                   "pt": "Tudo igual. Um chá, respira fundo e vamos ganhar o segundo tempo. {team}: {p}%.",
+                   "fr": "Égalité. Une tasse de thé, on respire, et on gagne la deuxième mi-temps. {team} : {p} %."},
     "down": {"en": "Hold your nerve. {team} still sit at {p}%.", "es": "Calma. {team} sigue con un {p}%.",
              "pt": "Calma. {team} ainda tem {p}%.", "fr": "Gardez la foi. {team} reste à {p} %."},
 }
@@ -112,8 +125,13 @@ def template_package(*, trigger: str, names: tuple[str, str], score: tuple[int, 
     for i, key in ((0, "home"), (1, "away")):
         p_now = round(after["home" if i == 0 else "away"] * 100)
         p_was = round(before["home" if i == 0 else "away"] * 100)
-        club_lines[key] = {lang: tr("up" if p_now >= p_was else "down", lang, team=names[i], p=p_now)
-                           for lang in LANGS}
+        if trigger == "half_time":
+            mine, theirs = (score[0], score[1]) if i == 0 else (score[1], score[0])
+            key_t = "talk_behind" if mine < theirs else "talk_ahead" if mine > theirs else "talk_level"
+            club_lines[key] = {lang: tr(key_t, lang, team=names[i], p=p_now) for lang in LANGS}
+        else:
+            club_lines[key] = {lang: tr("up" if p_now >= p_was else "down", lang, team=names[i], p=p_now)
+                               for lang in LANGS}
     h, aw = stats["teams"]
     contrib_txt = ", ".join(f"{d['component'].replace('_', ' ')} {d['delta']:+d}" for d in drivers)
     analyst = (f"xG {h['xg']:.2f}-{aw['xg']:.2f} · shots {h['shots']}-{aw['shots']} · possession "

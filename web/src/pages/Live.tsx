@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Crest, pct } from "../components/bits";
 import { CallIt } from "../components/CallIt";
 import { Back, Chevron } from "../components/Icons";
+import { Believe } from "../components/Believe";
 import { Touchline } from "../components/Touchline";
 import { Meter } from "../components/Meter";
 import { Feed, StatsPanel } from "../components/Panels";
@@ -26,8 +27,8 @@ export function Lobby() {
     <div className="page">
       <div className="hero">
         <span className="eyebrow gold">{t("liveNow", lang)}</span>
-        <h1>SEE WHY THE ODDS MOVED. <em>THEN OUT-PREDICT THE GAFFER.</em></h1>
-        <p>Every chance, card and goal moves the odds, live. AI agents explain why, then challenge you to call what's next.</p>
+        <h1>{t("heroA", lang)} <em>{t("heroB", lang)}</em></h1>
+        <p>{t("heroSub", lang)}</p>
       </div>
       {[...live, ...other].map((m) => (
         <a key={m.match_id} className="card matchcard" href={`#/match/${m.match_id}`}>
@@ -101,6 +102,7 @@ export function MatchPage({ id }: { id: string }) {
         </div>
         <Meter snap={snap} lang={lang} />
       </section>
+      <Believe snap={snap} lang={lang} />
       <Touchline snap={snap} lang={lang} />
       {moment && <WhyItMoved snap={snap} moment={moment} lang={lang} />}
       <CallIt snap={snap} lang={lang} />

@@ -173,6 +173,9 @@ a { color: var(--silver); }
 .driver .bar { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
 .driver .bar span { display: block; height: 100%; border-radius: 2px; background: var(--gold); transition: width 0.8s; }
 .driver .bar span.neg { background: var(--line-3); }
+.driver .arrow { font-weight: 700; color: var(--gold); }
+.driver .arrow.neg { color: var(--muted); }
+.clubline .talk { display: block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.8; margin-bottom: 4px; }
 .driver .d { font-family: var(--num); font-weight: 700; font-size: 17px; color: var(--gold-2); }
 .clubline { margin-top: 12px; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--gold) 10%, transparent); color: var(--gold-2); font-size: 14px; font-weight: 600; }
 .analyst { margin-top: 12px; padding: 10px 12px; border-radius: 14px; background: var(--surface-3); color: var(--soft); font-size: 13px; line-height: 1.45; }
@@ -196,6 +199,24 @@ a { color: var(--silver); }
 .cta { width: 100%; height: 52px; margin-top: 12px; border-radius: 16px; border: 0; background: var(--gold); color: var(--ink-on-gold); font-size: 16px; font-weight: 700; transition: transform 0.12s, filter 0.2s; }
 .cta:active { transform: scale(0.98); }
 .cta:disabled { filter: grayscale(0.7) brightness(0.7); cursor: default; }
+.believe { display: flex; align-items: center; gap: 14px; padding: 4px 4px 2px; animation: signin 0.6s cubic-bezier(0.2, 1.3, 0.4, 1); }
+.believe .sign { position: relative; flex: none; padding: 8px 16px 6px; background: #F4EEE0; color: #1B2A4A; font-family: var(--num); font-weight: 700; font-size: 26px; letter-spacing: 0.14em; transform: rotate(-2.5deg); box-shadow: 0 6px 14px var(--shadow); border-radius: 2px; }
+.believe .tape { position: absolute; top: -7px; width: 30px; height: 13px; background: rgba(214, 196, 150, 0.75); }
+.believe .tape.l { left: -8px; transform: rotate(-28deg); }
+.believe .tape.r { right: -8px; transform: rotate(24deg); }
+.believe span { font-size: 13px; font-weight: 600; color: var(--text-2); }
+.believe.won .sign { background: var(--gold); color: #0A1020; box-shadow: 0 0 22px color-mix(in srgb, var(--gold) 55%, transparent); }
+.believe.won span { color: var(--gold-2); }
+@keyframes signin { from { transform: translateY(-14px) rotate(4deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .believe { animation: none; } }
+.lasso-wrap { position: relative; }
+.lasso-throw { position: absolute; left: -6px; right: -6px; top: 6px; width: calc(100% + 12px); height: 64px; pointer-events: none; overflow: visible; }
+.lasso-throw path { fill: none; stroke: var(--gold); stroke-width: 2.5; stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 100; stroke-dashoffset: 100; }
+.lasso-throw .loop { animation: rope 0.7s cubic-bezier(0.3, 0.8, 0.3, 1) forwards, ropefade 0.5s ease 1.6s forwards; }
+.lasso-throw .tail { animation: rope 0.35s ease 0.55s forwards, ropefade 0.5s ease 1.6s forwards; }
+@keyframes rope { to { stroke-dashoffset: 0; } }
+@keyframes ropefade { to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .lasso-throw { display: none; } }
 .cta.ghost { background: transparent; border: 1px solid var(--line-2); color: var(--text); }
 .timer { height: 3px; background: var(--line); border-radius: 2px; margin-top: 12px; overflow: hidden; }
 .timer span { display: block; height: 100%; background: var(--gold); transition: width 1s linear; }
@@ -240,6 +261,28 @@ input, select { width: 100%; height: 46px; border-radius: 14px; border: 1px soli
 label.f { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); }
 
 /* moment cards */
+.stickers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 8px; margin-top: 12px; }
+.sticker { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; min-width: 0; }
+.sticker b { font-size: 13px; line-height: 1.2; }
+.sticker span { font-size: 11px; line-height: 1.3; color: var(--muted); }
+.sticker.locked b { color: var(--muted); }
+.sticker-art { flex: none; filter: drop-shadow(0 3px 8px var(--shadow)); }
+.sticker-art .ring { fill: var(--surface-3); stroke-width: 3; }
+.sticker-art.gold .ring { stroke: var(--gold); }
+.sticker-art.silver .ring { stroke: var(--silver); }
+.sticker-art.bronze .ring { stroke: var(--bronze); }
+.sticker-art .face { fill: var(--surface-2); }
+.sticker-art.gold .face { fill: color-mix(in srgb, var(--gold) 22%, var(--surface-2)); }
+.sticker-art .glyph { fill: none; stroke: var(--text); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.sticker-art.gold .glyph { stroke: var(--gold-2); }
+.sticker-art.locked { filter: none; opacity: 0.45; }
+.sticker-art.locked .ring { fill: none; stroke: var(--line-3); stroke-dasharray: 4 4; }
+.sticker-art.locked .face { fill: none; }
+.sticker-art.locked .glyph { stroke: var(--muted); }
+.eyebrow.tier-gold { color: var(--gold); font-weight: 700; }
+.eyebrow.tier-silver { color: var(--silver); font-weight: 700; }
+.eyebrow.tier-bronze { color: var(--bronze); font-weight: 700; }
+.toast.sticker { gap: 12px; }
 .mcards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .mcard { aspect-ratio: 3 / 4; border-radius: 18px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; background: var(--surface-2); border: 2px solid var(--bronze); position: relative; overflow: hidden; }
 .mcard.silver { border-color: var(--silver); }

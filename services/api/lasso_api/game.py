@@ -1,4 +1,4 @@
-"""Beat the Gaffer: calls, biscuits, streaks, the Goldfish, moment cards, missions and leagues."""
+"""Beat the Gaffer: calls, biscuits, streaks, the Goldfish, stickers, missions and leagues."""
 
 from __future__ import annotations
 
@@ -12,12 +12,13 @@ import uuid
 from lasso_engine.markets import calibration_points
 
 from .matchroom import Market, MatchRoom
+from .stickers import award, public_stickers
 from .store import Store
 
 START_BISCUITS = 1000
 STAKES = (50, 100, 250)
 MISSIONS = {
-    "correct_calls": {"target": 3, "reward": 150, "label": "Call 3 moments correctly"},
+    "correct_calls": {"target": 3, "reward": 150, "label": "Win 3 calls"},
     "underdog": {"target": 1, "reward": 200, "label": "Win a call the Gaffer gave under 25%"},
     "stories": {"target": 2, "reward": 50, "label": "Read 2 \"Why it moved\" stories"},
 }
@@ -46,7 +47,7 @@ def new_user(name: str, *, club_id: str | None = None, bot: bool = False, user_i
     return {
         "id": user_id or uuid.uuid4().hex[:12], "name": name[:24] or "Fan", "club_id": club_id,
         "persona": "fan", "lang": "en", "biscuits": START_BISCUITS, "xp": 0, "streak": 0, "best_streak": 0,
-        "goldfish_week": None, "calls_total": 0, "calls_won": 0, "calibration_points": 0, "cards": [],
+        "goldfish_week": None, "calls_total": 0, "calls_won": 0, "calibration_points": 0, "stickers": {},
         "missions": {"date": _today(), "progress": {k: 0 for k in MISSIONS}, "claimed": []},
         "leagues": [DEFAULT_LEAGUE], "bot": bot, "created_at": time.time(),
     }
@@ -70,7 +71,7 @@ def public_user(u: dict) -> dict:
                              "best_streak", "calls_total", "calls_won", "calibration_points", "leagues")},
         "level": level_for(u["xp"]), "next_level_xp": 50 * level_for(u["xp"]) ** 2,
         "goldfish_available": u.get("goldfish_week") != _iso_week(),
-        "cards": u["cards"][-30:],
+        "stickers": public_stickers(u),
         "missions": [{"id": k, **v, "progress": min(m["progress"].get(k, 0), v["target"]),
                       "done": k in m["claimed"]} for k, v in MISSIONS.items()],
     }
@@ -132,33 +133,48 @@ class GameService:
                         "reward": MISSIONS[key]["reward"], "biscuits": u["biscuits"]})
         return out
 
-    async def record_activity(self, user_id: str, kind: str) -> list[dict]:
+    async def record_activity(self, user_id: str, kind: str, lang: str | None = None) -> list[dict]:
         u = await self.store.get_user(user_id)
-        if not u or kind != "read_story":
+        if not u:
             return []
-        out = self._progress(u, "stories")
+        out: list[dict] = []
+        if kind == "read_story":
+            out += self._progress(u, "stories")
+            langs = set(u.get("story_langs") or [])
+            if lang in ("en", "es", "pt", "fr"):
+                langs.add(lang)
+                u["story_langs"] = sorted(langs)
+            if len(langs) >= 2:
+                out += self._sticker(u, "polyglot")
+        elif kind == "halftime":
+            out += self._sticker(u, "halftime_tea")
         await self.store.put_user(u)
         return out
 
+    @staticmethod
+    def _sticker(u: dict, key: str, detail: str | None = None) -> list[dict]:
+        msg = award(u, key, detail, time.time())
+        return [msg] if msg else []
+
     # ----------------------------------------------------------------- calls
     async def place_call(self, user_id: str, room: MatchRoom, market_id: str, option_id: str, stake: int,
-                         confidence: float | None = None) -> tuple[dict | None, str | None]:
+                         confidence: float | None = None) -> tuple[dict | None, str | None, list[dict]]:
         u = await self.store.get_user(user_id)
         if not u:
-            return None, "unknown user"
+            return None, "unknown user", []
         m = room.markets.get(market_id)
         if not m or m.status != "open":
-            return None, "this call has closed"
+            return None, "this call has closed", []
         opt = next((o for o in m.options if o["id"] == option_id), None)
         if not opt:
-            return None, "unknown option"
+            return None, "unknown option", []
         if stake not in STAKES:
-            return None, "invalid stake"
+            return None, "invalid stake", []
         if u["biscuits"] < stake:
-            return None, "not enough biscuits"
+            return None, "not enough biscuits", []
         existing = [c for c in await self.store.calls_for_market(market_id) if c["user_id"] == user_id]
         if existing:
-            return None, "you already called this one"
+            return None, "you already called this one", []
         u["biscuits"] -= stake
         u["calls_total"] += 1
         u["xp"] += 10
@@ -166,10 +182,16 @@ class GameService:
                 "market_id": market_id, "question": m.question, "option_id": option_id, "label": opt["label"],
                 "stake": stake, "multiplier": opt["multiplier"], "p": opt["p"],
                 "confidence": confidence if confidence is not None else None,
-                "minute": room.minute(), "status": "open", "payout": 0, "placed_at": time.time()}
+                "minute": room.minute(), "status": "open", "payout": 0, "placed_at": time.time(),
+                "kind": m.kind, "score_at_call": list(room.state.goals)}
+        msgs: list[dict] = []
+        if not u.get("bot"):
+            msgs += self._sticker(u, "first_call")
+            if m.kind == "comeback" and option_id == "yes":
+                msgs += self._sticker(u, "believe", f"{room.names[0]} v {room.names[1]}, {room.minute()}'")
         await self.store.put_call(call)
         await self.store.put_user(u)
-        return call, None
+        return call, None, msgs
 
     async def bot_calls(self, room: MatchRoom, m: Market) -> None:
         """Rival fans make their own calls, with a little more skill than chance."""
@@ -185,7 +207,7 @@ class GameService:
             ps = [o["p"] for o in m.options]
             weights = [p ** 1.3 for p in ps]
             opt = rng.choices(m.options, weights=weights)[0]
-            await self.place_call(uid, room, m.market_id, opt["id"], rng.choice(STAKES))
+            await self.place_call(uid, room, m.market_id, opt["id"], rng.choice(STAKES))  # bots earn no stickers
 
     async def settle(self, room: MatchRoom, m: Market) -> list[tuple[str, dict]]:
         """Settle every call on a market. Returns (user_id, message) pairs to push."""
@@ -207,22 +229,24 @@ class GameService:
                 u["streak"] += 1
                 u["best_streak"] = max(u["best_streak"], u["streak"])
                 u["xp"] += 25
-                card = self._card_for(call, room)
-                if card:
-                    u["cards"].append(card)
-                    msgs.append({"type": "card", "card": card})
+                if not u.get("bot"):
+                    msgs += await self._stickers_for_win(u, call, m, room)
                 msgs += self._progress(u, "correct_calls")
                 if call["p"] < 0.25:
                     msgs += self._progress(u, "underdog")
             else:
                 call.update(status="lost", payout=0)
+                runs = u.setdefault("match_runs", {})
+                runs[room.match_id] = 0
                 if u["streak"] >= 3 and u.get("goldfish_week") != _iso_week():
                     u["goldfish_week"] = _iso_week()
+                    u["goldfish_pending"] = True
                     call["goldfish"] = True
                     msgs.append({"type": "goldfish", "streak": u["streak"],
                                  "text": "Be a goldfish. Your streak survives this one."})
                 else:
                     u["streak"] = 0
+                    u["goldfish_pending"] = False
             conf = call.get("confidence")
             if conf is not None:
                 u["calibration_points"] += calibration_points(won, conf)
@@ -235,14 +259,50 @@ class GameService:
                 out.extend((u["id"], msg) for msg in msgs)
         return out
 
-    def _card_for(self, call: dict, room: MatchRoom) -> dict | None:
-        p = call["p"]
-        rarity = "gold" if p < 0.10 else "silver" if p < 0.25 else "bronze" if p < 0.5 else None
-        if not rarity:
-            return None
-        return {"id": call["id"], "rarity": rarity, "title": call["question"], "pick": call["label"],
-                "p": p, "minute": call["minute"], "match": f"{room.names[0]} v {room.names[1]}",
-                "score": list(room.state.goals), "earned_at": time.time()}
+    async def _stickers_for_win(self, u: dict, call: dict, m: Market, room: MatchRoom) -> list[dict]:
+        """Which stickers this winning call earns. Every rule uses facts the game already knows."""
+        match = f"{room.names[0]} v {room.names[1]}"
+        where = f"{match}, {room.minute()}'"
+        out = self._sticker(u, "called_it", where)
+        p, kind = call["p"], m.kind
+        if p < 0.25:
+            out += self._sticker(u, "underdog", f"{call['label']} at {round(p * 100)}%, {match}")
+        if p < 0.10:
+            out += self._sticker(u, "long_shot", f"{call['label']} at {round(p * 100)}%, {match}")
+        if u["streak"] >= 5:
+            out += self._sticker(u, "on_fire")
+        if u["streak"] >= 10:
+            out += self._sticker(u, "unstoppable")
+        if u["calls_won"] >= 10:
+            out += self._sticker(u, "sharp_eye")
+        runs = u.setdefault("match_runs", {})
+        runs[room.match_id] = runs.get(room.match_id, 0) + 1
+        if runs[room.match_id] >= 3:
+            out += self._sticker(u, "hat_trick", match)
+        if u.get("goldfish_pending"):
+            u["goldfish_pending"] = False
+            out += self._sticker(u, "goldfish")
+        # Goal calls: which side scored, if this was a call on a goal.
+        scorer: int | None = None
+        if kind == "score" and m.result == "yes":
+            scorer = int(m.market_id.split(":")[-1].split("-")[1])
+        elif kind == "next" and m.result in ("home", "away"):
+            scorer = 0 if m.result == "home" else 1
+        if scorer is not None:
+            if room.minute() >= 80:
+                out += self._sticker(u, "rom_com", where)
+            if room.state.reds[scorer] > 0:
+                out += self._sticker(u, "ten_men", where)
+        if kind == "comeback" and call["option_id"] == "yes":
+            out += self._sticker(u, "comeback", match)
+        if kind == "result" and call["minute"] <= 10:
+            out += self._sticker(u, "bullseye", f"{call['label']}, called at {call['minute']}'")
+        league = await self.store.get_league(DEFAULT_LEAGUE)
+        if league and u["id"] in league["members"]:
+            others = [x for uid in league["members"] if uid != u["id"] and (x := await self.store.get_user(uid))]
+            if others and u["biscuits"] > max(x["biscuits"] for x in others):
+                out += self._sticker(u, "diamond_dog")
+        return out
 
     # --------------------------------------------------------------- leagues
     async def create_league(self, user_id: str, name: str) -> dict:

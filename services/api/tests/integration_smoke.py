@@ -51,7 +51,7 @@ async def main(seconds: float = 40) -> None:
                 if d["type"] == "call_settled":
                     print("SETTLED", d["call"]["status"], d["call"]["payout"], d["user"]["biscuits"],
                           "streak", d["user"]["streak"])
-                if d["type"] in ("card", "goldfish", "mission_complete"):
+                if d["type"] in ("sticker", "goldfish", "mission_complete"):
                     print(d)
         print(got)
         lb = (await c.get("/api/leaderboard", params={"code": "DIAMOND"})).json()

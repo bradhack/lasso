@@ -28,8 +28,8 @@ export const api = {
   user: (id: string) => req<User>(`/api/users/${id}`),
   updateUser: (id: string, prefs: Partial<Pick<User, "name" | "club_id" | "persona" | "lang">>) =>
     req<User>(`/api/users/${id}`, { method: "PATCH", body: JSON.stringify(prefs) }),
-  activity: (id: string, kind: "read_story") =>
-    req<{ ok: boolean; user: User | null }>(`/api/users/${id}/activity?kind=${kind}`, { method: "POST" }),
+  activity: (id: string, kind: "read_story" | "halftime", lang?: string) =>
+    req<{ ok: boolean; user: User | null }>(`/api/users/${id}/activity?kind=${kind}${lang ? `&lang=${lang}` : ""}`, { method: "POST" }),
   calls: (id: string) => req<Call[]>(`/api/users/${id}/calls`),
   placeCall: (body: { user_id: string; market_id: string; option_id: string; stake: number; confidence?: number }) =>
     req<{ call: Call; user: User }>("/api/calls", { method: "POST", body: JSON.stringify(body) }),

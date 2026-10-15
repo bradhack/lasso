@@ -5,6 +5,7 @@ import { useStore } from "../store";
 import type { Lang, LeaderRow } from "../types";
 import { Crest } from "../components/bits";
 import { Flame } from "../components/Icons";
+import { StickerBadge, stickerText } from "../components/Stickers";
 import { currentAppearance, setAppearance } from "../theme";
 
 export function Leagues() {
@@ -89,31 +90,35 @@ export function Leagues() {
   );
 }
 
-export function CardsPage() {
+export function StickersPage() {
   const user = useStore((s) => s.user);
   const lang = useStore((s) => s.lang);
-  const cards = [...(user?.cards ?? [])].reverse();
+  const book = user?.stickers ?? [];
+  const earned = book.filter((s) => s.earned).length;
   return (
     <div className="page">
       <div className="hero">
-        <span className="eyebrow gold">{t("cards", lang)}</span>
-        <h1>MOMENTS YOU <em>CALLED.</em></h1>
-        <p>Bronze under 50%, silver under 25%, gold when the Gaffer gave it less than 10%.</p>
+        <span className="eyebrow gold">{t("cards", lang)} · {earned} / {book.length}</span>
+        <h1>{t("stickerHead", lang)}</h1>
+        <p>{t("stickerSub", lang)}</p>
       </div>
-      {cards.length === 0 ? <div className="card empty">{t("noCards", lang)}</div> : (
-        <div className="mcards">
-          {cards.map((c) => (
-            <div key={c.id} className={`mcard ${c.rarity}`}>
-              <span className="rar">{c.rarity.toUpperCase()}{c.rarity === "gold" ? " · BELIEVE" : ""}</span>
-              <div>
-                <div className="odds">{Math.round(c.p * 100)}%</div>
-                <div className="title">{c.pick}</div>
-              </div>
-              <div className="meta">{c.title}<br />{c.match} · {c.minute}'</div>
-            </div>
-          ))}
-        </div>
-      )}
+      {(["gold", "silver", "bronze"] as const).map((tier) => (
+        <section key={tier} className="card">
+          <span className={`eyebrow tier-${tier}`}>{t(tier, lang)}</span>
+          <div className="stickers">
+            {book.filter((s) => s.tier === tier).map((s) => {
+              const txt = stickerText(s, lang);
+              return (
+                <div key={s.id} className={`sticker${s.earned ? "" : " locked"}`}>
+                  <StickerBadge s={s} />
+                  <b>{txt.name}{s.count > 1 ? ` ×${s.count}` : ""}</b>
+                  <span>{s.earned && s.detail ? s.detail : txt.how}</span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }
@@ -196,6 +201,7 @@ export function Profile() {
             <button className={`tab${user.persona === "fan" ? " sel" : ""}`} onClick={() => updatePrefs({ persona: "fan" })}>{t("fan", lang)}</button>
             <button className={`tab${user.persona === "analyst" ? " sel" : ""}`} onClick={() => updatePrefs({ persona: "analyst" })}>{t("analystMode", lang)}</button>
           </div>
+          <span style={{ fontSize: 12 }}>{t(user.persona === "fan" ? "fanHint" : "analystHint", lang)}</span>
         </div>
         <label className="f">{t("yourClub", lang)}
           <select value={user.club_id ?? ""} onChange={(e) => updatePrefs({ club_id: e.target.value || null })}>

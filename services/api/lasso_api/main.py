@@ -98,7 +98,7 @@ async def publish(room: MatchRoom, msg: dict) -> None:
 
 
 _enrich_state = {"day": "", "count": 0, "last": {}}
-ALWAYS_ENRICH = {"goal", "red_card", "full_time"}
+ALWAYS_ENRICH = {"goal", "red_card", "half_time", "full_time"}
 
 
 async def _should_enrich(room: MatchRoom, moment: dict) -> bool:
@@ -350,8 +350,9 @@ async def patch_user(user_id: str, body: Prefs) -> dict:
 
 
 @app.post("/api/users/{user_id}/activity")
-async def activity(user_id: str, kind: str = Query(..., pattern="^read_story$")) -> dict:
-    msgs = await game.record_activity(user_id, kind)
+async def activity(user_id: str, kind: str = Query(..., pattern="^(read_story|halftime)$"),
+                   lang: str | None = Query(None, pattern="^(en|es|pt|fr)$")) -> dict:
+    msgs = await game.record_activity(user_id, kind, lang)
     for m in msgs:
         await hub.to_user(user_id, m)
     u = await store.get_user(user_id)
@@ -369,12 +370,14 @@ async def place_call(body: NewCall) -> dict:
     room = rooms.get(match_id)
     if not room:
         raise HTTPException(404, "match not found")
-    call, err = await game.place_call(body.user_id, room, body.market_id, body.option_id, body.stake,
-                                      body.confidence)
+    call, err, msgs = await game.place_call(body.user_id, room, body.market_id, body.option_id, body.stake,
+                                            body.confidence)
     if err:
         raise HTTPException(400, err)
+    for msg in msgs:
+        await hub.to_user(body.user_id, msg)
     u = await store.get_user(body.user_id)
-    return {"call": call, "user": public_user(u)}
+    return {"call": call, "user": public_user(u), "events": msgs}
 
 
 @app.get("/api/stakes")

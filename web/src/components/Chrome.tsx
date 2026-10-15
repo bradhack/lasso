@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { t } from "../i18n";
 import { useStore } from "../store";
 import { Animated } from "./bits";
+import { StickerBadge, stickerText } from "./Stickers";
 import { Biscuit, CardsIcon, Flame, LassoMark, LiveIcon, Moon, Sun, Trophy, UserIcon } from "./Icons";
 import { currentAppearance, setAppearance } from "../theme";
 
@@ -26,7 +27,7 @@ export function TopBar() {
       </a>
       {user && (
         <div className="pills">
-          <span className="pill" title={t("biscuits", lang)}>
+          <span className="pill" title={t("biscuitTin", lang)}>
             <Biscuit />
             <Animated value={user.biscuits} />
           </span>
@@ -72,10 +73,10 @@ export function Toasts() {
 
   useEffect(() => {
     if (!last) return;
-    if (last.kind === "win" || last.kind === "card") {
+    if (last.kind === "win" || last.kind === "sticker") {
       const css = getComputedStyle(document.documentElement);
       const gold = ["--gold", "--gold-2", "--silver", "--text"].map((v) => css.getPropertyValue(v).trim() || "#D8B26E");
-      confetti({ particleCount: last.kind === "card" ? 140 : 80, spread: 70, origin: { y: 0.15 }, colors: gold, disableForReducedMotion: true });
+      confetti({ particleCount: last.kind === "sticker" ? 140 : 80, spread: 70, origin: { y: 0.15 }, colors: gold, disableForReducedMotion: true });
       navigator.vibrate?.([20, 40, 20]);
     }
   }, [last?.id]);
@@ -96,13 +97,22 @@ export function Toasts() {
               <div className="sub">{x.call.question} {x.call.goldfish ? "· Goldfish saved your streak" : ""}</div>
             </div>
           )}
-          {x.kind === "card" && (
-            <div>
-              <div className="sub" style={{ letterSpacing: "0.08em", color: x.card.rarity === "gold" ? "var(--gold)" : "var(--silver)" }}>
-                {x.card.rarity.toUpperCase()} MOMENT CARD
+          {x.kind === "sticker" && (
+            <>
+              <StickerBadge s={x.sticker} size={52} />
+              <div>
+                <div className="sub" style={{ letterSpacing: "0.08em", color: `var(--${x.sticker.tier === "gold" ? "gold" : x.sticker.tier === "silver" ? "silver" : "bronze"})` }}>
+                  {t("newSticker", lang).toUpperCase()}
+                </div>
+                <div className="big" style={{ fontSize: 22 }}>{stickerText(x.sticker, lang).name}</div>
+                <div className="sub">{x.sticker.detail || stickerText(x.sticker, lang).how}</div>
               </div>
-              <div className="big" style={{ fontSize: 22 }}>{x.card.pick} at {Math.round(x.card.p * 100)}%</div>
-              <div className="sub">{x.card.title}</div>
+            </>
+          )}
+          {x.kind === "hope" && (
+            <div>
+              <div className="big" style={{ fontSize: 20 }}>{t("hopeLine", lang)}</div>
+              <div className="sub">{t("hopeSub", lang)} {Math.round(x.call.p * 100)}% · {x.call.question}</div>
             </div>
           )}
           {x.kind === "mission" && (

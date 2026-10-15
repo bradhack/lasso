@@ -3,7 +3,7 @@ import { BottomNav, Toasts, TopBar } from "./components/Chrome";
 import { Onboarding } from "./components/Onboarding";
 import { Lobby, MatchPage } from "./pages/Live";
 import { Overlay } from "./pages/Overlay";
-import { CardsPage, Leagues, Profile } from "./pages/Social";
+import { Leagues, Profile, StickersPage } from "./pages/Social";
 import { useStore } from "./store";
 import type { Lang } from "./types";
 
@@ -45,7 +45,7 @@ export default function App() {
       <TopBar />
       {page === "match" && arg ? <MatchPage id={arg} /> :
         page === "leagues" ? <Leagues /> :
-        page === "cards" ? <CardsPage /> :
+        page === "cards" ? <StickersPage /> :
         page === "me" ? <Profile /> : <Lobby />}
       <BottomNav route={page ?? ""} />
       <Toasts />
