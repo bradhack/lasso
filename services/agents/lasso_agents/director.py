@@ -5,7 +5,7 @@
            └─> Gaffer ──┘            └─> Game Master ─┘
 
 Stage one gathers facts and the model's explanation in parallel; stage two
-writes, personalises and creates a challenge in parallel. Every agent call is
+writes, personalizes and creates a challenge in parallel. Every agent call is
 time-boxed and traced; a failed agent simply contributes nothing, and the API
 keeps its instant template text for that part.
 """

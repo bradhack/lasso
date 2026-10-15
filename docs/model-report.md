@@ -8,13 +8,14 @@ python -m lasso_engine.generate --out ../data/league --seed 7     # about 2 minu
 python -m lasso_engine.training --data ../data/league --out ../data/model
 python -m lasso_engine.evaluate --data ../data/league --model ../data/model --docs ../docs
 python -m lasso_engine.mcmc_check --data ../data/league --out ../data/model
+cd .. && python docs/charts/render_meter.py
 ```
 
 ## 1. The synthetic league
 
 - 20 fictional clubs and about 480 fictional players, over five seasons of double round-robin fixtures: 1,900 matches and about 2.2M events.
 - The events are passes (with length, difficulty and ball speed), shots (with xG, body part and shot speed), saves, corners, tackles, interceptions, fouls, yellow and red cards, substitutions, and added time.
-- Each club has a hidden **true** attack, defence, style and discipline, and these drift between seasons. Each match also has a hidden **form** factor for both teams, plus a half-time shift. All of this is written to `truth/`, which the model never reads.
+- Each club has a hidden **true** attack, defense, style and discipline, and these drift between seasons. Each match also has a hidden **form** factor for both teams, plus a half-time shift. All of this is written to `truth/`, which the model never reads.
 - In-match game state follows realistic effects: a team down a man creates fewer chances, trailing teams push and leading teams sit back, and the pace rises late in the game.
 
 The league is calibrated to league-wide top-flight averages:
@@ -29,7 +30,7 @@ The league is calibrated to league-wide top-flight averages:
 
 ## 2. Pre-match model: hierarchical Poisson team strengths
 
-`log λ_home = μ + H + att_home − def_away`, with Normal priors on the attack and defence terms. The likelihood blends goals with xG, and older matches are down-weighted with time decay. The posterior uses a Laplace approximation, which takes milliseconds per refit.
+`log λ_home = μ + H + att_home − def_away`, with Normal priors on the attack and defense terms. The likelihood blends goals with xG, and older matches are down-weighted with time decay. The posterior uses a Laplace approximation, which takes milliseconds per refit.
 
 **Validated against full MCMC (NUTS, NumPyro).** Posterior means correlate at 0.99996, the largest difference in any mean is 0.006, and the median ratio of standard deviations is 1.001.
 
@@ -43,7 +44,7 @@ Held-out season 5 (380 matches), with the model refit before every matchday and 
 
 The Gaffer captures **85% of the achievable improvement** over base rates. The remaining gap exists because the model has to learn strengths that the oracle is simply given.
 
-**Strength recovery** at the end of season 5: correlation with the hidden truth is 0.95 for attack and 0.91 for defence, and the 90% credible intervals cover the truth for 90% and 100% of clubs respectively.
+**Strength recovery** at the end of season 5: correlation with the hidden truth is 0.95 for attack and 0.91 for defense, and the 90% credible intervals cover the truth for 90% and 100% of clubs respectively.
 
 ![Strength recovery](img/strength_recovery.png)
 

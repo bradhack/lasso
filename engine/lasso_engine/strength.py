@@ -115,7 +115,7 @@ class StrengthPosterior:
         ph = poisson.pmf(g[None, :], np.exp(eta[:, :1])).mean(axis=0)
         pa = poisson.pmf(g[None, :], np.exp(eta[:, 1:])).mean(axis=0)
         joint = np.outer(ph, pa)
-        joint /= joint.sum()  # renormalise the truncated tail
+        joint /= joint.sum()  # renormalize the truncated tail
         return {
             "home": float(np.tril(joint, -1).sum()),
             "draw": float(np.trace(joint)),

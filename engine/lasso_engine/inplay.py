@@ -175,7 +175,7 @@ class Gaffer:
     def probabilities(self, s: MatchState) -> dict[str, float]:
         ph, pa = self.remaining_pmf(s, 0), self.remaining_pmf(s, 1)
         joint = np.outer(ph, pa)
-        joint /= joint.sum()  # renormalise the truncated tail
+        joint /= joint.sum()  # renormalize the truncated tail
         diff = s.goals[0] - s.goals[1]
         idx = np.arange(MAX_GOALS + 1)
         final_diff = diff + idx[:, None] - idx[None, :]

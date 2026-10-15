@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import numpy as np
 
-# (name, short code, monogram, primary colour, secondary colour)
+# (name, short code, monogram, primary color, secondary color)
 CLUBS: list[tuple[str, str, str, str, str]] = [
     ("Harbourside Rovers", "HBR", "HR", "#D3D7DE", "#1A3A5C"),
     ("Kingsmere Athletic", "KMA", "KA", "#7A1F2B", "#E6DEEA"),

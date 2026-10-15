@@ -61,7 +61,7 @@ def generate_markets(g: Gaffer, s: MatchState, home_name: str, away_name: str,
         out.append(Market(f"comeback-{tag}", f"Can {name} come back for at least a draw?",
                           _opts([("yes", "Believe", p_not_lose), ("no", "No way", 1 - p_not_lose)]),
                           s.clock + 1, f"not_lose:{trailing}"))
-    out.append(Market(f"result-{tag}", "Full-time result?",
+    out.append(Market(f"result-{tag}", "Final result?",
                       _opts([("home", home_name, pr["home"]), ("draw", "Draw", pr["draw"]),
                              ("away", away_name, pr["away"])]), s.clock + 1, "result"))
     return out

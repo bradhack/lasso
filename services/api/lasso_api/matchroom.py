@@ -275,9 +275,9 @@ class MatchRoom:
             off = self.data.player_label((ev.get("detail") or "").replace("off:", ""))
             return {**base, "text": f"Sub ({team}): {player} on for {off}"}
         if et == "half_time":
-            return {**base, "text": f"Half-time {self.state.goals[0]}-{self.state.goals[1]}"}
+            return {**base, "text": f"Halftime {self.state.goals[0]}-{self.state.goals[1]}"}
         if et == "full_time":
-            return {**base, "text": f"Full-time {self.state.goals[0]}-{self.state.goals[1]}"}
+            return {**base, "text": f"Full time {self.state.goals[0]}-{self.state.goals[1]}"}
         return None
 
     # --------------------------------------------------------------- moments

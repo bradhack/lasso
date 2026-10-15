@@ -243,31 +243,9 @@ def main() -> None:
 
     # Believe-o-Meter trajectory for the showcase match.
     club_tbl = pd.read_parquet(data / "clubs.parquet").set_index("club_id")
-    names = club_tbl["name"]
     traj = believe_o_meter_path(DEMO_MATCH, test_ev, test, pre, params, club_tbl["short"].to_dict())
     traj.to_json(model_dir / "demo_trajectory.json", orient="records")
-    m = test.set_index("match_id").loc[DEMO_MATCH]
-    fig, ax = plt.subplots(figsize=(8, 4.6), dpi=160)
-    fig.patch.set_facecolor(SURFACE)
-    _style(ax)
-    for col, color, label in (("home", PLUM, f"{names[m.home_id]} win"), ("draw", BLUE, "Draw"),
-                              ("away", GOLD, f"{names[m.away_id]} win")):
-        ax.plot(traj.elapsed, traj[col] * 100, color=color, linewidth=2, label=label)
-    for k, r in enumerate(traj[traj.note != ""].itertuples()):
-        ax.axvline(r.elapsed, color="#CFC8D3", linewidth=1, linestyle=":", zorder=0)
-        ax.text(r.elapsed + 0.8, 112 - 7 * (k % 2), r.note, color=INK, fontsize=7.5, va="center")
-    ax.set_ylim(0, 116)
-    ax.set_yticks([0, 20, 40, 60, 80, 100])
-    ax.set_xlim(0, traj.elapsed.max() + 2)
-    ax.legend(frameon=False, fontsize=8.5, ncol=3, loc="upper left", bbox_to_anchor=(0, -0.13),
-              labelcolor=INK)
-    ax.set_xlabel("Minutes played", color=MUTED, fontsize=9, labelpad=2)
-    ax.set_ylabel("Believe-o-Meter (%)", color=MUTED, fontsize=9)
-    ax.set_title(f"{names[m.home_id]} {m.home_goals}-{m.away_goals} {names[m.away_id]}: "
-                 "the Believe-o-Meter, event by event", color=INK, fontsize=11, loc="left")
-    fig.tight_layout()
-    fig.savefig(img / "believe_o_meter_example.png", facecolor=SURFACE)
-    plt.close(fig)
+    # The showcase chart itself is drawn by docs/charts/render_meter.py from this JSON.
 
     fig, ax = plt.subplots(figsize=(4.6, 4.6), dpi=160)
     fig.patch.set_facecolor(SURFACE)
@@ -286,7 +264,7 @@ def main() -> None:
     fig, axes = plt.subplots(1, 2, figsize=(8, 4), dpi=160)
     fig.patch.set_facecolor(SURFACE)
     for ax, est, err, tr, label in ((axes[0], att_m, att_sd, t5.attack.to_numpy(), "Attack"),
-                                    (axes[1], def_m, def_sd, t5.defense.to_numpy(), "Defence")):
+                                    (axes[1], def_m, def_sd, t5.defense.to_numpy(), "Defense")):
         _style(ax)
         lim = max(np.abs(np.r_[est, tr]).max() * 1.15, 0.1)
         ax.plot([-lim, lim], [-lim, lim], color=MUTED, linewidth=1, linestyle="--")

@@ -28,12 +28,12 @@ T = {
                      "pt": "O empate ganha força", "fr": "Le nul se rapproche"},
     "h_pulse": {"en": "{min}': Believe-o-Meter check", "es": "{min}': así está el Believe-o-Meter",
                 "pt": "{min}': como está o Believe-o-Meter", "fr": "{min}' : le point Believe-o-Meter"},
-    "h_half_time": {"en": "Half-time: {home} {hs}-{as_} {away}", "es": "Descanso: {home} {hs}-{as_} {away}",
+    "h_half_time": {"en": "Halftime: {home} {hs}-{as_} {away}", "es": "Descanso: {home} {hs}-{as_} {away}",
                     "pt": "Intervalo: {home} {hs}-{as_} {away}", "fr": "Mi-temps : {home} {hs}-{as_} {away}"},
-    "h_full_time": {"en": "Full-time: {home} {hs}-{as_} {away}", "es": "Final: {home} {hs}-{as_} {away}",
+    "h_full_time": {"en": "Full time: {home} {hs}-{as_} {away}", "es": "Final: {home} {hs}-{as_} {away}",
                     "pt": "Fim de jogo: {home} {hs}-{as_} {away}",
                     "fr": "Fin du match : {home} {hs}-{as_} {away}"},
-    "h_kickoff": {"en": "Kick-off: {home} v {away}", "es": "Comienza: {home} vs {away}",
+    "h_kickoff": {"en": "Kickoff: {home} v {away}", "es": "Comienza: {home} vs {away}",
                   "pt": "Começa: {home} x {away}", "fr": "Coup d'envoi : {home} - {away}"},
     "story": {"en": "{team} win chance: {a}% to {b}%. Biggest factor: {label} ({d:+d} pts).",
               "es": "Probabilidad de victoria de {team}: del {a}% al {b}%. Factor clave: {label} ({d:+d} pts).",
@@ -55,7 +55,7 @@ def tr(key: str, lang: str, **kw) -> str:
 
 
 def driver_rows(contrib: dict[str, float], window: dict, names: tuple[str, str], focus: int) -> list[dict]:
-    """Shapley contributions to labelled, localised driver rows (deltas in points)."""
+    """Shapley contributions to labeled, localized driver rows (deltas in points)."""
     rows = []
     for comp, delta in sorted(contrib.items(), key=lambda kv: -abs(kv[1])):
         pts = round(delta * 100)

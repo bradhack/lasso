@@ -128,7 +128,7 @@ def build_league(seed: int = 7, config: LeagueConfig | None = None) -> League:
                 quality[cid] = rho * quality[cid] + innov * float(rng.normal())
                 att_eps[cid] = rho * att_eps[cid] + innov * float(rng.normal(0, cfg.attack_noise))
                 def_eps[cid] = rho * def_eps[cid] + innov * float(rng.normal(0, cfg.defense_noise))
-        # Centre so the league average attack/defence is zero each season.
+        # Center so the league average attack/defense is zero each season.
         q_mean = np.mean(list(quality.values()))
         a_mean = np.mean(list(att_eps.values()))
         d_mean = np.mean(list(def_eps.values()))

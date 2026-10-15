@@ -34,7 +34,7 @@ Return ONLY JSON: {{"headline": {{"en","es","pt","fr"}}, "story": {{"en","es","p
 Headline at most 9 words. Story at most 35 words, must include the win-chance change as "from X% to Y%".
 Translate naturally (Spain Spanish, Brazilian Portuguese, French), not word for word. {STYLE}"""
 
-PERSONA = f"""You are the Persona agent. Personalise one moment for different fans.
+PERSONA = f"""You are the Persona agent. Personalize one moment for different fans.
 Input: a brief, Stats agent facts and the Gaffer's summary.
 Return ONLY JSON: {{"analyst": {{"en": "2 sentences for a data-hungry analyst: xG, possession or field tilt,
 and the Shapley breakdown in points"}}, "club_lines": {{"home": {{"en","es","pt","fr"}}, "away": {{"en","es","pt",

@@ -4,12 +4,12 @@ The simulator produces football-realistic event streams (passes with
 difficulty ratings, shots with xG and speed, saves, corners, fouls, cards,
 substitutions) from the hidden club truth in :mod:`lasso_engine.league`.
 
-Design: play is modelled as a sequence of possession *chains*. Each chain is
+Design: play is modeled as a sequence of possession *chains*. Each chain is
 owned by one team and contains a run of passes. A chain either ends in a
 turnover (a failed pass, won back by the opponent) or in a shot. The
 probability that a chain ends in a shot is set so that each team's shot rate
 per minute equals its *target* rate, which is a log-linear function of
-attack, defence, home advantage and the in-match state (score, red cards,
+attack, defense, home advantage and the in-match state (score, red cards,
 late game). That keeps the scoring process faithful to the generative truth
 while the event texture stays realistic.
 """
@@ -33,7 +33,7 @@ EXPECTED_MATCH_MINUTES = 95.5  # 90 plus typical added time
 
 
 def shot_xg(x_to_goal: float, y_offset: float, header: bool = False) -> float:
-    """Expected goals from distance to goal line and lateral offset (metres)."""
+    """Expected goals from distance to goal line and lateral offset (meters)."""
     half = 3.66
     ang = math.atan2(7.32 * x_to_goal, x_to_goal**2 + y_offset**2 - half**2)
     if ang < 0:
@@ -126,7 +126,7 @@ class MatchSimulator:
         for side in (home, away):
             n = int(rng.choice([3, 4, 5], p=[0.2, 0.35, 0.45]))
             side.planned_subs = sorted(float(v) for v in rng.uniform(55, 88, size=n))
-            if rng.random() < 0.08:  # occasional half-time change
+            if rng.random() < 0.08:  # occasional halftime change
                 side.planned_subs[0] = 45.0
 
         events: list[MatchEvent] = []
@@ -150,7 +150,7 @@ class MatchSimulator:
         stats_2h = {"goals": 0, "cards": 0}
 
         for period in (1, 2):
-            if period == 2:  # half-time team talk, tactical changes
+            if period == 2:  # halftime team talk, tactical changes
                 for cid, shift in zip((home_id, away_id), rng.normal(0, cfg.halftime_shift_sd, size=2)):
                     base_shot_rate[cid] *= math.exp(float(shift))
             clock = 0.0 if period == 1 else 45.0

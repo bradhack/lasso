@@ -90,10 +90,10 @@ def main() -> None:
     matches.to_parquet(out / "matches.parquet", index=False)
     counts = pd.concat([c for _, c in results], axis=1).fillna(0).astype(int)
     print(counts.to_string())
-    print(summarise(matches).to_string())
+    print(summarize(matches).to_string())
 
 
-def summarise(matches: pd.DataFrame) -> pd.DataFrame:
+def summarize(matches: pd.DataFrame) -> pd.DataFrame:
     g = matches.groupby("season")
     return pd.DataFrame({
         "matches": g.size(),

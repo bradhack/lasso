@@ -9,3 +9,6 @@ dist/
 .env
 .azure/
 web/e2e-shots/
+engine/build/
+*.egg-info/
+docs/charts/*.html

@@ -30,13 +30,13 @@ Here's how the code covers the brief's five stages:
 | **Interpret** | `matchroom.py` keeps live stats (xG, pass difficulty, field tilt, shot speed, momentum). The Stats agent picks out what matters |
 | **Explain** | `engine/lasso_engine/inplay.py` (Bayesian live model) and `explain.py` (exact Shapley attribution). The Gaffer and Narrator agents turn those into words |
 | **Render** | Realtime push to the mobile web app (`web/`) and a transparent broadcast overlay (`#/overlay/<match>`) |
-| **Personalize** | Persona agent (fan or analyst depth, favourite-club lines), language choice, Game Master challenges, missions |
+| **Personalize** | Persona agent (fan or analyst depth, favorite-club lines), language choice, Game Master challenges, missions |
 
 ## The model, in numbers (held-out season; see the [model report](docs/model-report.md))
 
 - **85%** of the best possible pre-match accuracy (ranked probability score against an oracle that knows the hidden true strengths)
 - **1.5 points** average calibration error on the live Believe-o-Meter
-- **0.95 / 0.91** correlation between the estimated and the hidden true attack and defence strengths
+- **0.95 / 0.91** correlation between the estimated and the hidden true attack and defense strengths
 - The fast Laplace posterior matches full NUTS MCMC (posterior means correlate at 0.99996)
 - **2.2M** synthetic events across 1,900 matches and five seasons, with a hidden truth to evaluate against
 
@@ -72,6 +72,7 @@ python -m lasso_engine.generate --out ../data/league --seed 7
 python -m lasso_engine.training --data ../data/league --out ../data/model
 python -m lasso_engine.evaluate --data ../data/league --model ../data/model --docs ../docs
 python -m lasso_engine.export_demo
+cd .. && python docs/charts/render_meter.py   # the showcase Believe-o-Meter chart
 ```
 
 ## Responsible design

@@ -1,6 +1,6 @@
 """Canonical event and entity schema for Lasso.
 
-Pitch coordinates are metres on a 105 x 68 pitch. ``x`` runs from the acting
+Pitch coordinates are meters on a 105 x 68 pitch. ``x`` runs from the acting
 team's own goal line (0) to the opponent's goal line (105); ``y`` runs from
 the left touchline (0) to the right (68). Every event is expressed from the
 acting team's attacking perspective, which keeps downstream analytics simple.
