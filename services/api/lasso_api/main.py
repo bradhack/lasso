@@ -104,6 +104,7 @@ async def publish(room: MatchRoom, msg: dict) -> None:
 
 
 _enrich_state = {"day": "", "count": 0, "last": {}}
+_forced_agents: set[str] = set()  # matches replayed with agents on even with no live viewers (the evaluation)
 ALWAYS_ENRICH = {"goal", "red_card", "half_time", "full_time"}
 
 
@@ -116,7 +117,10 @@ async def _should_enrich(room: MatchRoom, moment: dict) -> bool:
         return False
     if moment["trigger"] == "kickoff":  # the template says it well; save the agents for real moments
         return False
-    if not await hub.has_viewers(f"match:{room.match_id}"):
+    if room.match_id in _forced_agents:
+        if moment["trigger"] == "full_time":
+            _forced_agents.discard(room.match_id)
+    elif not await hub.has_viewers(f"match:{room.match_id}"):
         return False
     last = _enrich_state["last"].get(room.match_id, 0.0)
     if moment["trigger"] not in ALWAYS_ENRICH and time.time() - last < settings.agents_min_gap_seconds:
@@ -621,11 +625,16 @@ async def model_card() -> dict:
 
 
 @app.post("/api/admin/matches/{match_id}/restart")
-async def restart(match_id: str, key: str, from_minute: float = 0.0, minute_seconds: float | None = None):
+async def restart(match_id: str, key: str, from_minute: float = 0.0, minute_seconds: float | None = None,
+                  agents: bool = False):
+    """Admin: replay a match now. agents=true has the agents write its stories even with no one watching
+    (the evaluation checks them over plain HTTP); it lasts until that replay's full time."""
     if key != settings.admin_key:
         raise HTTPException(403, "bad key")
     if match_id not in data.matches:
         raise HTTPException(404, "match not found")
+    if agents:
+        _forced_agents.add(match_id)
     if match_id not in rooms:
         rooms[match_id] = MatchRoom(match_id, data)
     if settings.event_source == "eventhubs" and not _feed["fallback"]:

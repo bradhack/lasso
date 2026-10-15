@@ -81,8 +81,8 @@ PARTISAN = {"en": r"\b(we|us|our)\b", "es": r"\b(nuestro|nuestra|nosotros|nuestr
             "pt": r"\b(nosso|nossa|nós|nossos)\b", "fr": r"\b(notre|nos|nous)\b"}
 JARGON = ["compact shape", "low block", "tracking", "transition", "game state", "driver", "win probability",
           "expected goals model"]
-CANT_REPLACE = ["can't be replaced", "cannot be replaced", "can not be replaced", "no one", "nobody",
-                "no substitute", "ten men", "10 men", "man short", "a man down", "not allowed"]
+CANT_REPLACE = ["can't be replaced", "cannot be replaced", "can not be replaced", "can't replace", "cannot replace",
+                "no one can", "nobody can", "no one replaces", "nobody replaces", "no substitute", "not allowed"]
 NO_TRACK = re.compile(r"(don't|do not|doesn't|does not|can't|cannot|not) (track|see|follow)|no (formation|position)"
                       r"|isn't tracked|aren't tracked")
 ENGLISH_LEAK = {"es": re.compile(r"\b(chance|chances|possession|read|the|my)\b"),
@@ -127,7 +127,7 @@ def run(base: str, key: str, minute_seconds: float) -> dict:
         u = http(base, "POST", "/api/users", {"name": f"Eval {k}", "club_id": clubs[club]})[1]
         http(base, "PATCH", f"/api/users/{u['id']}", {"persona": persona, "lang": lang})
         fans[k] = {"id": u["id"], "lang": lang, "persona": persona, "club": club}
-    status, _ = http(base, "POST", f"/api/admin/matches/{MATCH}/restart?key={key}&minute_seconds={minute_seconds}")
+    status, _ = http(base, "POST", f"/api/admin/matches/{MATCH}/restart?key={key}&minute_seconds={minute_seconds}&agents=true")
     if status != 200:
         sys.exit(f"restart failed ({status}): check the admin key")
     print(f"Replaying {names['home']} v {names['away']} at {minute_seconds}s per minute...")
