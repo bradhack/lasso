@@ -140,8 +140,9 @@ async def consume_forever(on_event: OnEvent, cfg: Settings = settings,
     while True:
         try:
             cred = DefaultAzureCredential(managed_identity_client_id=cfg.managed_identity_client_id or None)
-            consumer = EventHubConsumerClient(cfg.eventhub_namespace, cfg.eventhub_consumer_group,
-                                              eventhub_name=cfg.eventhub_name, credential=cred)
+            consumer = EventHubConsumerClient(fully_qualified_namespace=cfg.eventhub_namespace,
+                                              eventhub_name=cfg.eventhub_name,
+                                              consumer_group=cfg.eventhub_consumer_group, credential=cred)
             log.info("Event Hubs consumer connecting to %s/%s", cfg.eventhub_namespace, cfg.eventhub_name)
             async with consumer, cred:
                 await consumer.receive(on_event=handle, on_error=on_error, starting_position="@latest")
