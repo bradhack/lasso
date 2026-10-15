@@ -96,6 +96,27 @@ a { color: var(--silver); }
 /* Touchline */
 .touchline .poss { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--text-2); }
 .touchline .poss i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.seg.mini { display: inline-flex; gap: 2px; padding: 2px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); }
+.seg.mini .tab { height: 34px; min-width: 0; padding: 0 12px; font-size: 12px; border: 0; border-radius: 999px; }
+.touchline .possdot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: 0.05em; }
+.pitch .shot-hit { cursor: pointer; }
+.pitch .hit { fill: transparent; }
+.pitch .shot-ring { fill: none; stroke: var(--text); stroke-width: 0.45; stroke-dasharray: 1 0.8; }
+.shotfoot { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; font-size: 12px; color: var(--muted); }
+.shotfoot .legend { display: flex; flex-wrap: wrap; gap: 12px; }
+.shotfoot .legend span { display: inline-flex; align-items: center; gap: 5px; }
+.shotfoot .lg { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.shotfoot .lg.goal { background: var(--gold); }
+.shotfoot .lg.on { background: var(--soft); }
+.shotfoot .lg.off { border: 1.5px solid var(--soft); }
+.shotrow { display: grid; grid-template-columns: 64px repeat(4, minmax(0, 1fr)); gap: 6px; align-items: end; }
+.shotrow > span { display: flex; flex-direction: column; font-size: 11px; line-height: 1.2; }
+.shotrow > span.who { flex-direction: row; align-items: center; gap: 6px; align-self: center; }
+.shotrow b { color: var(--text); font-family: var(--num); font-size: 18px; font-weight: 600; line-height: 1.1; }
+.shotrow .who b { font-family: var(--body); font-size: 13px; font-weight: 700; }
+.shotrow .crest-img.sm { width: 20px; height: 20px; filter: none; }
+.shotpick { color: var(--text-2); font-size: 13px; padding-top: 6px; border-top: 1px solid var(--line); }
+.shotpick i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; }
 .linkbtn { background: none; border: 0; color: var(--muted); font-size: 12px; font-weight: 700; padding: 4px 2px; }
 .pitch { width: 100%; display: block; margin-top: 12px; }
 .pitch .turf { fill: var(--pitch); }

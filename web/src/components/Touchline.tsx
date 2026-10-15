@@ -13,14 +13,19 @@ const W = 105;
 const H = 68;
 const TEAM = ["var(--home)", "var(--away)"];
 const KEY = "lasso-touchline-hidden";
+const VIEW_KEY = "lasso-touchline-view";
 const reduceMotion = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
-function readHidden() {
+function readPref(key: string) {
   try {
-    return localStorage.getItem(KEY) === "1";
+    return localStorage.getItem(key);
   } catch {
-    return false;
+    return null;
   }
+}
+
+function readHidden() {
+  return readPref(KEY) === "1";
 }
 
 export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
@@ -61,31 +66,37 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
   useEffect(() => {
     if (!lastGoal || lastGoal.s <= seenGoal.current) return;
     seenGoal.current = lastGoal.s;
+    if (touches.slice(-8).every((x) => x.s !== lastGoal.s)) return; // an old goal caught up in a replay: no fanfare
     setFlash(lastGoal);
     const tm = window.setTimeout(() => setFlash(null), 3500);
     return () => window.clearTimeout(tm);
   }, [lastGoal?.s]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const [view, setView] = useState<"live" | "shots">(() => (readPref(VIEW_KEY) === "shots" ? "shots" : "live"));
+  const [picked, setPicked] = useState<number | null>(null);
+  const recentShot = [...shown.slice(-8)].reverse().find((x) => x.t === "shot");
+  const selected = shots.find((x) => x.s === picked) ?? shots[shots.length - 1];
+
   const toggle = () => {
     const next = !hidden;
     setHidden(next);
-    try {
-      localStorage.setItem(KEY, next ? "1" : "0");
-    } catch {
-      /* not saved; fine for this visit */
-    }
+    writePref(KEY, next ? "1" : "0");
+  };
+  const choose = (v: "live" | "shots") => {
+    setView(v);
+    writePref(VIEW_KEY, v);
   };
 
   return (
     <section className="card touchline" aria-label={t("touchline", lang)}>
       <div className="row">
         <span className="eyebrow gold">{t("touchline", lang)}</span>
-        <div className="row" style={{ gap: 10 }}>
-          {!hidden && possession !== null && snap.status !== "scheduled" && (
-            <span className="poss">
-              <i style={{ background: TEAM[possession] }} />
-              {(possession === 0 ? snap.home : snap.away).short} {t("ball", lang)}
-            </span>
+        <div className="row" style={{ gap: 8 }}>
+          {!hidden && (
+            <div className="seg mini" role="tablist">
+              <button role="tab" aria-selected={view === "live"} className={`tab${view === "live" ? " sel" : ""}`} onClick={() => choose("live")}>{t("live", lang)}</button>
+              <button role="tab" aria-selected={view === "shots"} className={`tab${view === "shots" ? " sel" : ""}`} onClick={() => choose("shots")}>{t("vShots", lang)}</button>
+            </div>
           )}
           <button className="linkbtn" onClick={toggle} aria-expanded={!hidden}>
             {hidden ? t("show", lang) : t("hide", lang)}
@@ -95,30 +106,33 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
       {!hidden && (
         <>
           <svg className="pitch" viewBox={`-3 -3 ${W + 6} ${H + 6}`} role="img"
-            aria-label={last ? describe(last, snap, lang) : t("touchline", lang)}>
+            aria-label={view === "live" ? (last ? describe(last, snap, lang) : t("touchline", lang)) : t("vShots", lang)}>
             <PitchMarkings />
-            {shots.map((s) => {
-              const r = 1.1 + (s.xg ?? 0) * 4.5;
-              return (
-                <circle key={`shot-${s.s}`} cx={s.x} cy={s.y} r={r}
-                  className={`shot${s.g ? " goal" : s.on ? " on" : " off"}${s.s === last?.s ? " now" : ""}`}
-                  style={{ ["--team" as string]: TEAM[s.k] }} />
-              );
-            })}
-            {markers.map((m, i) => (
-              <Marker key={`m-${m.s}`} m={m} age={markers.length - 1 - i} />
-            ))}
-            {passes.map((p, i) => (
-              <line key={`p-${p.s}`} x1={p.x} y1={p.y} x2={p.ex} y2={p.ey}
-                className={`pass${p.o ? "" : " cut"}`}
-                style={{ stroke: TEAM[p.k], opacity: 0.25 + 0.75 * ((i + 1) / passes.length) }} />
-            ))}
-            {ball && (
-              <g className="ball" style={{ transform: `translate(${ball[0]}px, ${ball[1]}px)` }}>
-                <circle r="3.4" className="halo" style={{ fill: TEAM[possession ?? last?.k ?? 0] }} />
-                <circle r="1.5" className="core" />
-              </g>
+            {view === "live" && (
+              <>
+                {recentShot && <ShotDot s={recentShot} now={recentShot.s === last?.s} />}
+                {markers.map((m, i) => (
+                  <Marker key={`m-${m.s}`} m={m} age={markers.length - 1 - i} />
+                ))}
+                {passes.map((p, i) => (
+                  <line key={`p-${p.s}`} x1={p.x} y1={p.y} x2={p.ex} y2={p.ey}
+                    className={`pass${p.o ? "" : " cut"}`}
+                    style={{ stroke: TEAM[p.k], opacity: 0.25 + 0.75 * ((i + 1) / passes.length) }} />
+                ))}
+                {ball && (
+                  <g className="ball" style={{ transform: `translate(${ball[0]}px, ${ball[1]}px)` }}>
+                    <circle r="3.4" className="halo" style={{ fill: TEAM[possession ?? last?.k ?? 0] }} />
+                    <circle r="1.5" className="core" />
+                  </g>
+                )}
+              </>
             )}
+            {view === "shots" && shots.map((x) => (
+              <g key={`shot-${x.s}`} className="shot-hit" onClick={() => setPicked(x.s)}>
+                <ShotDot s={x} now={x.s === last?.s} picked={x.s === selected?.s} />
+                <circle cx={x.x} cy={x.y} r="4.5" className="hit" />
+              </g>
+            ))}
             {flash && (
               <g key={`goal-${flash.s}`} className="goalflash">
                 <circle cx={flash.k === 0 ? W : 0} cy={H / 2} r="6" />
@@ -126,15 +140,68 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
               </g>
             )}
           </svg>
-          <div className="pitch-foot">
-            <span className="dir"><Crest club={snap.home} size="sm" />{snap.home.short} <b>→</b></span>
-            <span className="ticker" aria-live="polite">{last ? `${last.m}'  ${describe(last, snap, lang)}` : ""}</span>
-            <span className="dir right"><b>←</b> {snap.away.short}<Crest club={snap.away} size="sm" /></span>
-          </div>
+          {view === "live" ? (
+            <div className="pitch-foot">
+              <span className="dir"><Crest club={snap.home} size="sm" />{snap.home.short} <b>→</b></span>
+              <span className="ticker" aria-live="polite">
+                {possession !== null && snap.status !== "scheduled" && <i className="possdot" style={{ background: TEAM[possession] }} />}
+                {last ? `${last.m}'  ${describe(last, snap, lang)}` : ""}
+              </span>
+              <span className="dir right"><b>←</b> {snap.away.short}<Crest club={snap.away} size="sm" /></span>
+            </div>
+          ) : (
+            <div className="shotfoot">
+              <div className="legend">
+                <span><i className="lg goal" />{t("goalWord", lang)}</span>
+                <span><i className="lg on" />{t("onTarget", lang)}</span>
+                <span><i className="lg off" />{t("tOff", lang)}</span>
+                <span className="muted">{t("sizeXg", lang)}</span>
+              </div>
+              {[0, 1].map((k) => {
+                const mine = shots.filter((x) => x.k === k);
+                const club = k === 0 ? snap.home : snap.away;
+                return (
+                  <div key={k} className="shotrow">
+                    <span className="who"><Crest club={club} size="sm" /><b>{club.short}</b></span>
+                    <span><b>{mine.length}</b>{t("vShots", lang).toLowerCase()}</span>
+                    <span><b>{mine.filter((x) => x.on || x.g).length}</b>{t("onTarget", lang)}</span>
+                    <span><b>{mine.reduce((a, x) => a + (x.xg ?? 0), 0).toFixed(2)}</b>xG</span>
+                    <span><b>{mine.filter((x) => x.g).length}</b>{t("goalsWord", lang)}</span>
+                  </div>
+                );
+              })}
+              {selected && (
+                <div className="shotpick" aria-live="polite">
+                  <i style={{ background: TEAM[selected.k] }} />
+                  {selected.m}' {describe(selected, snap, lang)}
+                </div>
+              )}
+            </div>
+          )}
         </>
       )}
     </section>
   );
+}
+
+function ShotDot({ s, now = false, picked = false }: { s: Touch; now?: boolean; picked?: boolean }) {
+  const r = 1.1 + (s.xg ?? 0) * 4.5;
+  return (
+    <>
+      {picked && <circle cx={s.x} cy={s.y} r={r + 1.6} className="shot-ring" />}
+      <circle cx={s.x} cy={s.y} r={r}
+        className={`shot${s.g ? " goal" : s.on ? " on" : " off"}${now ? " now" : ""}`}
+        style={{ ["--team" as string]: TEAM[s.k] }} />
+    </>
+  );
+}
+
+function writePref(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    /* not saved; fine for this visit */
+  }
 }
 
 /** The passes of the move in progress: the latest run of passes by one team, back to the last interruption. */
