@@ -47,6 +47,9 @@ a { color: var(--silver); }
 .brand span { font-family: var(--logo); font-weight: 700; font-size: 21px; letter-spacing: 0.02em; color: var(--text); }
 .pills { display: flex; gap: 8px; align-items: center; }
 .pill { display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.pill { white-space: nowrap; }
+@media (max-width: 389px) { .pill .lbl { display: none; } .pills { gap: 6px; } }
+.pill.icon { width: 34px; height: 34px; padding: 0; justify-content: center; color: var(--soft); }
 .pill.gold { background: color-mix(in srgb, var(--gold) 12%, transparent); border-color: color-mix(in srgb, var(--gold) 40%, transparent); color: var(--gold-2); }
 .pill .bump { animation: bump 0.5s ease; }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--live); display: inline-block; }

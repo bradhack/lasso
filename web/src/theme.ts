@@ -27,6 +27,7 @@ export function setAppearance(a: Appearance) {
     /* private mode: still applies for this visit */
   }
   applyTheme(theme);
+  window.dispatchEvent(new Event("lasso-theme"));
 }
 
 export function currentAppearance(): Appearance {

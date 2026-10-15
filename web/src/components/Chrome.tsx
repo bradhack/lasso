@@ -1,14 +1,22 @@
 import confetti from "canvas-confetti";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { t } from "../i18n";
 import { useStore } from "../store";
 import { Animated } from "./bits";
-import { Biscuit, CardsIcon, Flame, LassoMark, LiveIcon, Trophy, UserIcon } from "./Icons";
+import { Biscuit, CardsIcon, Flame, LassoMark, LiveIcon, Moon, Sun, Trophy, UserIcon } from "./Icons";
+import { currentAppearance, setAppearance } from "../theme";
 
 export function TopBar() {
   const user = useStore((s) => s.user);
   const connected = useStore((s) => s.connected);
   const lang = useStore((s) => s.lang);
+  const [mode, setMode] = useState(currentAppearance);
+  useEffect(() => {
+    const sync = () => setMode(currentAppearance());
+    window.addEventListener("lasso-theme", sync);
+    return () => window.removeEventListener("lasso-theme", sync);
+  }, []);
+  const flip = () => setAppearance(mode === "dark" ? "light" : "dark");
   return (
     <header className="topbar">
       <a className="brand" href="#/" aria-label="Lasso home">
@@ -24,8 +32,12 @@ export function TopBar() {
           </span>
           <span className="pill gold" title={t("streak", lang)}>
             <Flame />
-            <span>{user.streak} {t("streak", lang)}</span>
+            <span>{user.streak}<span className="lbl"> {t("streak", lang)}</span></span>
           </span>
+          <button className="pill icon" onClick={flip} aria-label={mode === "dark" ? t("light", lang) : t("dark", lang)}
+            title={mode === "dark" ? t("light", lang) : t("dark", lang)}>
+            {mode === "dark" ? <Sun /> : <Moon />}
+          </button>
         </div>
       )}
     </header>

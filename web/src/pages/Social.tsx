@@ -126,6 +126,11 @@ export function Profile() {
   const setUser = useStore((s) => s.setUser);
   const [appearance, setAppearanceState] = useState(currentAppearance);
   useEffect(() => {
+    const sync = () => setAppearanceState(currentAppearance());
+    window.addEventListener("lasso-theme", sync);
+    return () => window.removeEventListener("lasso-theme", sync);
+  }, []);
+  useEffect(() => {
     if (user) api.user(user.id).then(setUser).catch(() => undefined);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   if (!user) return null;
