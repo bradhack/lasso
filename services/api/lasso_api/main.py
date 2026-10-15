@@ -389,6 +389,22 @@ _ASK_FALLBACK = {
 }
 
 
+_SENTENCE = re.compile(r"(?<=[.!?])\s+")
+
+
+def _cap_words(text: str, limit: int) -> str:
+    """Backstop for long answers: keep whole sentences up to the word limit (always at least the first)."""
+    out: list[str] = []
+    n = 0
+    for sent in _SENTENCE.split(text.strip()):
+        w = len(sent.split())
+        if out and n + w > limit:
+            break
+        out.append(sent)
+        n += w
+    return " ".join(out)[:700]
+
+
 def _ask_allowed(user_id: str) -> str | None:
     """Cost guard-rails for questions: a shared daily cap, and a pace and daily allowance per fan."""
     day = time.strftime("%Y-%m-%d")
@@ -443,13 +459,23 @@ async def ask(match_id: str, body: AskIn) -> dict:
                  "chances_pct": {room.names[0]: p["home"], "draw": p["draw"], room.names[1]: p["away"]}}
         if any(room.state.reds):
             brief["red_cards"] = {room.names[0]: room.state.reds[0], room.names[1]: room.state.reds[1]}
-        # The authoritative timeline, so basic questions never depend on which tools the Scout picks.
+        # The authoritative timeline and numbers, so basic questions never depend on which tools the Scout picks
+        # and the Gaffer never has to guess a figure.
         brief["key_events"] = [f"{e['minute']}' {e['text']}" for e in room.feed
                                if e.get("type") in KEY_EVENTS][-24:]
+        st = room.stats_public()["teams"]
+        brief["numbers"] = {room.names[i]: {"xg": st[i]["xg"], "shots": st[i]["shots"],
+                                            "on_target": st[i]["on_target"], "possession_pct": st[i]["possession"]}
+                            for i in (0, 1)}
+        sent_off = [f"{c['p']} ({room.names[c['k']]}, {c['m']}')" for c in room.cards if c["c"] == "r"]
+        if sent_off:
+            brief["sent_off"] = sent_off
+            brief["rules"] = ("A sent-off player cannot be replaced by a substitute; that team plays the rest of "
+                              "the match a man short.")
         pkg = await agents.produce(brief)
         # A real answer echoes our id and carries the agents' trace; anything else is an error reply.
         if pkg and pkg.get("ask_id") == ask_id and pkg.get("trace") and isinstance(pkg.get("answer"), str):
-            answer = _localize(lang, _clean(pkg["answer"]))[:700]
+            answer = _cap_words(_localize(lang, _clean(pkg["answer"])), 85 if u.get("persona") == "analyst" else 55)
             followups = [_localize(lang, _clean(f))[:60] for f in (pkg.get("followups") or [])
                          if isinstance(f, str) and f.strip()][:2]
             trace = pkg["trace"]
