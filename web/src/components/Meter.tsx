@@ -60,7 +60,11 @@ function pointAtOrBefore(h: MeterPoint[], m?: { minute: number }) {
   return best;
 }
 
-function Spark({ history }: { history: MeterPoint[] }) {
+function Spark({ history: raw }: { history: MeterPoint[] }) {
+  // Snapshot and live pushes can overlap; plot one point per moment of match time, in order.
+  const byTime = new Map<number, MeterPoint>();
+  for (const pt of raw) byTime.set(pt.elapsed, pt);
+  const history = [...byTime.values()].sort((a, b) => a.elapsed - b.elapsed);
   const maxX = Math.max(96, history[history.length - 1].elapsed);
   const path = (k: "home" | "away") =>
     history.map((pt, i) => `${i ? "L" : "M"}${((pt.elapsed / maxX) * 100).toFixed(2)},${(30 - pt[k] * 30).toFixed(2)}`).join(" ");
