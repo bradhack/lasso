@@ -1,21 +1,24 @@
 # Lasso: Believe Your Call
 
-**See why the odds moved. Then out-predict the AI Gaffer on what's next.**
+**Watch smarter. Call it first.**
+
+Lasso shows your team's chances live, tells you in plain English why they just changed, and challenges you to predict what happens next against the Gaffer, our AI. Free to play.
 
 Lasso is a live, multi-agent match companion for phones and broadcasts, built for the Microsoft and Premier League *Inside the Game* hackathon.
 
 - It ingests synthetic football events in real time.
 - It updates a Bayesian win-probability model, **the Gaffer**, with every chance, card and goal. The model's output is the **Gaffer's Gauge**.
 - It explains every swing, so fans know *why* it moved.
+- **Fan or analyst:** fans get the story in plain English and their club's angle; analysts get every driver in points, xG and field tilt.
 - **Touchline** shows the ball live on the pitch: every pass, shot, tackle, save and corner, with the move in progress and a whole-match shot map.
-- It invites fans to make free-to-play **Call It** predictions against the Gaffer's own odds, with streaks, moment cards, missions and friend leagues. Biscuits are in-app points with no cash value.
+- It invites fans to make free-to-play **Call It** predictions priced at the Gaffer's own chances, with streaks, a sticker book of 17 achievements, missions and friend leagues. Biscuits are in-app points with no cash value.
 
-![Lasso: see why the odds moved, then out-predict the AI Gaffer](docs/img/submission-1-cover.png)
+![Lasso: watch smarter, call it first](docs/img/submission-1-cover.png)
 
 <p>
   <img src="docs/img/submission-2-how-it-works.png" width="32%" alt="How Lasso works: five agents, one live pipeline" />
-  <img src="docs/img/submission-3-the-gaffer.png" width="32%" alt="The Gaffer: a Bayesian model you can watch think" />
-  <img src="docs/img/submission-4-beat-the-gaffer.png" width="32%" alt="Beat the Gaffer: call the next moment, earn biscuits" />
+  <img src="docs/img/submission-3-the-gaffer.png" width="32%" alt="The Gaffer reads the game: honest win chances, tested on a season it never saw" />
+  <img src="docs/img/submission-4-beat-the-gaffer.png" width="32%" alt="Beat the Gaffer: call it first and fill your sticker book" />
 </p>
 
 ## How it works
@@ -30,7 +33,7 @@ flowchart LR
         ROOM["<b>Match rooms</b><br/>live state · xG · pass difficulty"]
         GAFFER["<b>The Gaffer</b><br/>Bayesian live model"]
         MCP["<b>MCP server</b><br/>/mcp tools"]
-        GAME["<b>Call It game</b><br/>biscuits · streaks · cards"]
+        GAME["<b>Call It game</b><br/>biscuits · streaks · stickers"]
         ROOM --> GAFFER --> MCP
         ROOM --> GAME
     end
@@ -138,7 +141,7 @@ Twenty fictional clubs, each with an original crest designed as one set: a disti
 | Path | What it is |
 |---|---|
 | `engine/` | `lasso_engine`: synthetic league and event simulator, the Gaffer (hierarchical Poisson team strengths plus Gamma-Poisson live updating), Shapley explanations, Call It pricing, evaluation |
-| `services/api/` | FastAPI: match rooms, the game (biscuits, streaks, the Goldfish, cards, missions, leagues), the Gaffer **MCP server**, realtime hub, A2A client |
+| `services/api/` | FastAPI: match rooms, the game (biscuits, streaks, the Goldfish, stickers, missions, leagues), the Gaffer **MCP server**, realtime hub, A2A client |
 | `services/agents/` | **Microsoft Agent Framework** agents and the Match Director fan-out / fan-in workflow, hosted over **A2A**, on **Microsoft Foundry** models |
 | `web/` | React + TypeScript phone app (installable PWA) and broadcast overlay |
 | `infra/` | Bicep for the whole stack, deployed with `azd up`. Keyless managed identity throughout |
