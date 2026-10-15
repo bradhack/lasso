@@ -67,6 +67,19 @@ export const Sparkle = ({ size = 13 }: P) => (
   </svg>
 );
 
+export const Speaker = ({ size = 15 }: P) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />
+    <path d="M15.5 9a4.2 4.2 0 0 1 0 6M18.2 6.6a7.6 7.6 0 0 1 0 10.8" />
+  </svg>
+);
+
+export const StopIcon = ({ size = 15 }: P) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <rect x="6.5" y="6.5" width="11" height="11" rx="2" />
+  </svg>
+);
+
 export const Sun = ({ size = 18 }: P) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden="true">
     <circle cx="12" cy="12" r="4.2" />

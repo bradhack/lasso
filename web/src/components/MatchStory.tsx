@@ -3,6 +3,7 @@ import { loc, t } from "../i18n";
 import type { Key } from "../i18n";
 import type { Lang, MatchSnapshot, Moment } from "../types";
 import { Sparkle } from "./Icons";
+import { Listen, storyText } from "./Listen";
 import { UnderTheHood } from "./UnderTheHood";
 
 const LABEL: Record<string, Key> = {
@@ -45,6 +46,8 @@ export function MatchStory({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) 
                   <div className="st-top">
                     <span className="st-tag">{t(LABEL[m.trigger] ?? "trPulse", lang)}</span>
                     <span className="st-score">{m.score[0]}-{m.score[1]}</span>
+                    <Listen kind="story" id={m.moment_id} matchId={snap.match_id} lang={lang} compact
+                      text={storyText(loc(m.headline, lang), loc(m.story, lang))} />
                     {m.source === "agents" && m.agent_trace?.length ? (
                       <button className="st-ai" onClick={() => setHood(m)} aria-label={t("uth", lang)}><Sparkle size={11} /> {t("agents", lang)}</button>
                     ) : null}

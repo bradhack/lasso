@@ -5,6 +5,7 @@ import { t } from "../i18n";
 import { useStore } from "../store";
 import type { AskAnswer, Lang, MatchSnapshot } from "../types";
 import { Sparkle } from "./Icons";
+import { Listen } from "./Listen";
 import { UnderTheHood } from "./UnderTheHood";
 
 const NO_ASKS: AskAnswer[] = [];
@@ -80,11 +81,14 @@ export function AskGaffer({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
                 <div className="bubble gaffer">
                   <span className="who">Gaffer</span>
                   {i.answer}
-                  {i.source === "agents" && i.trace.length > 0 && (
-                    <button className="by" onClick={() => setHood(i)} aria-label={t("uth", lang)}>
-                      <Sparkle size={11} /> {t("askBy", lang).replace("{n}", String(i.trace.length)).replace("{s}", (i.latency_ms / 1000).toFixed(1))} <span className="chev">›</span>
-                    </button>
-                  )}
+                  <span className="bubble-actions">
+                    <Listen kind="answer" id={i.ask_id} text={i.answer} lang={lang} />
+                    {i.source === "agents" && i.trace.length > 0 && (
+                      <button className="by" onClick={() => setHood(i)} aria-label={t("uth", lang)}>
+                        <Sparkle size={11} /> {t("askBy", lang).replace("{n}", String(i.trace.length)).replace("{s}", (i.latency_ms / 1000).toFixed(1))} <span className="chev">›</span>
+                      </button>
+                    )}
+                  </span>
                 </div>
               )}
             </div>

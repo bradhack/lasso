@@ -9,11 +9,12 @@ import os
 import re
 import time
 import uuid
+from collections import OrderedDict
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query, Request, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -26,6 +27,7 @@ from .feed import Scheduler, consume_forever, replay
 from .game import STAKES, GameService, daily_top_up, public_user
 from .matchroom import MatchRoom
 from .mcp_tools import build_mcp
+from .speech import Speech
 from .realtime import LocalHub, make_hub
 from .store import make_store
 
@@ -44,6 +46,8 @@ store = make_store(settings.cosmos_endpoint, settings.cosmos_database, settings.
 game = GameService(store)
 agents = AgentsClient(settings.agents_url, settings.agents_timeout) if settings.agents_url else None
 mcp = build_mcp(rooms)
+speech = Speech(settings.speech_region, settings.speech_resource_id, settings.managed_identity_client_id,
+                settings.speech_daily_limit)
 scheduler = Scheduler(data, lambda mid, ev: on_event(mid, ev))
 _last_stats: dict[str, float] = {}
 _background: set[asyncio.Task] = set()
@@ -316,6 +320,13 @@ class BelieveIn(BaseModel):
     side: int = Field(..., ge=0, le=1)
 
 
+class SpeechIn(BaseModel):
+    kind: str = Field(..., pattern="^(story|answer)$")
+    id: str = Field(..., max_length=80)
+    lang: str = Field("en", pattern="^(en|es|pt|fr)$")
+    match_id: str | None = Field(None, max_length=40)
+
+
 class LeagueIn(BaseModel):
     user_id: str
     name: str | None = None
@@ -376,6 +387,40 @@ async def match_story(match_id: str) -> list[dict]:
     return [{k: v for k, v in m.items() if k != "window"} for m in rooms[match_id].moments]
 
 
+@app.get("/api/speech")
+async def speech_status() -> dict:
+    """Whether the server reads aloud with Azure AI Speech; if not, the app uses the phone's voice."""
+    return {"azure": speech.enabled}
+
+
+@app.get("/api/speech/audio")
+async def listen(kind: str = Query(..., pattern="^(story|answer)$"), id: str = Query(..., max_length=80),
+                 lang: str = Query("en", pattern="^(en|es|pt|fr)$"),
+                 match_id: str | None = Query(None, max_length=40)) -> Response:
+    """Listen: a story or a Gaffer answer read aloud in the fan's language (MP3). The text comes from the server,
+    never from the request, so this can't be used to read arbitrary text. It's a plain GET so a phone can start
+    playing it inside the tap (iPhones block audio started later)."""
+    body = SpeechIn(kind=kind, id=id, lang=lang, match_id=match_id)
+    if body.kind == "story":
+        room = rooms.get(body.match_id or "")
+        m = next((x for x in (room.moments if room else []) if x["moment_id"] == body.id), None)
+        if m is None:
+            raise HTTPException(404, "story not found")
+        head = ((m.get("headline") or {}).get(body.lang) or "").strip()
+        if head and head[-1] not in ".!?":
+            head += "."  # a pause between the headline and the story
+        text = f"{head} {(m.get('story') or {}).get(body.lang) or ''}".strip()
+        lang = body.lang
+    else:
+        if body.id not in _answers:
+            raise HTTPException(404, "answer not found")
+        lang, text = _answers[body.id]
+    audio = await speech.synthesize(text, lang)
+    if audio is None:
+        raise HTTPException(503, "speech unavailable")
+    return Response(audio, media_type="audio/mpeg", headers={"Cache-Control": "private, max-age=86400"})
+
+
 @app.post("/api/matches/{match_id}/believe")
 async def touch_the_sign(match_id: str, body: BelieveIn) -> dict:
     """Touch the sign: believe in a side that's behind. If they draw level, believers get a bonus."""
@@ -395,6 +440,7 @@ async def touch_the_sign(match_id: str, body: BelieveIn) -> dict:
 
 # ------------------------------------------------------------ Ask the Gaffer
 _ask_state: dict = {"day": "", "count": 0, "users": {}}
+_answers: "OrderedDict[str, tuple[str, str]]" = OrderedDict()  # ask_id -> (lang, answer), for Listen
 KEY_EVENTS = {"goal", "red_card", "yellow_card", "substitution", "half_time"}
 _ASK_OFF_TOPIC = {
     "en": "I only talk about this match, so I'll leave that one. Right now at {m}': {score}. My numbers: {h} {ph}%, "
@@ -537,6 +583,9 @@ async def ask(match_id: str, body: AskIn) -> dict:
     if not answer:
         answer = _ask_fallback(room, lang)
     log.info("ask %s %s source=%s %dms", match_id, ask_id, source, int((time.time() - t0) * 1000))
+    _answers[ask_id] = (lang, answer)
+    while len(_answers) > 1000:
+        _answers.popitem(last=False)
     return {"ask_id": ask_id, "question": question, "answer": answer, "followups": followups, "source": source,
             "trace": trace, "minute": room.minute(), "latency_ms": int((time.time() - t0) * 1000)}
 

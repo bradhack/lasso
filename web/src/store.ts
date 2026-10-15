@@ -32,7 +32,8 @@ interface State {
   snapshots: Record<string, MatchSnapshot>;
   calls: Record<string, Call>; // by market_id
   asks: Record<string, AskAnswer[]>;
-  believed: Record<string, boolean>; // Touch the sign: `${match}:${side}:${spell}` this fan touched // Ask the Gaffer, by match_id (only the asker sees these)
+  believed: Record<string, boolean>;
+  speechAzure: boolean; // Listen: Azure AI Speech is on (otherwise the phone's own voice) // Touch the sign: `${match}:${side}:${spell}` this fan touched // Ask the Gaffer, by match_id (only the asker sees these)
   toasts: Toast[];
   connected: boolean;
   rt: Realtime | null;
@@ -77,6 +78,7 @@ export const useStore = create<State>((set, get) => ({
   calls: {},
   asks: {},
   believed: {},
+  speechAzure: false,
   toasts: [],
   connected: false,
   rt: null,
@@ -84,6 +86,7 @@ export const useStore = create<State>((set, get) => ({
 
   init: async () => {
     const [clubs, matches] = await Promise.all([api.clubs(), api.matches()]);
+    api.speechStatus().then((r) => set({ speechAzure: r.azure })).catch(() => undefined);
     set({ clubs: Object.fromEntries(clubs.map((c) => [c.club_id, c])), matches });
     const id = readId();
     if (id) {

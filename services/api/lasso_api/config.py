@@ -47,6 +47,10 @@ class Settings:
     agents_min_gap_seconds: float = field(default_factory=lambda: float(_env("LASSO_AGENTS_MIN_GAP", "20")))
     agents_daily_limit: int = field(default_factory=lambda: int(_env("LASSO_AGENTS_DAILY_LIMIT", "600")))
     # Ask the Gaffer: a shared daily cap, plus a per-fan pace and daily allowance.
+    # Listen: Azure AI Speech on the Foundry account (keyless). Empty region means the app uses the phone's voice.
+    speech_region: str = field(default_factory=lambda: _env("LASSO_SPEECH_REGION"))
+    speech_resource_id: str = field(default_factory=lambda: _env("LASSO_SPEECH_RESOURCE_ID"))
+    speech_daily_limit: int = field(default_factory=lambda: int(_env("LASSO_SPEECH_DAILY_LIMIT", "1500")))
     asks_daily_limit: int = field(default_factory=lambda: int(_env("LASSO_ASKS_DAILY_LIMIT", "500")))
     asks_per_user_daily: int = field(default_factory=lambda: int(_env("LASSO_ASKS_PER_USER_DAILY", "30")))
     asks_min_gap_seconds: float = field(default_factory=lambda: float(_env("LASSO_ASKS_MIN_GAP", "6")))

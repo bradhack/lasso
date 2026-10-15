@@ -25,7 +25,7 @@ The app replays four matches on a loop, so something is always live. Each match 
 4. In **Ask the Gaffer**, tap a suggestion or type your own question, in English, Spanish, Portuguese or French.
 5. **Call it:** pick an option and lasso it. You're playing free biscuits against the Gaffer's odds.
 6. If your club falls behind, **Touch the sign** to say you still believe. If they draw level, every believer gets a bonus.
-7. Scroll down to **Match story** for everything said so far. Visit **Stickers** and **Me** for the sticker book, your call history, language and light or dark mode.
+7. Tap **Listen** under a story or an answer to hear it read aloud. Scroll down to **Match story** for everything said so far. Visit **Stickers** and **Me** for the sticker book, your call history, language and light or dark mode.
 8. For TV: add `#/overlay/S5-MD07-03` to the link for a see-through overlay that sits on top of a match broadcast.
 
 ## 1. Technical implementation
@@ -95,7 +95,8 @@ An answer uses about 6,000 tokens across both agents, well under a cent. Full re
 
 - **A second screen for TV and streaming.** It tells viewers what just changed and why, in one sentence, the moment it happens. The see-through overlay puts the same Gauge on a broadcast.
 - **Understanding, not just numbers.** Casual fans get the two biggest reasons for each swing in plain words. Analysts get every cause in points, plus chances created and territory. Ask the Gaffer covers anything else.
-- **Built for everyone.** Four languages, two levels of detail, a line for your own club, light and dark themes, and reduced animation for people who prefer less motion.
+- **Built for everyone.** Four languages, two levels of detail, a line for your own club, and light and dark themes. **Listen** reads any story or Gaffer answer aloud in the fan's language with Azure AI Speech neural voices, for fans with low vision or anyone watching the match rather than the phone.
+- **Accessible by design.** Both themes pass an automated WCAG 2.2 AA audit (axe-core) on every screen, including color contrast and touch-target size. Sheets work fully by keyboard (focus moves in, Tab stays inside, Escape closes), the page language follows the fan's choice so screen readers use the right voice, live updates are announced politely, and looping animations stop on their own or immediately for anyone who prefers less motion.
 - **Fun without gambling.** Biscuits are free points with no cash value and can't be bought, and there's a daily top-up so nobody is locked out. The confidence bonus rewards honesty: your best strategy is always to say what you really believe.
 - **Honest numbers.** The Gauge was tested on a season it never saw, and the [model report](model-report.md) shows the results.
 - **Cheap to run.** The AI agents only work on matches someone is watching, with daily limits. The whole system costs about $7 to $10 a day with everything switched on.

@@ -17,6 +17,8 @@ Lasso is a live, multi-agent match companion for phones and broadcasts, built fo
 - **Fan or analyst:** fans get the story in plain English and their club's angle; analysts get every driver in points, xG and field tilt.
 - **Ask the Gaffer:** fans ask anything about the match in their own words ("Why did our chances drop at 5'?") and get an answer in their language. A Scout agent picks the Gaffer's MCP tools that answer it, and the Gaffer replies from those facts alone.
 - **Touch the sign:** when a side falls behind, a BELIEVE sign goes up. Fans who still believe touch it, see how many others believe, and get a biscuit bonus if their side draws level.
+- **Listen:** every story and every Gaffer answer can be read aloud in the fan's language, with Azure AI Speech neural voices (or the phone's own voice as a fallback).
+- **Accessible:** both themes pass an automated WCAG 2.2 AA audit on every screen, sheets work fully by keyboard, the page language follows the fan's choice for screen readers, and looping animations stop on their own.
 - **Under the hood:** tap the AI agents chip on any story or answer to see how it was made: which agents ran, which ran in parallel, the MCP tools each one called (with arguments), and the time, tokens and model for each.
 - **Match story** keeps every story told during the match, newest first, with how each one moved the chances.
 - **Touchline** shows the ball live on the pitch: every pass, shot, tackle, save and corner, with the move in progress and a whole-match shot map.

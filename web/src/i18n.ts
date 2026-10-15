@@ -205,6 +205,9 @@ const S = {
     pt: "Os números vêm do modelo bayesiano do Gaffer por meio de ferramentas MCP. Os agentes os explicam; nunca inventam estatísticas.",
     fr: "Les chiffres viennent du modèle bayésien du Gaffer via des outils MCP. Les agents les expliquent ; ils n'inventent jamais de statistiques.",
   },
+  listen: { en: "Listen", es: "Escuchar", pt: "Ouvir", fr: "Écouter" },
+  stopListen: { en: "Stop", es: "Detener", pt: "Parar", fr: "Arrêter" },
+  listenAria: { en: "Read this aloud", es: "Leer en voz alta", pt: "Ler em voz alta", fr: "Lire à voix haute" },
 } satisfies Record<string, Record<Lang, string>>;
 
 export type Key = keyof typeof S;

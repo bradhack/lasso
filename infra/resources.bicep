@@ -116,6 +116,18 @@ resource foundryOpenAIUser 'Microsoft.Authorization/roleAssignments@2022-04-01' 
   }
 }
 
+// Listen: the API reads stories aloud with Azure AI Speech on this same account (keyless). Cognitive Services
+// User covers speech synthesis.
+resource foundrySpeechUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(foundry.id, identity.id, 'cognitive-services-user')
+  scope: foundry
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b65f3-24c7-4388-baec-2e87135dc908')
+    principalId: identity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 // ----------------------------------------------------------------- Event Hubs (live match events)
 resource eventHubs 'Microsoft.EventHub/namespaces@2024-01-01' = {
   name: 'evhns-lasso-${token}'
@@ -266,6 +278,8 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
           { name: 'COSMOS_ENDPOINT', value: cosmos.properties.documentEndpoint }
           { name: 'LASSO_AGENTS_URL', value: '${agentsUrl}/' }
           { name: 'LASSO_ADMIN_KEY', secretRef: 'admin-key' }
+          { name: 'LASSO_SPEECH_REGION', value: foundry.location }
+          { name: 'LASSO_SPEECH_RESOURCE_ID', value: foundry.id }
           { name: 'OTEL_SERVICE_NAME', value: 'lasso-api' }
         ])
       }]

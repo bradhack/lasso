@@ -572,3 +572,15 @@ button.chip { cursor: pointer; font-family: inherit; }
 .toast-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; border-radius: 6px; }
 .pitch .shot-hit:focus-visible { outline: none; }
 .pitch .shot-hit:focus-visible .hit { stroke: var(--gold); stroke-width: 0.8; }
+
+/* Listen */
+.why-actions { display: flex; gap: 8px; margin-top: 10px; }
+.bubble-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+.bubble-actions .by { margin-top: 0; }
+.listen { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 3px 11px; border-radius: 999px; border: 1px solid var(--line-2); background: none; color: var(--soft); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.listen:hover { color: var(--text); border-color: var(--line-3); }
+.listen.loading { opacity: 0.6; }
+.listen.playing { color: var(--ink-on-gold); background: var(--gold); border-color: var(--gold); }
+.listen.compact { min-height: 24px; min-width: 24px; padding: 0; justify-content: center; }
+.st-top .listen.compact { margin-left: auto; }
+.st-top .listen.compact + .st-ai { margin-left: 0; }
