@@ -9,7 +9,7 @@ import { Feed, StatsPanel } from "../components/Panels";
 import { WhyItMoved } from "../components/WhyItMoved";
 import { t } from "../i18n";
 import { useStore } from "../store";
-import type { Lang, MatchSummary } from "../types";
+import type { Booking, Lang, MatchSummary } from "../types";
 
 function statusLabel(m: MatchSummary, lang: Lang) {
   if (m.status === "finished") return t("fullTime", lang);
@@ -96,9 +96,9 @@ export function MatchPage({ id }: { id: string }) {
           </span>
         </div>
         <div className="scoreboard">
-          <div className="team"><Crest club={snap.home} />{snap.home.name}{snap.reds[0] > 0 && <Men reds={snap.reds[0]} lang={lang} />}</div>
+          <div className="team"><Crest club={snap.home} />{snap.home.name}<Bookings cards={(snap.cards ?? []).filter((c) => c.k === 0)} reds={snap.reds[0]} lang={lang} /></div>
           <div className="score" aria-label={`${snap.score[0]} to ${snap.score[1]}`}>{snap.score[0]}<span className="sep">:</span>{snap.score[1]}</div>
-          <div className="team"><Crest club={snap.away} round />{snap.away.name}{snap.reds[1] > 0 && <Men reds={snap.reds[1]} lang={lang} />}</div>
+          <div className="team"><Crest club={snap.away} round />{snap.away.name}<Bookings cards={(snap.cards ?? []).filter((c) => c.k === 1)} reds={snap.reds[1]} lang={lang} /></div>
         </div>
         <Meter snap={snap} lang={lang} />
       </section>
@@ -113,12 +113,20 @@ export function MatchPage({ id }: { id: string }) {
   );
 }
 
-/** Red cards under a team: the card mark plus how many players they have left. */
-function Men({ reds, lang }: { reds: number; lang: Lang }) {
+/** Bookings under a team, like a broadcast scoreboard: each card with the player and minute. */
+function Bookings({ cards, reds, lang }: { cards: Booking[]; reds: number; lang: Lang }) {
+  if (!cards.length && !reds) return null;
+  const shown = cards.slice(-3);
   return (
-    <span className="men" title={t("redCards", lang)}>
-      {Array.from({ length: reds }, (_, i) => <i key={i} className="reds" />)}
-      {t("menLeft", lang).replace("{n}", String(11 - reds))}
-    </span>
+    <div className="bookings">
+      {shown.map((c, i) => (
+        <span key={i} className={`bk ${c.c === "r" ? "red" : "yellow"}`} title={t(c.c === "r" ? "tRed" : "tYellow", lang)}>
+          <i />
+          {c.p} {c.m}'
+        </span>
+      ))}
+      {cards.length > shown.length && <span className="bk more">+{cards.length - shown.length}</span>}
+      {reds > 0 && <span className="men" title={t("redCards", lang)}>{t("menLeft", lang).replace("{n}", String(11 - reds))}</span>}
+    </div>
   );
 }

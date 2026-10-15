@@ -23,6 +23,15 @@ export interface MatchSummary {
   minute: number;
   probs: Probs;
   prematch: Probs;
+  cards?: Booking[];
+}
+
+/** A booking on the scoreboard: team (0 home, 1 away), yellow or red, surname, minute. */
+export interface Booking {
+  k: 0 | 1;
+  c: "y" | "r";
+  p: string;
+  m: number;
 }
 
 export interface MeterPoint extends Probs {

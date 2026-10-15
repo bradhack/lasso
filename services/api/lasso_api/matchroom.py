@@ -102,6 +102,7 @@ class MatchRoom:
         self.shot_map: list[dict] = []  # every shot of the match, for the Touchline shot map
         self.pending_touches: list[dict] = []
         self.possession: int | None = None
+        self.cards: list[dict] = []  # bookings for the scoreboard: team, yellow/red, surname, minute
         self.last_seq = 0
         self._record_point()
 
@@ -158,7 +159,7 @@ class MatchRoom:
             "home": {"club_id": self.home_id, "name": self.names[0], **self._club(self.home_id)},
             "away": {"club_id": self.away_id, "name": self.names[1], **self._club(self.away_id)},
             "score": list(s.goals), "reds": list(s.reds), "period": s.period, "clock": round(s.clock, 2),
-            "minute": self.minute(), "probs": self.probs(),
+            "minute": self.minute(), "probs": self.probs(), "cards": self.cards,
             "prematch": {"home": self.pre["p_home"], "draw": self.pre["p_draw"], "away": self.pre["p_away"]},
         }
 
@@ -206,6 +207,11 @@ class MatchRoom:
             self.status = "live"
             out.append({"type": "status", "match": self.summary()})
         self._update_stats(ev, t)
+        if etype in ("yellow_card", "red_card") and t is not None:
+            name = self.data.player_label(ev.get("player_id"))
+            self.cards.append({"k": t, "c": "r" if etype == "red_card" else "y",
+                               "p": name.split()[-1] if name else "", "m": self.minute()})
+            out.append({"type": "status", "match": self.summary()})
         touch = self._touch(ev, t)
         if touch:
             self.touches.append(touch)
