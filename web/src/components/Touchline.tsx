@@ -121,16 +121,11 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
                   <Marker key={`m-${m.s}`} m={m} age={markers.length - 1 - i} />
                 ))}
                 {passes.map((p, i) => (
-                  <line key={`p-${p.s}`} x1={p.x} y1={p.y} x2={p.ex} y2={p.ey}
+                  <path key={`p-${p.s}`} d={passCurve(p).d}
                     className={`pass${p.o ? "" : " cut"}`}
                     style={{ stroke: TEAM[p.k], opacity: 0.25 + 0.75 * ((i + 1) / passes.length) }} />
                 ))}
-                {ball && (
-                  <g className="ball" style={{ transform: `translate(${ball[0]}px, ${ball[1]}px)` }}>
-                    <circle r="3.4" className="halo" style={{ fill: TEAM[possession ?? last?.k ?? 0] }} />
-                    <circle r="1.5" className="core" />
-                  </g>
-                )}
+                {ball && <Ball last={last} at={ball} fill={TEAM[possession ?? last?.k ?? 0]} />}
               </>
             )}
             {view === "shots" && shots.map((x) => (
@@ -187,6 +182,68 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
         </>
       )}
     </section>
+  );
+}
+
+/**
+ * A pass drawn as a gentle arc, the way a ball curls or is lofted, rather than a ruler line.
+ * The bend grows with distance, and its side is fixed per pass (so it never flickers) and
+ * flipped when it would leave the pitch.
+ */
+function passCurve(p: Touch): { c: [number, number]; d: string } {
+  const x1 = p.x ?? 0, y1 = p.y ?? 0, x2 = p.ex ?? x1, y2 = p.ey ?? y1;
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const bend = Math.min(8, len * 0.17);
+  const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, nx = -dy / len, ny = dx / len;
+  let side = p.s % 2 ? 1 : -1;
+  let cx = mx + nx * bend * side, cy = my + ny * bend * side;
+  if (cx < 1 || cx > W - 1 || cy < 1 || cy > H - 1) {
+    side = -side;
+    cx = mx + nx * bend * side;
+    cy = my + ny * bend * side;
+  }
+  const r = (v: number) => Math.round(v * 10) / 10;
+  return { c: [cx, cy], d: `M${r(x1)} ${r(y1)}Q${r(cx)} ${r(cy)} ${r(x2)} ${r(y2)}` };
+}
+
+/** The ball. After a pass it travels along the same arc as the line, slowing as it arrives. */
+function Ball({ last, at, fill }: { last?: Touch; at: [number, number]; fill: string }) {
+  const g = useRef<SVGGElement>(null);
+  const pos = useRef<[number, number] | null>(null);
+  useEffect(() => {
+    const el = g.current;
+    if (!el) return;
+    const put = (q: [number, number]) => {
+      pos.current = q;
+      el.setAttribute("transform", `translate(${q[0].toFixed(2)} ${q[1].toFixed(2)})`);
+    };
+    const from = pos.current;
+    if (!from || reduceMotion || (from[0] === at[0] && from[1] === at[1])) {
+      put(at);
+      return;
+    }
+    const c = last?.t === "pass" && last.ex !== undefined ? passCurve(last).c : null;
+    const t0 = performance.now();
+    const dur = c ? 300 : 240;
+    let raf = 0;
+    const step = (now: number) => {
+      const u = Math.min(1, (now - t0) / dur);
+      const e = 1 - (1 - u) * (1 - u);
+      const a = 1 - e;
+      put(c
+        ? [a * a * from[0] + 2 * a * e * c[0] + e * e * at[0], a * a * from[1] + 2 * a * e * c[1] + e * e * at[1]]
+        : [from[0] + (at[0] - from[0]) * e, from[1] + (at[1] - from[1]) * e]);
+      if (u < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [at[0], at[1], last?.s]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <g ref={g} className="ball">
+      <circle r="3.4" className="halo" style={{ fill }} />
+      <circle r="1.5" className="core" />
+    </g>
   );
 }
 
