@@ -89,7 +89,7 @@ ENGLISH_LEAK = {"es": re.compile(r"\b(chance|chances|possession|read|the|my)\b")
                 "pt": re.compile(r"\b(possession|read|the|my)\b"),
                 "fr": re.compile(r"\bune \d+ ?% chance\b|\b(read|the|my)\b")}
 EUROPEAN_PT = re.compile(r"\b(golo|golos|equipa|equipas|a jogar|a correr)\b")
-GARBLED = re.compile(r"\d\s?%\d")
+GARBLED = re.compile(r"\d\s?%\d|\d\s?%\s?(?:de\s)?xG")
 POSSESSION = re.compile(r"possession|posesi[oó]n|posse", re.I)
 PCT = re.compile(r"(\d{1,3})\s?%")
 MINUTE = re.compile(r"(\d{1,3})\s?(?:'|’|st minute|nd minute|rd minute|th minute|e minute|º|ª)|minut[eo]s?\s(\d{1,3})")

@@ -422,11 +422,19 @@ _SENTENCE = re.compile(r"(?<=[.!?])\s+")
 
 
 _XG = re.compile(r"\bxG\b|\d[.,]\d\d")
+# An xG phrase inside a sentence: "and 0.68 xG by 48'", "y 0.63 xG acumulado", "(1.26 xG)".
+_XG_CLAUSE = re.compile(
+    r"\s*\(\s*\d+[.,]\d+\s*xG\s*\)"  # "(1.26 xG)"
+    r"|,?\s+\b(?:and|with|y|con|e|com|et|avec)\s+\d+[.,]\d+\s*xG\b"  # "and 0.68 xG", "y 0.63 xG"
+    r"(?:\s+(?:by|at|al|aos|à|en|em|in|acumulad[oa]s?|total|so far|until)\b[^,.;)]*)?",
+    re.IGNORECASE)
 
 
 def _plain_for_fans(text: str) -> str:
-    """Fans don't get xG decimals: drop sentences that quote them, as long as one sentence remains."""
-    sents = _SENTENCE.split(text.strip())
+    """Fans don't get xG decimals: cut the xG phrase out of a sentence, and drop any sentence still quoting
+    it as long as another sentence remains."""
+    text = _XG_CLAUSE.sub("", text).strip()
+    sents = _SENTENCE.split(text)
     keep = [s_ for s_ in sents if not _XG.search(s_)]
     return " ".join(keep) if keep else text
 
@@ -504,7 +512,8 @@ async def ask(match_id: str, body: AskIn) -> dict:
         brief["key_events"] = [f"{e['minute']}' {e['text']}" for e in room.feed
                                if e.get("type") in KEY_EVENTS][-24:]
         st = room.stats_public()["teams"]
-        brief["numbers"] = {room.names[i]: {"xg": st[i]["xg"], "shots": st[i]["shots"],
+        fan = (u.get("persona") or "fan") != "analyst"
+        brief["numbers"] = {room.names[i]: {**({} if fan else {"xg": st[i]["xg"]}), "shots": st[i]["shots"],
                                             "on_target": st[i]["on_target"], "possession_pct": st[i]["possession"]}
                             for i in (0, 1)}
         sent_off = [f"{c['p']} ({room.names[c['k']]}, {c['m']}')" for c in room.cards if c["c"] == "r"]
