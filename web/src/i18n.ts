@@ -50,6 +50,8 @@ const S = {
   behind: { en: "{team} are behind. Believe.", es: "{team} va perdiendo. A creer.", pt: "{team} está perdendo. Acredite.", fr: "{team} est mené. Y croire." },
   backedIt: { en: "You backed the comeback.", es: "Apostaste por la remontada.", pt: "Você apostou na virada.", fr: "Tu as cru au retour." },
   cameBack: { en: "{team} came back.", es: "{team} remontó.", pt: "{team} reagiu.", fr: "{team} est revenu." },
+  menLeft: { en: "{n} men", es: "{n} jugadores", pt: "{n} jogadores", fr: "{n} joueurs" },
+  redCards: { en: "Red card: playing a player short", es: "Roja: juega con uno menos", pt: "Vermelho: joga com um a menos", fr: "Carton rouge : joue à dix" },
   teamTalk: { en: "Halftime team talk", es: "Charla del descanso", pt: "Preleção do intervalo", fr: "Causerie de la mi-temps" },
   fanHint: { en: "Plain-English stories and your club's angle", es: "Historias claras y el punto de vista de tu club", pt: "Histórias simples e o lado do seu clube", fr: "Des récits simples et l'angle de ton club" },
   analystHint: { en: "xG, field tilt and the full breakdown of every swing", es: "xG, dominio territorial y el desglose de cada cambio", pt: "xG, domínio territorial e o detalhamento de cada virada", fr: "xG, territoire et le détail de chaque bascule" },

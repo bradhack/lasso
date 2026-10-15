@@ -96,9 +96,9 @@ export function MatchPage({ id }: { id: string }) {
           </span>
         </div>
         <div className="scoreboard">
-          <div className="team"><Crest club={snap.home} />{snap.home.name}{snap.reds[0] > 0 && <span>{Array.from({ length: snap.reds[0] }, (_, i) => <i key={i} className="reds" />)}</span>}</div>
+          <div className="team"><Crest club={snap.home} />{snap.home.name}{snap.reds[0] > 0 && <Men reds={snap.reds[0]} lang={lang} />}</div>
           <div className="score" aria-label={`${snap.score[0]} to ${snap.score[1]}`}>{snap.score[0]}<span className="sep">:</span>{snap.score[1]}</div>
-          <div className="team"><Crest club={snap.away} round />{snap.away.name}{snap.reds[1] > 0 && <span>{Array.from({ length: snap.reds[1] }, (_, i) => <i key={i} className="reds" />)}</span>}</div>
+          <div className="team"><Crest club={snap.away} round />{snap.away.name}{snap.reds[1] > 0 && <Men reds={snap.reds[1]} lang={lang} />}</div>
         </div>
         <Meter snap={snap} lang={lang} />
       </section>
@@ -110,5 +110,15 @@ export function MatchPage({ id }: { id: string }) {
       <Feed snap={snap} lang={lang} />
       {user?.persona !== "analyst" && <StatsPanel snap={snap} lang={lang} />}
     </div>
+  );
+}
+
+/** Red cards under a team: the card mark plus how many players they have left. */
+function Men({ reds, lang }: { reds: number; lang: Lang }) {
+  return (
+    <span className="men" title={t("redCards", lang)}>
+      {Array.from({ length: reds }, (_, i) => <i key={i} className="reds" />)}
+      {t("menLeft", lang).replace("{n}", String(11 - reds))}
+    </span>
   );
 }
