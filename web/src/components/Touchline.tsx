@@ -129,7 +129,9 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
               </>
             )}
             {view === "shots" && shots.map((x) => (
-              <g key={`shot-${x.s}`} className="shot-hit" onClick={() => setPicked(x.s)}>
+              <g key={`shot-${x.s}`} className="shot-hit" onClick={() => setPicked(x.s)} role="button" tabIndex={0}
+                aria-label={`${x.m}' ${describe(x, snap, lang)}`} aria-pressed={x.s === selected?.s}
+                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setPicked(x.s))}>
                 <ShotDot s={x} now={x.s === last?.s} picked={x.s === selected?.s} />
                 <circle cx={x.x} cy={x.y} r="4.5" className="hit" />
               </g>

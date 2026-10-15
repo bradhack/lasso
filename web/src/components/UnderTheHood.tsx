@@ -2,6 +2,7 @@ import { createPortal } from "react-dom";
 import { t } from "../i18n";
 import { useStore } from "../store";
 import type { AgentTrace, Lang } from "../types";
+import { useDialog } from "../useDialog";
 
 /** Each agent's name and job, in the fan's language. */
 const AGENTS: Record<string, Record<Lang, [string, string]>> = {
@@ -37,6 +38,7 @@ export function UnderTheHood({ kind, trace, latencyMs, onClose }: {
   kind: "story" | "answer"; trace: AgentTrace[]; latencyMs?: number; onClose: () => void;
 }) {
   const lang = useStore((s) => s.lang);
+  const panel = useDialog<HTMLDivElement>(onClose);
   const rows = layout(trace);
   const span = Math.max(1, ...rows.map((r) => r.from + r.a.ms));
   const stages = [...new Set(trace.map((a) => a.stage ?? 1))].sort();
@@ -46,7 +48,7 @@ export function UnderTheHood({ kind, trace, latencyMs, onClose }: {
 
   return createPortal(
     <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="uth-title" onClick={onClose}>
-      <div className="sheet-inner uth" onClick={(e) => e.stopPropagation()}>
+      <div className="sheet-inner uth" ref={panel} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
         <h2 id="uth-title" className="num" style={{ margin: 0, fontSize: 30 }}>{t("uth", lang).toUpperCase()}</h2>
         <p className="muted" style={{ margin: 0, lineHeight: 1.5 }}>
           {t(kind === "story" ? "uthStory" : "uthAnswer", lang).replace("{n}", String(trace.length))}

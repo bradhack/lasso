@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
-import { setMeterName } from "./i18n";
+import { setMeterName, setPageLang } from "./i18n";
 import { applyTheme, savedTheme } from "./theme";
 import { useStore } from "./store";
 import { watchForUpdates } from "./updates";
@@ -18,6 +18,9 @@ import "./styles.css";
 const params = new URLSearchParams(location.search);
 applyTheme(params.get("theme") ?? savedTheme());
 if (params.get("meter")) setMeterName(params.get("meter")!);
+
+setPageLang(useStore.getState().lang);
+useStore.subscribe((s, prev) => s.lang !== prev.lang && setPageLang(s.lang));
 
 watchForUpdates(() => useStore.getState().toast({ kind: "update" }));
 

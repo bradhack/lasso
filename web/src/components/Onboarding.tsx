@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { LANGS, t } from "../i18n";
+import { useEffect, useState } from "react";
+import { LANGS, setPageLang, t } from "../i18n";
+import { useDialog } from "../useDialog";
 import { useStore } from "../store";
 import type { Lang } from "../types";
 import { Crest } from "./bits";
@@ -14,10 +15,12 @@ export function Onboarding() {
   const [persona, setPersona] = useState<"fan" | "analyst">("fan");
   const [lang, setLang] = useState<Lang>(guessLang());
   const [busy, setBusy] = useState(false);
+  const panel = useDialog<HTMLDivElement>();
+  useEffect(() => setPageLang(lang), [lang]);
 
   return (
     <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="ob-title">
-      <div className="sheet-inner">
+      <div className="sheet-inner" ref={panel} tabIndex={-1}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, color: "var(--gold)" }}>
           <LassoMark size={34} />
           <span style={{ fontFamily: "Sora", fontWeight: 700, fontSize: 30, color: "var(--text)" }}>lasso</span>

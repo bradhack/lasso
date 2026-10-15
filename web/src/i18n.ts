@@ -215,6 +215,13 @@ export function setMeterName(name: string) {
   meterOverride = name.trim().slice(0, 30);
 }
 
+/** The page's language for browsers and screen readers (WCAG 3.1.1), so each language is read with the right voice. */
+export const HTML_LANG: Record<Lang, string> = { en: "en-US", es: "es-ES", pt: "pt-BR", fr: "fr-FR" };
+
+export function setPageLang(lang: Lang) {
+  document.documentElement.lang = HTML_LANG[lang] ?? "en";
+}
+
 export function t(key: Key, lang: Lang): string {
   if (key === "meter" && meterOverride) return meterOverride;
   const text = S[key][lang] ?? S[key].en;

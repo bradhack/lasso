@@ -7,6 +7,7 @@ import { Animated } from "./bits";
 import { StickerBadge, stickerText } from "./Stickers";
 import { Biscuit, CardsIcon, Fish, Flame, LassoMark, LiveIcon, Moon, Sun, Trophy, UserIcon } from "./Icons";
 import { currentAppearance, setAppearance } from "../theme";
+import { useDialog } from "../useDialog";
 
 export function TopBar() {
   const user = useStore((s) => s.user);
@@ -146,10 +147,10 @@ export function Toasts() {
           )}
           {x.kind === "error" && <div style={{ fontWeight: 600 }}>{x.text}</div>}
           {x.kind === "update" && (
-            <div onClick={() => location.reload()} style={{ cursor: "pointer" }}>
+            <button className="toast-btn" onClick={() => location.reload()}>
               <div className="sub" style={{ color: "var(--gold-2)", letterSpacing: "0.08em" }}>{t("updated", lang).toUpperCase()}</div>
               <div style={{ fontWeight: 700 }}>{t("tapRefresh", lang)}</div>
-            </div>
+            </button>
           )}
         </div>
       ))}
@@ -160,6 +161,7 @@ export function Toasts() {
 /** What a streak is worth and how the Goldfish protects it. Opens from the streak pill. */
 function StreakSheet({ onClose }: { onClose: () => void }) {
   const user = useStore((s) => s.user)!;
+  const panel = useDialog<HTMLDivElement>(onClose);
   const lang = useStore((s) => s.lang);
   const tiers = [
     { at: 3, x: "1.25x" },
@@ -167,7 +169,7 @@ function StreakSheet({ onClose }: { onClose: () => void }) {
   ];
   return (
     <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="streak-title" onClick={onClose}>
-      <div className="sheet-inner" onClick={(e) => e.stopPropagation()}>
+      <div className="sheet-inner" ref={panel} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
         <div className="row">
           <h2 id="streak-title" className="num" style={{ margin: 0, fontSize: 30 }}>{t("streakTitle", lang).toUpperCase()}</h2>
           <span className="pill gold"><Flame /> {user.streak}</span>
