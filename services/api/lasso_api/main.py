@@ -186,7 +186,9 @@ def _clean(text: object) -> str:
 
 _US = {"favourite": "favorite", "equaliser": "equalizer", "equalise": "equalize", "defence": "defense",
        "colour": "color", "centre": "center", "honour": "honor", "organise": "organize", "realise": "realize",
-       "neighbour": "neighbor", "behaviour": "behavior", "offence": "offense", "programme": "program"}
+       "neighbour": "neighbor", "behaviour": "behavior", "offence": "offense", "programme": "program",
+       "favour": "favor", "labour": "labor", "tyre": "tire", "analyse": "analyze", "recognise": "recognize",
+       "apologise": "apologize", "minimise": "minimize", "maximise": "maximize"}
 _US_RE = re.compile(r"\b(" + "|".join(_US) + r")", re.IGNORECASE)
 _FROM_TO = re.compile(r"\bfrom (\d+) ?% to (\d+) ?%")
 _FROM_TO_LANG = {"es": "del {}% al {}%", "pt": "de {}% para {}%", "fr": "de {} % à {} %"}
@@ -197,7 +199,7 @@ _FIXES = {
            (r"\ba correr\b", "correndo"), (r"\ba ganhar\b", "ganhando"), (r"\ba perder\b", "perdendo"),
            (r"\ba pressionar\b", "pressionando"), (r"(\d+)\.º", r"\1º")],
     "es": [(r"\bchances\b", "opciones"), (r"\buna chance\b", "una opción"), (r"\bchance\b", "opción"),
-           (r"\bpossession\b", "posesión")],
+           (r"\bpossession\b", "posesión"), (r"\buna (\d+) ?%", r"un \1%")],
 }
 
 
@@ -206,10 +208,16 @@ def _us(m: re.Match) -> str:
     return word.capitalize() if m.group(1)[0].isupper() else word
 
 
+# "a early red card": the article before a vowel sound, for the words that come up in match stories.
+_A_AN = re.compile(r"\b([Aa]) (?=(?:early|earlier|extra|equali[sz]er|own goal|unlikely|unexpected|important|ugly|"
+                   r"easy|eighth|eleventh|eighteenth|eightieth|hour|eight|11th|18th|8th|80th|81st|82nd|83rd|84th|"
+                   r"85th|86th|87th|88th|89th)\b)")
+
+
 def _localize(lang: str, text: str) -> str:
     """Deterministic fixes for what models still slip on: US spelling, and English left in translations."""
     if lang == "en":
-        return _US_RE.sub(_us, text)
+        return _A_AN.sub(lambda m: m.group(1) + "n ", _US_RE.sub(_us, text))
     if fmt := _FROM_TO_LANG.get(lang):
         text = _FROM_TO.sub(lambda m: fmt.format(m.group(1), m.group(2)), text)
     for pat, rep in _FIXES.get(lang, []):
@@ -263,7 +271,15 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
     # The story is only labeled as the agents' when they wrote its words (a narrator timeout leaves the
     # template text, even if the persona's analyst view and club lines arrived).
     applied = False
+    keep_story = False
+    if moment.get("trigger") == "var_overturned" and (moment.get("var") or {}).get("stands_pct") is not None:
+        # The instant story says what the ruled-out goal would have meant ("not the 23% it would have been");
+        # keep it unless the agents' version says so too.
+        story_en = (_lang_map(pkg.get("story")) or {}).get("en", "")
+        keep_story = f"{moment['var']['stands_pct']}%" not in story_en
     for key in ("headline", "story", "analyst"):
+        if key == "story" and keep_story:
+            continue
         if vals := _lang_map(pkg.get(key)):
             moment[key] = {**moment.get(key, {}), **vals}
             applied = applied or key in ("headline", "story")

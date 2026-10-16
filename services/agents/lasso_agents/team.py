@@ -52,8 +52,10 @@ Write naturally:
 - Write minutes in words ("in the 82nd minute", "early on", "just before halftime"), never 82' or "at 5'".
 - Don't open with the score line ("Eastholme Rangers 2-1."); weave the score into a sentence if it helps.
 - No possession, xG or shot counts in the story; analysts get those elsewhere.
-- Mention a red card only when this moment is the red card, or in a short clause such as "even with ten men",
-  and then make clear which team had the player sent off (the brief's red_cards).
+- Mention a red card or "ten men" only when this moment is the red card, or when the brief's drivers name the
+  red card as a cause of this change, or in a goal story for the side that's a man down ("even with ten men").
+  Never in clock, pulse, halftime or swing stories: fans already know, and repeating it reads as filler. When you
+  do mention it, make clear which team had the player sent off (the brief's red_cards).
 - When nothing happened but time passed, say what the clock means: with the score level a draw gets likelier,
   the team behind is running out of time, the team ahead is closer to the win.
 - At full time, say who won (or that it ended level) and the final score, and never quote a chance of winning

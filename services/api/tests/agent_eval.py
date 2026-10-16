@@ -313,6 +313,12 @@ def check_story(m: dict) -> dict[str, bool]:
                             and not re.match(r"(?:[A-Z][\w]*\s){1,4}\d+-\d+\.", en))
     if m.get("trigger") == "full_time":
         c["no_final_chances"] = not re.search(r"\b(?:100|0) ?%", en)
+    # The red card belongs in its own story and the goals after it, not in every clock update.
+    if m.get("trigger") in ("pulse", "swing", "swing_draw", "half_time") and not any(
+            d.get("component") == "red_cards" for d in m.get("drivers") or []):
+        c["no_red_card_filler"] = not re.search(r"ten men|red card|sent off|man down|\b10 men", en, re.I)
+    if m.get("trigger") == "var_overturned" and (m.get("var") or {}).get("stands_pct") is not None:
+        c["var_what_if"] = f"{m['var']['stands_pct']}%" in en
     return c
 
 
