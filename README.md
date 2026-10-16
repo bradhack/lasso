@@ -27,7 +27,7 @@ Lasso is a live, multi-agent match companion for phones and broadcasts, built fo
 ![Lasso: watch smarter, call it first](docs/img/submission-1-cover.png)
 
 <p>
-  <img src="docs/img/submission-2-how-it-works.png" width="32%" alt="How Lasso works: five agents, one live pipeline" />
+  <img src="docs/img/submission-2-how-it-works.png" width="32%" alt="How Lasso works: seven agents in two teams, one live pipeline" />
   <img src="docs/img/submission-3-the-gaffer.png" width="32%" alt="The Gaffer reads the game: honest win chances, tested on a season it never saw" />
   <img src="docs/img/submission-4-beat-the-gaffer.png" width="32%" alt="Beat the Gaffer: call it first and fill your sticker book" />
 </p>
