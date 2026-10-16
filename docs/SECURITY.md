@@ -26,6 +26,16 @@ Lasso has no passwords or payment details, and fans don't create accounts. What 
 | Azure templates and Dockerfiles | `checkov` | Remaining findings are enterprise network isolation (private endpoints, image quarantine) that a public demo doesn't use |
 | Manual review | | Found and fixed: the agents service open to anyone, fans' ids on the leaderboard, the admin key in the URL, unlimited sign-ups |
 
+## Accepted findings
+
+The security workflow reports these on purpose; each is dismissed as "Won't fix" in code scanning, for this reason:
+
+| Finding | Tool | Why it stays |
+|---|---|---|
+| Disable public access; private endpoints for Foundry, Cosmos DB and the Container Apps environment | Template Analyzer, checkov | Lasso is a public demo with no virtual network. Every service accepts only Microsoft Entra sign-in (keys are off), which is what protects them. |
+| Image quarantine and vulnerability scanning in the registry | checkov | Needs the Premium registry or Defender for Containers; dependencies are scanned in this workflow and by `pip-audit` and `npm audit`. |
+| Restrict Cognitive Services endpoints | Template Analyzer | As above: no virtual network, Entra-only sign-in. |
+
 ## Run the scans yourself
 
 From the repo root:

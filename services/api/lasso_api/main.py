@@ -178,15 +178,17 @@ async def settle(room: MatchRoom, market_id: str) -> None:
         await hub.to_user(user_id, msg)
 
 
-_DASHES = re.compile(r"\s*[\u2014\u2013]\s*")
+_DASHES = re.compile(r"[ \t]{0,3}[\u2014\u2013][ \t]{0,3}")
 
 
-_RANGE = re.compile(r"(\d+(?:[.,]\d+)?)\s*[\u2013\u2014-]\s*(\d+(?:[.,]\d+)?)(\s?%)")
+# Bounded repeats throughout: these run on model output and fans' questions, so no pattern may backtrack
+# without limit on a long run of digits or spaces.
+_RANGE = re.compile(r"(?<![\d.,])(\d{1,3}(?:[.,]\d{1,2})?) {0,2}[\u2013\u2014-] {0,2}(\d{1,3}(?:[.,]\d{1,2})?)( ?%)")
 _RANGE_WORD = {"en": "to", "es": "a", "pt": "a", "fr": "à"}
 
 
 # A minute range: "between 82'–88'" read "between 82', 88'" once the dash became a comma.
-_MIN_RANGE = re.compile(r"\b(between |entre )?(\d+)['’]\s*[\u2013\u2014-]\s*(\d+)['’]", re.IGNORECASE)
+_MIN_RANGE = re.compile(r"\b(between |entre )?(\d{1,3})['’] {0,2}[\u2013\u2014-] {0,2}(\d{1,3})['’]", re.IGNORECASE)
 _AND_WORD = {"en": "and", "es": "y", "pt": "e", "fr": "et"}
 
 
@@ -197,7 +199,7 @@ def _clean(text: object, lang: str = "en") -> str:
     text = _MIN_RANGE.sub(lambda m: (f"{m.group(1)}{m.group(2)}' {_AND_WORD.get(lang, 'and')} {m.group(3)}'"
                                      if m.group(1) else
                                      f"{m.group(2)}' {_RANGE_WORD.get(lang, 'to')} {m.group(3)}'"), text)
-    text = re.sub(r"(\d)\s*[\u2013\u2014]\s*(\d)", r"\1-\2", text)  # a score: "1–0" is "1-0", not "1, 0"
+    text = re.sub(r"(\d) {0,2}[\u2013\u2014] {0,2}(\d)", r"\1-\2", text)  # a score: "1–0" is "1-0", not "1, 0"
     return _DASHES.sub(", ", text).strip()
 
 

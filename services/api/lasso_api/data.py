@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import contextlib
+
 import json
 from dataclasses import dataclass
 from functools import cached_property
@@ -20,11 +22,10 @@ EVENT_COLUMNS = ["match_id", "seq", "period", "clock", "team_id", "player_id", "
 def _clean(v):
     if v is None:
         return None
-    try:
-        if v != v:  # NaN
+    # NaN is the only value not equal to itself; arrays can't answer that question, and that's fine.
+    with contextlib.suppress(TypeError, ValueError):
+        if v != v:
             return None
-    except Exception:  # noqa: BLE001
-        pass
     if hasattr(v, "item"):
         return v.item()
     return v

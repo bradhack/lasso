@@ -214,6 +214,8 @@ resource webPubSub 'Microsoft.SignalRService/webPubSub@2024-03-01' = {
   name: 'wps-lasso-${token}'
   location: location
   tags: tags
+  // Its own identity, for anything it calls out to (it has no upstream handlers today), never keys.
+  identity: { type: 'SystemAssigned' }
   sku: { name: 'Standard_S1', tier: 'Standard', capacity: 1 }
   properties: { disableLocalAuth: true, publicNetworkAccess: 'Enabled' }
 }

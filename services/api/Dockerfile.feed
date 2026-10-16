@@ -11,4 +11,6 @@ COPY data/demo /app/data/demo
 ENV LASSO_DATA_DIR=/app/data/demo
 RUN useradd -m lasso && chown -R lasso /app
 USER lasso
+# The feed publisher serves no HTTP; it's healthy while it runs, and Container Apps restarts it if it exits.
+HEALTHCHECK NONE
 CMD ["python", "-m", "lasso_api.feed"]

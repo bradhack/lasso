@@ -22,5 +22,8 @@ ENV LASSO_DATA_DIR=/app/data/demo LASSO_WEB_DIST=/app/web/dist
 RUN useradd -m lasso && chown -R lasso /app
 USER lasso
 EXPOSE 8000
+# For Docker and local runs (Azure Container Apps uses its own probes).
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=4)"
 # The same image runs the Match Feed publisher: override the command with `python -m lasso_api.feed`.
 CMD ["uvicorn", "lasso_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*"]
