@@ -17,6 +17,7 @@ Lasso is a live, multi-agent match companion for phones and broadcasts, built fo
 - **Fan or analyst:** fans get the story in plain English and their club's angle; analysts get every driver in points, xG and field tilt.
 - **Ask the Gaffer:** fans ask anything about the match in their own words ("Why did our chances drop at 5'?") and get an answer in their language. A Scout agent picks the Gaffer's MCP tools that answer it, and the Gaffer replies from those facts alone.
 - **Touch the sign:** when a side falls behind, a BELIEVE sign goes up. Fans who still believe touch it, see how many others believe, and get a biscuit bonus if their side draws level.
+- **Season outlook:** the league table as it stands, moving live as goals go in, and what this match means for each club's season: their title, top-four or relegation chance now and if they win, draw or lose. The Gaffer plays out the rest of the season 10,000 times, and the odds blend with the live Gauge every second. At full time, the story says what the result did to the season.
 - **VAR check, both ways:** while VAR reviews a goal, the Gauge shows the chances if it stands and if it's ruled out, side by side. Fans can call the decision before it lands, and the story explains what the ruling cost or saved.
 - **Listen:** every story and every Gaffer answer can be read aloud in the fan's language, with Azure AI Speech neural voices (or the phone's own voice as a fallback). Text is prepared for the ear first: 82' is read as "the 82nd minute", "v" as "versus" and 2-1 as "2 to 1".
 - **Accessible:** both themes pass an automated WCAG 2.2 AA audit on every screen, sheets work fully by keyboard, the page language follows the fan's choice for screen readers, and looping animations stop on their own.
@@ -100,7 +101,7 @@ A second workflow on the same A2A endpoint answers fans' questions. The Scout ch
 flowchart LR
     Q["Fan's question<br/>EN · ES · PT · FR"] --> API["API<br/>caps + brief"]
     API == "A2A · kind: ask" ==> SC["Scout<br/>picks tools"]
-    SC -. "MCP: gaffers_gauge, why_it_moved,<br/>match_story, chances_at, match_stats" .-> MCP["Gaffer MCP server"]
+    SC -. "MCP: gaffers_gauge, why_it_moved,<br/>match_story, chances_at, season_outlook" .-> MCP["Gaffer MCP server"]
     SC --> PR["The Gaffer<br/>answers from the facts"]
     PR ==> API --> A["Answer + follow-up questions"]
 
@@ -151,7 +152,7 @@ Here's how the code covers the brief's five stages:
 |---|---|
 | **Ingest** | `services/api/lasso_api/feed.py`: the Match Feed replays synthetic matches into Event Hubs |
 | **Interpret** | `matchroom.py` keeps live stats (xG, pass difficulty, field tilt, shot speed, momentum). The Stats agent picks out what matters |
-| **Explain** | `engine/lasso_engine/inplay.py` (Bayesian live model) and `explain.py` (exact Shapley attribution). The Gaffer and Narrator agents turn those into words |
+| **Explain** | `engine/lasso_engine/inplay.py` (Bayesian live model), `explain.py` (exact Shapley attribution) and `season.py` (the rest of the season, simulated). The Gaffer and Narrator agents turn those into words |
 | **Render** | Realtime push to the mobile web app (`web/`): the Gaffer's Gauge, the Touchline live pitch, and a transparent broadcast overlay (`#/overlay/<match>`). Touchline's ball actions ride inside the Gauge updates, so they add no realtime messages |
 | **Personalize** | Persona agent (fan or analyst depth, favorite-club lines), language choice, Game Master challenges, missions, and Ask the Gaffer answers to each fan's own questions |
 

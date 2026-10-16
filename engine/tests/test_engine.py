@@ -123,3 +123,45 @@ def test_markets_and_odds():
     assert odds_multiplier(0.46) == pytest.approx(2.0)
     assert calibration_points(True, 0.9) > calibration_points(True, 0.6)
     assert calibration_points(False, 0.9) < calibration_points(False, 0.6)
+
+
+def test_season_outlook_is_coherent(league, season):
+    from lasso_engine.season import apply_result, outcome_scores, rank, simulate, stake_zone, table_before
+
+    played = pd.DataFrame([{k: getattr(r, k) for k in ("match_id", "season", "matchday", "home_id", "away_id",
+                                                       "home_goals", "away_goals", "home_xg", "away_xg")}
+                           for r in season])
+    ids = [c.club_id for c in league.clubs]
+    fx = double_round_robin(ids, np.random.default_rng(5))
+    future = pd.DataFrame([{"match_id": f"T-{md}-{i}", "season": 1, "matchday": md, "home_id": h, "away_id": a,
+                            "home_goals": 0, "away_goals": 0, "home_xg": 0.0, "away_xg": 0.0}
+                           for md, pairs in enumerate(fx, start=1) if md > 12 for i, (h, a) in enumerate(pairs)])
+    matches = pd.concat([played, future], ignore_index=True)
+    clubs = sorted(ids)
+    live = future.iloc[0]
+
+    t = table_before(matches, clubs, 1, 13)
+    assert (t.played == 12).all() and t.pts.sum() == 3 * (t.won.sum()) + t.drawn.sum()
+    assert t.won.sum() == t.lost.sum() and t.gd.sum() == 0
+
+    o = simulate(matches, clubs, 1, 13, live.home_id, live.away_id, live.match_id, sims=2000, seed=1)
+    assert o.remaining == len(future)
+    odds = o.odds_given(1, 0)
+    # Exactly one champion, four top-four places and three relegated clubs in every simulated season.
+    assert math.isclose(sum(v["title"] for v in odds.values()), 1.0, abs_tol=1e-9)
+    assert math.isclose(sum(v["top4"] for v in odds.values()), 4.0, abs_tol=1e-9)
+    assert math.isclose(sum(v["relegation"] for v in odds.values()), 3.0, abs_tol=1e-9)
+    # Winning helps: the home side's top-four chance and average finish are better with a win than a loss.
+    cond = o.conditional(0, 0)
+    h = live.home_id
+    assert cond["home"][h]["top4"] >= cond["away"][h]["top4"]
+    assert cond["home"][h]["avg_pos"] < cond["away"][h]["avg_pos"]
+    assert stake_zone(cond, h, "home")[0] in ("title", "top4", "relegation", "none")
+    # Blending by the live chances stays between the extremes.
+    b = o.blended(0, 0, {"home": 0.5, "draw": 0.3, "away": 0.2})
+    assert cond["away"][h]["top4"] - 1e-9 <= b[h]["top4"] <= cond["home"][h]["top4"] + 1e-9
+
+    assert outcome_scores(1, 1) == {"home": (2, 1), "draw": (1, 1), "away": (1, 2)}
+    assert outcome_scores(2, 0) == {"home": (2, 0), "draw": (2, 2), "away": (2, 3)}
+    now = apply_result(t, live.home_id, live.away_id, 2, 0)
+    assert now.loc[live.home_id, "pts"] == t.loc[live.home_id, "pts"] + 3 and len(rank(now)) == 20

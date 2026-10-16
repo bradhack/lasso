@@ -49,6 +49,7 @@ QUESTIONS = [
     ("xg_both", 54, "en_analyst", "Explain the xG for both sides.", {}),
     ("pt_now", 58, "pt_analyst", "Como estão as chances agora?", {}),
     ("left_flank", 62, "en_fan", "Who should cover the left flank?", {"no_formations": True}),
+    ("season", 64, "en_fan", "What does this result mean for Eastholme's season?", {"season": True}),
     ("es_best", 66, "es_fan", "¿Quién está jugando mejor?", {}),
     ("en_swing", 70, "en_analyst", "What drove the biggest swing so far?", {}),
     ("fr_red", 74, "fr_fan", "Le carton rouge a-t-il tout changé ?", {}),
@@ -148,11 +149,13 @@ def run(base: str, key: str, minute_seconds: float) -> dict:
         qid, _, fan_key, question, expect = q
         fan = fans[fan_key]
         before = http(base, "GET", f"/api/matches/{MATCH}")[1]
+        season_before = http(base, "GET", f"/api/matches/{MATCH}/season")[1]
         t0 = time.time()
         status, a = http(base, "POST", f"/api/matches/{MATCH}/ask",
                          {"user_id": fan["id"], "question": question, "lang": fan["lang"]})
         after = http(base, "GET", f"/api/matches/{MATCH}")[1]
-        return {"id": qid, "fan": fan_key, "lang": fan["lang"], "persona": fan["persona"], "question": question,
+        season_after = http(base, "GET", f"/api/matches/{MATCH}/season")[1]
+        return {"season": [season_before, season_after],"id": qid, "fan": fan_key, "lang": fan["lang"], "persona": fan["persona"], "question": question,
                 "expect": expect, "status": status, "answer": a.get("answer", a.get("detail", "")),
                 "source": a.get("source"), "latency_ms": a.get("latency_ms") or int((time.time() - t0) * 1000),
                 "trace": a.get("trace", []), "minute": before.get("minute"),
@@ -207,6 +210,8 @@ def valid_pcts(a: dict, story: list[dict]) -> set[int]:
     for m in story:
         for side in ("before", "after"):
             vals |= {round(100 * v) for v in m[side].values()}
+    for sv in a.get("season") or []:  # the season outlook's percentages (table questions)
+        vals |= {int(x) for x in re.findall(r'_pct": (\d+)', json.dumps(sv or {}))}
     return {v + d for v in vals for d in (-2, -1, 0, 1, 2)}
 
 
@@ -235,6 +240,8 @@ def check_answer(a: dict, f: dict, story: list[dict], names: dict) -> dict[str, 
     if e.get("red_card"):
         r = f["reds"][0] if f["reds"] else None
         c["fact_red_card"] = bool(r) and r["player"].split()[-1].lower() in low and str(r["minute"]) in text
+    if e.get("season"):
+        c["fact_season"] = any(w in low for w in ("relegat", "top four", "top-four", "title", "table", "finish"))
     if e.get("cant_replace"):
         c["fact_cant_replace"] = any(x in low for x in CANT_REPLACE)
     if e.get("scorer_of"):
@@ -266,6 +273,8 @@ def check_story(m: dict) -> dict[str, bool]:
     c["four_languages"] = all((m.get("story") or {}).get(k) for k in ("en", "es", "pt", "fr"))
     c["languages_match"] = all(detect_lang(m["story"][k]) == k for k in ("en", "es", "pt", "fr") if m["story"].get(k))
     allowed = {round(100 * v) for v in (*m["before"].values(), *m["after"].values())}
+    if m.get("season"):  # full time: the season line's chances before kickoff and now
+        allowed |= {m["season"]["was_pct"], m["season"]["now_pct"]}
     allowed = {v + d for v in allowed for d in (-1, 0, 1)}
     texts = [m["story"].get(k, "") for k in ("en", "es", "pt", "fr")] + [m["headline"].get(k, "") for k in ("en",)]
     # Win chances must be the Gaffer's; possession percentages are checked by the stats, not here.
@@ -277,7 +286,11 @@ def check_story(m: dict) -> dict[str, bool]:
     c["no_english_words"] = not any(ENGLISH_LEAK[k].search(m["story"].get(k, "").lower()) for k in ("es", "pt", "fr"))
     c["brazilian_portuguese"] = not EUROPEAN_PT.search(m["story"].get("pt", "").lower())
     en = m["story"].get("en", "")
-    c["states_the_change"] = before == after or (f"{before}%" in en and f"{after}%" in en)
+    if m.get("season"):
+        ss = m["season"]
+        c["states_the_change"] = f"{ss['now_pct']}%" in en and f"{ss['was_pct']}%" in en
+    else:
+        c["states_the_change"] = before == after or (f"{before}%" in en and f"{after}%" in en)
     c["no_dashes"] = not any(re.search("[—–]", t) for t in texts)
     c["length"] = len(en.split()) <= 40 and len((m["headline"].get("en") or "").split()) <= 10
     # Reads like a person talking: no written minute marks (82'), no stiff phrases, no filler endings and no

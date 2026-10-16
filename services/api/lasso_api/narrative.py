@@ -74,6 +74,26 @@ T = {
                     "pt": "A chance de vitória cai de {a}% para {b}%.", "fr": "Leurs chances de victoire passent de {a} % à {b} %."},
     "c_flat_they": {"en": "Their chance of winning holds at {b}%.", "es": "Su probabilidad de victoria se mantiene en el {b}%.",
                     "pt": "A chance de vitória segue em {b}%.", "fr": "Leurs chances de victoire restent à {b} %."},
+    "z_title": {"en": "winning the league", "es": "ganar la liga", "pt": "ser campeão", "fr": "de remporter le titre"},
+    "z_top4": {"en": "a top-four finish", "es": "acabar entre los cuatro primeros",
+               "pt": "terminar entre os quatro primeiros", "fr": "de finir dans les quatre premiers"},
+    "z_relegation": {"en": "relegation", "es": "descender", "pt": "ser rebaixado", "fr": "d'être relégué"},
+    "season_moved": {"en": "{poss} chance of {zone} is now {now}%, {dir} from {was}% before kickoff.",
+                     "es": "{team} tiene ahora un {now}% de probabilidad de {zone}, frente al {was}% antes del partido.",
+                     "pt": "O {team} agora tem {now}% de chance de {zone}, contra {was}% antes do jogo.",
+                     "fr": "{team} a désormais {now} % de chances {zone}, contre {was} % avant le match."},
+    "season_same": {"en": "{poss} chance of {zone} stays at {now}%.",
+                    "es": "{team} sigue con un {now}% de probabilidad de {zone}.",
+                    "pt": "O {team} segue com {now}% de chance de {zone}.",
+                    "fr": "{team} garde {now} % de chances {zone}."},
+    "season_moved_they": {"en": "Their chance of {zone} is now {now}%, {dir} from {was}% before kickoff.",
+                          "es": "Ahora tiene un {now}% de probabilidad de {zone}, frente al {was}% antes del partido.",
+                          "pt": "Agora tem {now}% de chance de {zone}, contra {was}% antes do jogo.",
+                          "fr": "Ils ont désormais {now} % de chances {zone}, contre {was} % avant le match."},
+    "season_same_they": {"en": "Their chance of {zone} stays at {now}%.",
+                         "es": "Sigue con un {now}% de probabilidad de {zone}.",
+                         "pt": "Segue com {now}% de chance de {zone}.",
+                         "fr": "Ils gardent {now} % de chances {zone}."},
     "w_goal_now": {"en": "That makes it {home} {hs}, {away} {as_}.", "es": "Con esto, {home} {hs}, {away} {as_}.",
                    "pt": "Com isso, {home} {hs} x {as_} {away}.", "fr": "Le score passe à {hs}-{as_}."},
     "w_red_now": {"en": "{team} will play the rest of the match with ten men.",
@@ -205,9 +225,21 @@ def _story(lang: str, *, trigger: str, names: tuple[str, str], score: tuple[int,
     return f"{first} {tr(change, lang, a=a, b=b, **who)}"
 
 
+def season_sentence(lang: str, season: dict, they: bool = False) -> str:
+    """What the final result did to the season: "Eastholme Rangers' chance of a top-four finish is now 12%..."."""
+    zone = tr(f"z_{season['zone']}", lang)
+    now, was = season["now_pct"], season["was_pct"]
+    who = {"team": season["club"], "poss": possessive(season["club"]), "zone": zone, "now": now, "was": was}
+    suffix = "_they" if they else ""
+    if now == was:
+        return tr(f"season_same{suffix}", lang, **who)
+    return tr(f"season_moved{suffix}", lang, dir="up" if now > was else "down", **who)
+
+
 def template_package(*, trigger: str, names: tuple[str, str], score: tuple[int, int], minute: int,
                      before: dict, after: dict, focus: int, drivers: list[dict], scorer: str | None,
-                     red_team: int | None, stats: dict, var: dict | None = None) -> dict:
+                     red_team: int | None, stats: dict, var: dict | None = None,
+                     season: dict | None = None) -> dict:
     side = "home" if focus == 0 else "away"
     a, b = round(before[side] * 100), round(after[side] * 100)
     team = names[focus]
@@ -231,6 +263,10 @@ def template_package(*, trigger: str, names: tuple[str, str], score: tuple[int, 
             headline[lang] = tr("h_pulse", lang, min=minute)
     story = {lang: _story(lang, trigger=trigger, names=names, score=score, focus=focus, a=a, b=b,
                           drivers=drivers, red_team=red_team, var=var) for lang in LANGS}
+    if trigger == "full_time" and season:
+        # "Their" when the first sentence just named the club (the winner).
+        they = score[0] != score[1] and season.get("team") == (0 if score[0] > score[1] else 1)
+        story = {lang: f"{story[lang]} {season_sentence(lang, season, they)}" for lang in LANGS}
     club_lines = {}
     for i, key in ((0, "home"), (1, "away")):
         p_now = round(after["home" if i == 0 else "away"] * 100)

@@ -114,6 +114,12 @@ Example from the showcase match, Eastholme Rangers 2-1 Brackenford City. Easthol
 
 **The details:** payout multiplier = `floor((1 − 4%) / p, 0.1)`, bounded between 1.05x and 25x. The confidence bonus uses the Brier score, a *proper scoring rule*.
 
+## 6. The season outlook
+
+**In plain terms:** to say what a match means for the season, the Gaffer plays out every remaining fixture 10,000 times, using its team ratings as of that matchday. Counting how often each club finishes first, in the top four or in the bottom three gives its title, top-four and relegation chances. The live match is left out of those simulations and added afterward, so the same simulations answer "what if it ends 2-1?" instantly. Weighting the win, draw and loss answers by the live Gauge gives season odds that move every second.
+
+**The details:** each simulation first draws the team strengths from their Laplace posterior (so the odds include the model's uncertainty about how good each team is), then draws Poisson scores for every remaining fixture. Clubs are ranked by points, goal difference, goals scored, then a random draw. Results of the live match are represented by the nearest final score from the current one (from 1-1, a home win is 2-1). The race shown for each club is the one whose chance differs most between winning and losing, with near ties (within 1.5 points) going to the title, then the top four, then relegation. About a second per match, done once in a worker thread. Tests check that every simulated season has exactly one champion, four top-four clubs and three relegated clubs. *Code:* `engine/lasso_engine/season.py`.
+
 ## Glossary
 
 - **Bayesian:** a way of modeling that tracks how sure you are, and updates that belief as new evidence arrives.

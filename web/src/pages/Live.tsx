@@ -6,6 +6,7 @@ import { Back, Chevron } from "../components/Icons";
 import { Believe } from "../components/Believe";
 import { Touchline } from "../components/Touchline";
 import { VarCheck } from "../components/VarCheck";
+import { RACE_LABEL, SeasonOutlook } from "../components/SeasonOutlook";
 import { MatchStory } from "../components/MatchStory";
 import { Meter } from "../components/Meter";
 import { Feed, StatsPanel } from "../components/Panels";
@@ -36,7 +37,7 @@ export function Lobby() {
       {[...live, ...other].map((m) => (
         <a key={m.match_id} className="card matchcard" href={`#/match/${m.match_id}`}>
           <div className="row">
-            <span className="eyebrow">Synthetic League · MD {m.match_id.split("-MD")[1]?.slice(0, 2)}</span>
+            <span className="eyebrow">{t("league", lang)} · {t("mdShort", lang).replace("{n}", String(Number(m.match_id.split("-MD")[1]?.slice(0, 2))))}</span>
             <span style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700, fontSize: 13 }}>
               {(m.status === "live") && <i className="dot pulse" />}
               {statusLabel(m, lang)}
@@ -64,6 +65,7 @@ export function Lobby() {
             <span><i className="key d" /><b>{pct(m.probs.draw)}</b> {t("draw", lang)}</span>
             <span><i className="key a" /><b>{pct(m.probs.away)}</b> {m.away.short}</span>
           </div>
+          {m.race && m.race !== "none" && <span className="race-tag">{t(RACE_LABEL[m.race], lang)}</span>}
         </a>
       ))}
     </div>
@@ -90,8 +92,8 @@ export function MatchPage({ id }: { id: string }) {
     <div className="page">
       <section className="card">
         <div className="row" style={{ fontSize: 12 }}>
-          <a href="#/" aria-label="Back to live matches" style={{ display: "flex", alignItems: "center", color: "var(--muted)" }}>
-            <Back size={18} /> <span className="eyebrow" style={{ marginLeft: 4 }}>Synthetic League</span>
+          <a href="#/" aria-label={t("backLive", lang)} style={{ display: "flex", alignItems: "center", color: "var(--muted)" }}>
+            <Back size={18} /> <span className="eyebrow" style={{ marginLeft: 4 }}>{t("league", lang)}</span>
           </a>
           <span style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700 }}>
             {snap.status === "live" && <i className="dot pulse" />}
@@ -109,6 +111,7 @@ export function MatchPage({ id }: { id: string }) {
       <Believe snap={snap} lang={lang} />
       <Touchline snap={snap} lang={lang} />
       {moment && <WhyItMoved snap={snap} moment={moment} lang={lang} />}
+      <SeasonOutlook snap={snap} lang={lang} />
       <CallIt snap={snap} lang={lang} />
       <AskGaffer snap={snap} lang={lang} />
       <MatchStory snap={snap} lang={lang} />

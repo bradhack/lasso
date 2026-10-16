@@ -10,6 +10,7 @@ from pathlib import Path
 import pandas as pd
 
 from lasso_engine.inplay import InPlayParams
+from lasso_engine.strength import StrengthHyper
 
 EVENT_COLUMNS = ["match_id", "seq", "period", "clock", "team_id", "player_id", "type", "x", "y", "end_x",
                  "end_y", "outcome", "receiver_id", "pass_length", "pass_difficulty", "ball_speed_kmh", "xg",
@@ -47,6 +48,19 @@ class DemoData:
     def matches(self) -> dict[str, dict]:
         df = pd.read_parquet(self.root / "matches.parquet")
         return {r.match_id: r._asdict() for r in df.itertuples(index=False)}
+
+    @cached_property
+    def matches_df(self) -> pd.DataFrame:
+        return pd.read_parquet(self.root / "matches.parquet")
+
+    @cached_property
+    def club_ids(self) -> list[str]:
+        return sorted(self.clubs)
+
+    @cached_property
+    def strength_hyper(self) -> StrengthHyper:
+        h = self.model_meta.get("strength_hyper", {})
+        return StrengthHyper(**{k: tuple(v) if isinstance(v, list) else v for k, v in h.items()})
 
     @cached_property
     def prematch(self) -> dict[str, dict]:

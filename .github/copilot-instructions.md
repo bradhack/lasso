@@ -8,8 +8,8 @@ Read `README.md`, `docs/model-report.md` and `docs/DEPLOY.md` before making non-
 
 | Path | What lives there |
 |---|---|
-| `engine/lasso_engine/` | Synthetic league + event simulator (`league.py`, `simulator.py`), the Gaffer (`strength.py` pre-match, `inplay.py` live), Shapley explanations (`explain.py`), Call It pricing (`markets.py`), training/evaluation |
-| `services/api/lasso_api/` | FastAPI app: match rooms (`matchroom.py`), game logic (`game.py`, `stickers.py`), the Gaffer **MCP server** (`mcp_tools.py`, mounted at `/mcp`), realtime hub (`realtime.py`), Match Feed (`feed.py`), A2A client (`agents_client.py`), Listen (`speech.py`). Agent evaluation: `services/api/tests/agent_eval.py` |
+| `engine/lasso_engine/` | Synthetic league + event simulator (`league.py`, `simulator.py`), the Gaffer (`strength.py` pre-match, `inplay.py` live), Shapley explanations (`explain.py`), Call It pricing (`markets.py`), the season outlook simulator (`season.py`), training/evaluation |
+| `services/api/lasso_api/` | FastAPI app: match rooms (`matchroom.py`), game logic (`game.py`, `stickers.py`), the Gaffer **MCP server** (`mcp_tools.py`, mounted at `/mcp`), realtime hub (`realtime.py`), Match Feed (`feed.py`), A2A client (`agents_client.py`), Listen (`speech.py`), season outlook (`season.py`). Agent evaluation: `services/api/tests/agent_eval.py` |
 | `services/agents/lasso_agents/` | Microsoft Agent Framework agents (`team.py`), the Match Director fan-out/fan-in workflow and the Press Room (Ask the Gaffer) workflow (`director.py`), A2A server that routes between them (`server.py`) |
 | `web/src/` | React 19 + TypeScript phone app (PWA) and broadcast overlay (`pages/Overlay.tsx`). Accessibility helpers: `useDialog.ts`, `setPageLang` in `i18n.ts`. Listen: `components/Listen.tsx` |
 | `infra/` | Bicep for every Azure resource, deployed with `azd up` |
@@ -53,6 +53,7 @@ Speed up local replays with `LASSO_MINUTE_SECONDS=0.5`. Point the API at the age
 11. **Listen reads only our own text.** `/api/speech/audio` takes a story or answer id, never text. Keep it that way, and keep the cache and daily cap.
 12. **Accessibility is WCAG 2.2 AA.** Text colors must reach 4.5:1 contrast in both Midnight and Ivory (check new tokens in both). Sheets use `useDialog` (focus in, Tab trapped, Escape closes). Anything tappable is a `<button>` or has a role, a label and keyboard handling. Looping animations stop within 5 seconds. The page language follows the fan's (`setPageLang`). Re-run an axe-core audit after visual changes.
 13. **Stories read like a person talking.** Two short sentences: what happened, then the chance of winning ("Their chance of winning rises from 12% to 83%."). No written minute marks, stats jargon or filler endings, in templates (`narrative.py`) and in the Narrator prompt alike; the eval's `reads_naturally` check enforces it. A story is labeled as the agents' only when they wrote its headline or text.
+14. **The season outlook is simulated once per match, off the event loop.** `season.compute` runs in a worker thread at startup; after that, match code only reads the cached simulations. A `season` message goes out only when the score changes (and at kickoff or reset); the phone blends the odds with the live Gauge itself.
 
 ## Style
 

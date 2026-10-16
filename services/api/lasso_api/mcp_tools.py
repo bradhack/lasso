@@ -131,4 +131,13 @@ def build_mcp(rooms: dict[str, MatchRoom]) -> FastMCP:
                 "live_scoring_rate_per_match": [round(x, 2) for x in live],
                 "prematch_probs": r.summary()["prematch"]}
 
+    @mcp.tool()
+    def season_outlook(match_id: str) -> dict:
+        """The league table as it stands (with this match's current score counted) and what the result
+        means for the season: each club's title, top-four and relegation chances now, the race that matters
+        most to each, and that chance if they win, draw or lose. From the rest of the season simulated
+        10,000 times with the Gaffer's team strengths."""
+        view = room(match_id).season_tool()
+        return view or {"note": "the season outlook is still being calculated; try again in a few seconds"}
+
     return mcp

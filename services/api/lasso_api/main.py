@@ -26,6 +26,7 @@ from .data import DemoData
 from .feed import Scheduler, consume_forever, replay
 from .game import STAKES, GameService, daily_top_up, public_user
 from .matchroom import MatchRoom
+from . import season as season_mod
 from .mcp_tools import build_mcp
 from .speech import Speech
 from .realtime import LocalHub, make_hub
@@ -66,9 +67,12 @@ async def on_event(match_id: str, ev: dict) -> None:
     room = rooms.get(match_id)
     if room is None:
         room = rooms[match_id] = MatchRoom(match_id, data)
+        _spawn(_warm_season([match_id]))
     if ev.get("type") == "match_reset":
         room.reset()
         await hub.to_group(f"match:{match_id}", {"type": "reset", "match": room.summary()})
+        for msg in room._season_msg():
+            await hub.to_group(f"match:{match_id}", msg)
         await hub.to_group("lobby", {"type": "status", "match": room.summary()})
         return
     seq = int(ev.get("seq") or 0)
@@ -217,6 +221,10 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
                         for d in moment["drivers"]]
     if moment.get("var"):  # a goal that survived a VAR check, or one VAR ruled out
         brief["var"] = moment["var"]
+    if moment.get("season"):  # full time: what the result did to the season of the club with most at stake
+        ss = moment["season"]
+        brief["season"] = {"club": ss["club"], "race": season_mod.ZONE_WORDS[ss["zone"]],
+                           "chance_before_kickoff_pct": ss["was_pct"], "chance_now_pct": ss["now_pct"]}
     t0 = time.time()
     pkg = await agents.produce(brief)
     # A real package echoes our moment id and carries the agents' trace; anything else is an error reply.
@@ -274,6 +282,17 @@ async def _feed_watchdog() -> None:
             scheduler.start()
 
 
+async def _warm_season(match_ids: list[str]) -> None:
+    """Simulate the rest of the season for these matches in a worker thread, then tell anyone watching."""
+    await season_mod.warm(data, match_ids)
+    for mid in match_ids:
+        room = rooms.get(mid)
+        if room is not None:
+            for msg in room._season_msg():
+                await hub.to_group(f"match:{mid}", msg)
+            await hub.to_group("lobby", {"type": "status", "match": room.summary()})
+
+
 # ------------------------------------------------------------------- app
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -285,6 +304,7 @@ async def lifespan(app: FastAPI):
                 _spawn(_feed_watchdog())
         else:
             scheduler.start()
+        _spawn(_warm_season(list(rooms)))
         log.info("Lasso API ready: %d featured matches, agents=%s", len(rooms), bool(agents))
         yield
 
@@ -382,6 +402,18 @@ async def match(match_id: str) -> dict:
     if match_id not in rooms:
         raise HTTPException(404, "match not found")
     return rooms[match_id].snapshot()
+
+
+@app.get("/api/matches/{match_id}/season")
+async def match_season(match_id: str) -> dict:
+    """The season outlook for this match: the table as it stands and what the result means for each club."""
+    if match_id not in rooms:
+        raise HTTPException(404, "match not found")
+    view = rooms[match_id].season_tool()
+    if view is None:
+        await asyncio.to_thread(season_mod.compute, data, match_id)
+        view = rooms[match_id].season_tool()
+    return view or {}
 
 
 @app.get("/api/matches/{match_id}/story")

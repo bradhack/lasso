@@ -25,6 +25,7 @@ The app replays four matches on a loop, so something is always live. Each match 
 4. In **Ask the Gaffer**, tap a suggestion or type your own question, in English, Spanish, Portuguese or French.
 5. **Call it:** pick an option and lasso it. You're playing free biscuits against the Gaffer's odds.
 6. If your club falls behind, **Touch the sign** to say you still believe. If they draw level, every believer gets a bonus.
+   Scroll to **Season outlook** to see what the match means for both clubs' seasons, and tap **Full table** for the league table as it stands. When Eastholme score their winner, they climb from 9th to 5th live.
    In the featured match, watch the 8th minute: VAR checks a goal, and the **VAR check** card shows the chances both ways until the decision. You can call it in **Call it** before it lands.
 7. Tap **Listen** under a story or an answer to hear it read aloud. Scroll down to **Match story** for everything said so far. Visit **Stickers** and **Me** for the sticker book, your call history, language and light or dark mode.
 8. For TV: add `#/overlay/S5-MD07-03` to the link for a see-through overlay that sits on top of a match broadcast.
@@ -38,6 +39,7 @@ The app replays four matches on a loop, so something is always live. Each match 
 - **Exact explanations.** Every move of the Gauge is split into its causes (goals, red cards, chances, the clock), and the parts add up exactly to the change. *Technically:* exact Shapley attribution. *Where:* `engine/lasso_engine/explain.py`.
 - **A live feed that doesn't break.** Match events stream through Azure Event Hubs to the app's server. If the connection drops, it reconnects. If the server restarts mid-match, it quietly catches up on what it missed. If the stream goes silent, the server keeps the matches playing itself. *Where:* `services/api/lasso_api/feed.py`, `main.py`.
 - **Instant updates to every phone,** through Azure Web PubSub. The ball's movements ride along with the once-a-second odds update, so the pitch view costs nothing extra. A push to phones can never hold up a match: it gives up after three seconds, and matches nobody is watching send nothing. *Where:* `services/api/lasso_api/realtime.py`, `matchroom.py`.
+- **A whole season, simulated live.** For each match, the rest of the season is played out 10,000 times with the Gaffer's team strengths as of that matchday, drawing the strengths from their uncertainty each time. That gives every club's title, top-four and relegation chances for each possible result of the live match. The phone blends those with the Gauge, so the season odds move every second with no extra realtime traffic, and the table re-sorts as goals go in. *Where:* `engine/lasso_engine/season.py`, `services/api/lasso_api/season.py`, `web/src/components/SeasonOutlook.tsx`.
 - **VAR, priced both ways.** When VAR reviews a goal, the Gaffer prices both futures at once (the goal stands, or it's ruled out), opens a quick call on the decision, and settles it when the ruling arrives. A disallowed goal gets its own story with what it would have meant. The Match Feed adds the checks to the synthetic replay with realistic timing. *Where:* `services/api/lasso_api/matchroom.py` (`_var_event`), `feed.py` (`var_plan`), `web/src/components/VarCheck.tsx`.
 - **Stories you can hear.** Listen reads stories and answers aloud with Azure AI Speech neural voices, on the same Foundry account and identity (no keys). The server supplies the text, so it can't be used to read anything else, and each clip is made once and cached. Text is rewritten for the ear before it's spoken (minutes, "versus", scores, abbreviations). *Where:* `services/api/lasso_api/speech.py`, `web/src/components/Listen.tsx`.
 - **One command to deploy everything.** All the Azure resources are defined as code (Bicep) and deployed with `azd up`. Services sign in to each other with Azure identities, so there are no passwords or keys to leak. *Where:* `infra/`, [deploy guide](DEPLOY.md).
@@ -73,9 +75,9 @@ Design choices worth a look:
 - **The AI explains; the model decides.** Every percentage, cause and payout comes from the Gaffer. The agents are told never to invent a statistic, and every request carries the true score, minute, chances and key events.
 - **The app never waits on AI.** Every story appears instantly from a template, and the agents' version replaces it when ready. Each agent has a time limit, and if one fails, only its own part is skipped.
 - **The right amount of thinking.** Short, structured jobs use the model's fastest setting, which cut a story from about 30 seconds to under 15.
-- **One shared toolbox.** The Gaffer's nine tools are the only way any agent reaches live data. Any other MCP client, GitHub Copilot for example, can use the same tools.
+- **One shared toolbox.** The Gaffer's ten tools are the only way any agent reaches live data. Any other MCP client, GitHub Copilot for example, can use the same tools.
 - **Nothing hidden.** Every agent run records what it looked up, how long it took and how many tokens it used. Fans can see this in the app (**Under the hood**), and it's also sent to Azure Application Insights for monitoring.
-- **Measured, not assumed.** An evaluation script replays the showcase match on the live app, asks the agents 24 set questions at set minutes from five test fans (four languages, fan and analyst), and checks every answer and every story automatically against the match's own data. See "How good are the agents?" below.
+- **Measured, not assumed.** An evaluation script replays the showcase match on the live app, asks the agents 25 set questions at set minutes from five test fans (four languages, fan and analyst), and checks every answer and every story automatically against the match's own data. See "How good are the agents?" below.
 
 ### How good are the agents?
 
@@ -121,7 +123,7 @@ An answer uses about 6,000 tokens across both agents, well under a cent. Full re
 - **Specialists:** seven agents, each with one job, its own instructions and only the tools it needs.
 - **Teamwork:** in the Match Director, agents work at the same time in two rounds, then their work is combined (fan-out and fan-in). In the Press Room, one agent hands its research to the next.
 - **A standard way to talk:** the app reaches the agents over A2A, and one front door routes each request to the right team.
-- **A shared toolbox:** nine tools over MCP, used by four of the agents.
+- **A shared toolbox:** ten tools over MCP, used by four of the agents. Ask "what does this mean for the table?" and the Scout picks `season_outlook`.
 - **Safe and reliable:** each agent has a time limit, there's always a fallback, and a fan's question can't make the agents do anything, because the agent that answers has no tools at all. Daily limits keep costs in check.
 - **Visible:** **Under the hood** shows every run in the app, so the multi-agent system is something a fan can actually see.
 

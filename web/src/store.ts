@@ -242,6 +242,9 @@ function onMessage(d: any) {
     case "moment_update":
       patchSnap(d.moment.match_id, (s) => ({ moments: upsertMoment(s.moments, d.moment) }));
       break;
+    case "season":
+      patchSnap(d.match_id, () => ({ season: d.season ?? null }));
+      break;
     case "var":
       patchSnap(d.match_id, () => ({
         var: d.var ?? null,

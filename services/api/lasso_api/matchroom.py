@@ -13,6 +13,7 @@ from lasso_engine.inplay import Gaffer, LiveMatch, MatchState, odds_multiplier
 from lasso_engine.markets import generate_markets
 
 from .data import DemoData
+from . import season as season_mod
 from .narrative import driver_rows, template_package
 
 SWING_THRESHOLD = 0.08  # 8 points on either side's win chance triggers a moment
@@ -171,9 +172,33 @@ class MatchRoom:
             "away": {"club_id": self.away_id, "name": self.names[1], **self._club(self.away_id)},
             "score": list(s.goals), "reds": list(s.reds), "period": s.period, "clock": round(s.clock, 2),
             "minute": self.minute(), "probs": self.probs(), "cards": self.cards, "believe": self.believe_public(),
-            "var": self.var,
+            "var": self.var, "race": self.race(),
             "prematch": {"home": self.pre["p_home"], "draw": self.pre["p_draw"], "away": self.pre["p_away"]},
         }
+
+    # ---------------------------------------------------------------- season
+    def _prematch_probs(self) -> dict[str, float]:
+        return {"home": self.pre["p_home"], "draw": self.pre["p_draw"], "away": self.pre["p_away"]}
+
+    def race(self) -> str | None:
+        o = season_mod.get(self.match_id)
+        return season_mod.race(o) if o else None
+
+    def season_public(self) -> dict | None:
+        """The season outlook from the current score, or None until the simulations are ready."""
+        o = season_mod.get(self.match_id)
+        return season_mod.public(o, self.data, tuple(self.state.goals), self._prematch_probs()) if o else None
+
+    def season_tool(self) -> dict | None:
+        o = season_mod.get(self.match_id)
+        if not o:
+            return None
+        p = self.probs()
+        return season_mod.tool_view(o, self.data, tuple(self.state.goals), {k: p[k] for k in ("home", "draw", "away")})
+
+    def _season_msg(self) -> list[dict]:
+        pub = self.season_public()
+        return [{"type": "season", "match_id": self.match_id, "season": pub}] if pub else []
 
     def _club(self, cid: str) -> dict:
         c = self.data.clubs[cid]
@@ -184,7 +209,8 @@ class MatchRoom:
         return {**self.summary(), "history": self.history[-400:], "feed": self.feed[-60:],
                 "touches": self.touches[-40:], "shots": self.shot_map, "possession": self.possession,
                 "moments": self.moments[-12:], "stats": self.stats_public(),
-                "markets": [m.public() for m in self.markets.values() if m.status != "settled"][-4:]}
+                "markets": [m.public() for m in self.markets.values() if m.status != "settled"][-4:],
+                "season": self.season_public()}
 
     # ---------------------------------------------------------------- ingest
     def catch_up(self, upto_seq: int) -> int:
@@ -208,6 +234,7 @@ class MatchRoom:
             self.started_at = time.time()
             out.append({"type": "status", "match": self.summary()})
             out.extend(self._moment("kickoff", force=True))
+            out.extend(self._season_msg())
             out.extend(self._maybe_open_market(kickoff=True))
         etype = ev["type"]
         t = self.team_index(ev.get("team_id"))
@@ -245,6 +272,7 @@ class MatchRoom:
             out.extend(self._moment("goal", scorer=self.data.player_label(ev.get("player_id")), focus=t,
                                     var={"stood": True} if self.var_stood == t else None))
             self.var_stood = None
+            out.extend(self._season_msg())  # the table and the season odds move with every goal
             out.extend(self._update_believe())
         elif etype == "red_card" and t is not None:
             self.window["reds"].append({"team": t, "minute": self.minute()})
@@ -258,7 +286,9 @@ class MatchRoom:
             self.believe = [None, None]  # still behind at the final whistle: the sign comes down, no reward
             out.extend(self._resolve_markets(full_time=True))
             out.append({"type": "status", "match": self.summary()})
-            out.extend(self._moment("full_time", force=True))
+            o = season_mod.get(self.match_id)
+            ft = season_mod.full_time(o, self.data, tuple(self.state.goals), self._prematch_probs()) if o else None
+            out.extend(self._moment("full_time", force=True, season=ft))
         else:
             if etype == "shot" and t is not None:
                 self.window["xg"][t] += float(ev.get("xg") or 0)
@@ -501,7 +531,8 @@ class MatchRoom:
         return []
 
     def _moment(self, trigger: str, *, force: bool = False, scorer: str | None = None,
-                red_team: int | None = None, focus: int | None = None, var: dict | None = None) -> list[dict]:
+                red_team: int | None = None, focus: int | None = None, var: dict | None = None,
+                season: dict | None = None) -> list[dict]:
         a, b = self.last_moment_state, self.state.copy()
         before, after = self.last_moment_probs, self.probs()
         if focus is None:
@@ -512,7 +543,7 @@ class MatchRoom:
         stats = self.stats_public()
         pkg = template_package(trigger=trigger, names=self.names, score=tuple(b.goals), minute=self.minute(),
                                before=before, after=after, focus=focus, drivers=drivers, scorer=scorer,
-                               red_team=red_team, stats=stats, var=var)
+                               red_team=red_team, stats=stats, var=var, season=season)
         moment = {
             "moment_id": f"{self.match_id}-m{next(_moment_ids)}", "match_id": self.match_id,
             "trigger": trigger, "minute": self.minute(), "period": b.period, "focus": focus,
@@ -521,6 +552,8 @@ class MatchRoom:
         }
         if var:
             moment["var"] = var
+        if season:
+            moment["season"] = season
         self.moments.append(moment)
         self.last_moment_state, self.last_moment_probs = b, after
         self.window = self._empty_window()

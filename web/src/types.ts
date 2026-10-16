@@ -27,6 +27,46 @@ export interface MatchSummary {
   var?: VarCheck | null;
   /** Touch the sign: per side, the open "behind" spell and how many fans believe. */
   believe?: ({ spell: number; count: number } | null)[];
+  /** The season race this match matters most to (from the season outlook). */
+  race?: Zone | "none" | null;
+}
+
+export type Zone = "title" | "top4" | "relegation";
+export type Result = "home" | "draw" | "away";
+
+export interface SeasonOdds {
+  title: number;
+  top4: number;
+  relegation: number;
+  avg_pos: number;
+}
+
+export interface TableRow {
+  club_id: string;
+  name: string;
+  short: string;
+  primary: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  gf: number;
+  ga: number;
+  gd: number;
+  pts: number;
+}
+
+/** Season outlook: the table before this match, and every club's odds for each result from `score`. */
+export interface Season {
+  season: number;
+  matchday: number;
+  sims: number;
+  remaining: number;
+  score: [number, number];
+  table: TableRow[];
+  odds: Record<Result, Record<string, SeasonOdds>>;
+  kickoff: Record<string, SeasonOdds>;
+  stakes: Record<"home" | "away", { zone: Zone | "none"; spread: number }>;
 }
 
 /** A booking on the scoreboard: team (0 home, 1 away), yellow or red, surname, minute. */
@@ -205,6 +245,7 @@ export interface MatchSnapshot extends MatchSummary {
   moments: Moment[];
   stats: { match_id: string; teams: [TeamStats, TeamStats] };
   markets: Market[];
+  season?: Season | null;
 }
 
 export interface Mission {
