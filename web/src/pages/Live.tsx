@@ -178,11 +178,11 @@ export function MatchPage({ id }: { id: string }) {
           <div className="col">
             {head}
             {why}
-            {finished ? <>{story}{touch}</> : <>{touch}{story}</>}
+            {story}
             {feed}
           </div>
           <div className="col">
-            {finished ? <>{motm}{season}{ask}{call}</> : <>{call}{ask}{motm}{season}</>}
+            {finished ? <>{motm}{season}{touch}{ask}{call}</> : <>{touch}{call}{ask}{motm}{season}</>}
             {stats}
           </div>
         </div>
