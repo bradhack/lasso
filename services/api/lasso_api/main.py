@@ -251,10 +251,16 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
     reds = list(room.state.reds)
     if any(reds):
         brief["red_cards"] = {room.names[0]: reds[0], room.names[1]: reds[1]}
-    brief["before_pct"], brief["after_pct"] = _pct(moment["before"]), _pct(moment["after"])
-    brief["focus_change"] = f"{brief['before_pct'][side]}% to {brief['after_pct'][side]}%"
-    brief["drivers"] = [{"label": d["label"]["en"], "points": round(float(d["delta"]), 1)}
-                        for d in moment["drivers"]]
+    if moment["trigger"] == "full_time":
+        # The result is settled: no chances to quote ("a 100% chance of winning" is what came back otherwise).
+        brief["result"] = (f"{room.names[0]} won {h}-{a}" if h > a else f"{room.names[1]} won {a}-{h}" if a > h
+                           else f"a {h}-{a} draw")
+    else:
+        brief["before_pct"], brief["after_pct"] = _pct(moment["before"]), _pct(moment["after"])
+        brief["focus_change"] = f"{brief['before_pct'][side]}% to {brief['after_pct'][side]}%"
+    if moment["trigger"] != "full_time":
+        brief["drivers"] = [{"label": d["label"]["en"], "points": round(float(d["delta"]), 1)}
+                            for d in moment["drivers"]]
     if moment.get("var"):  # a goal that survived a VAR check, or one VAR ruled out
         brief["var"] = moment["var"]
     if moment.get("season"):  # full time: what the result did to the season of the club with most at stake
@@ -271,7 +277,9 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
     # The story is only labeled as the agents' when they wrote its words (a narrator timeout leaves the
     # template text, even if the persona's analyst view and club lines arrived).
     applied = False
-    keep_story = False
+    # Full time: the instant story is exact (the result, and what it did to the season), so it stays; the
+    # agents still write the headline.
+    keep_story = moment.get("trigger") == "full_time"
     if moment.get("trigger") == "var_overturned" and (moment.get("var") or {}).get("stands_pct") is not None:
         # The instant story says what the ruled-out goal would have meant ("not the 23% it would have been");
         # keep it unless the agents' version says so too.
@@ -280,6 +288,8 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
     for key in ("headline", "story", "analyst"):
         if key == "story" and keep_story:
             continue
+        if key == "headline" and moment.get("trigger") == "full_time" and "%" in str(pkg.get(key)):
+            continue  # a full-time headline is the result, never a chance
         if vals := _lang_map(pkg.get(key)):
             moment[key] = {**moment.get(key, {}), **vals}
             applied = applied or key in ("headline", "story")
