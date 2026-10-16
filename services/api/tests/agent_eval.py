@@ -157,7 +157,8 @@ def run(base: str, key: str, minute_seconds: float) -> dict:
                          {"user_id": fan["id"], "question": question, "lang": fan["lang"]})
         after = http(base, "GET", f"/api/matches/{MATCH}")[1]
         season_after = http(base, "GET", f"/api/matches/{MATCH}/season")[1]
-        return {"season": [season_before, season_after],"id": qid, "fan": fan_key, "lang": fan["lang"], "persona": fan["persona"], "question": question,
+        return {"season": [season_before, season_after], "finished": before.get("status") == "finished",
+                "minute_after": after.get("minute"),"id": qid, "fan": fan_key, "lang": fan["lang"], "persona": fan["persona"], "question": question,
                 "expect": expect, "status": status, "answer": a.get("answer", a.get("detail", "")),
                 "source": a.get("source"), "latency_ms": a.get("latency_ms") or int((time.time() - t0) * 1000),
                 "trace": a.get("trace", []), "minute": before.get("minute"),
@@ -237,7 +238,11 @@ def check_answer(a: dict, f: dict, story: list[dict], names: dict) -> dict[str, 
     ok_pcts = valid_pcts(a, story)
     c["real_percentages"] = all(int(p) in ok_pcts for p in PCT.findall(text))
     mins = [int(x or y) for x, y in MINUTE.findall(text)]
-    c["real_minutes"] = all(any(abs(m - v) <= 1 for v in f["minutes"] | {a["minute"] or 0}) for m in mins)
+    asked, answered = a["minute"] or 0, a.get("minute_after") or a["minute"] or 0
+    now = set(range(asked, answered + 1))  # the minute it was asked through the minute it was answered
+    c["real_minutes"] = all(any(abs(m - v) <= 1 for v in f["minutes"] | now) for m in mins)
+    if a.get("finished"):  # after full time the result is settled: no "100% chance to win"
+        c["no_final_chances"] = not re.search(r"\b(?:100|0) ?%", text)
     e = a["expect"]
     if e.get("red_card"):
         r = f["reds"][0] if f["reds"] else None
@@ -295,13 +300,19 @@ def check_story(m: dict) -> dict[str, bool]:
     if m.get("season"):
         ss = m["season"]
         c["states_the_change"] = f"{ss['now_pct']}%" in en and f"{ss['was_pct']}%" in en
+    elif m.get("trigger") == "full_time":
+        c["states_the_change"] = True  # the result says it all
     else:
         c["states_the_change"] = before == after or (f"{before}%" in en and f"{after}%" in en)
     c["no_dashes"] = not any(re.search("[—–]", t) for t in texts)
     c["length"] = len(en.split()) <= 40 and len((m["headline"].get("en") or "").split()) <= 10
     # Reads like a person talking: no written minute marks (82'), no stiff phrases, no filler endings and no
     # score-line openers ("Eastholme Rangers 2-1.").
-    c["reads_naturally"] = not STIFF.search(en) and not re.search(r"\d+'", en) and not re.match(r"[A-Z][\w ]+ \d+-\d+\.", en)
+    # A score-line opener is just names and a score ("Eastholme Rangers 2-1."), not a sentence that mentions one.
+    c["reads_naturally"] = (not STIFF.search(en) and not re.search(r"\d+'", en)
+                            and not re.match(r"(?:[A-Z][\w]*\s){1,4}\d+-\d+\.", en))
+    if m.get("trigger") == "full_time":
+        c["no_final_chances"] = not re.search(r"\b(?:100|0) ?%", en)
     return c
 
 

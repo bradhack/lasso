@@ -613,6 +613,35 @@ _ASK_FALLBACK = {
 }
 
 
+# After the final whistle there are no chances left to quote, just the result.
+_ASK_OFF_TOPIC_FT = {
+    "en": "I only talk about this match, so I'll leave that one. Full time: {score}.",
+    "es": "Solo hablo de este partido, así que esa la dejo pasar. Final: {score}.",
+    "pt": "Eu só falo deste jogo, então vou deixar essa passar. Fim de jogo: {score}.",
+    "fr": "Je ne parle que de ce match, alors je laisse celle-là. Fin du match : {score}.",
+}
+_ASK_FALLBACK_FT = {
+    "en": "I can't take questions right now. Full time: {score}.",
+    "es": "Ahora no puedo responder preguntas. Final: {score}.",
+    "pt": "Não consigo responder perguntas agora. Fim de jogo: {score}.",
+    "fr": "Je ne peux pas répondre pour l'instant. Fin du match : {score}.",
+}
+# "...and Eastholme still had a 100% chance to win by the final whistle": a settled result read as a chance.
+_FINAL_CHANCE = re.compile(r"(?:,|;)?\s*(?:\b(?:and|but|so|y|pero|e|mas|et|mais)\b)?[^,.;!?]*?\b(?:100|0)\s?%[^,.;!?]*", re.I)
+
+
+def _no_final_chances(text: str) -> str:
+    """Full time: cut any clause quoting a 100% or 0% chance; drop a sentence left with nothing in it."""
+    out = []
+    for sent in _SENTENCE.split(text.strip()):
+        cut = _FINAL_CHANCE.sub("", sent).strip()
+        if cut and cut != sent:
+            cut = cut.rstrip(",;: ") + ("" if cut[-1:] in ".!?" else sent[-1] if sent[-1:] in ".!?" else ".")
+        if len(cut.split()) >= 3:
+            out.append(cut)
+    return " ".join(out) or text
+
+
 _SENTENCE = re.compile(r"(?<=[.!?])\s+")
 
 
@@ -669,6 +698,8 @@ def _ask_fallback(room: MatchRoom, lang: str, templates: dict | None = None) -> 
     p = _pct(room.probs())
     h, a = room.state.goals
     templates = templates or _ASK_FALLBACK
+    if room.status == "finished":
+        templates = _ASK_OFF_TOPIC_FT if templates is _ASK_OFF_TOPIC else _ASK_FALLBACK_FT
     return templates.get(lang, templates["en"]).format(
         m=room.minute(), score=f"{room.names[0]} {h}-{a} {room.names[1]}", h=room.names[0], a=room.names[1],
         ph=p["home"], pd=p["draw"], pa=p["away"])
@@ -712,16 +743,29 @@ async def ask(match_id: str, body: AskIn) -> dict:
                                             "on_target": st[i]["on_target"], "possession_pct": st[i]["possession"]}
                             for i in (0, 1)}
         sent_off = [f"{c['p']} ({room.names[c['k']]}, {c['m']}')" for c in room.cards if c["c"] == "r"]
+        rules = []
         if sent_off:
             brief["sent_off"] = sent_off
-            brief["rules"] = ("A sent-off player cannot be replaced by a substitute; that team plays the rest of "
-                              "the match a man short.")
+            rules.append("A sent-off player cannot be replaced by a substitute; that team plays the rest of the "
+                         "match a man short.")
+        if room.status == "finished":
+            # The result is settled: no live chances to quote (they'd read "a 100% chance to win").
+            brief.pop("chances_pct", None)
+            brief["result"] = (f"Full time: {room.names[0]} won {h}-{a}" if h > a else
+                               f"Full time: {room.names[1]} won {a}-{h}" if a > h else f"Full time: a {h}-{a} draw")
+            rules.append("The match is over and the result is final: never quote a current chance of winning (no "
+                         "100% or 0%). Talk about the result; quote a chance only as it was at a moment during the "
+                         "match, for example before the winner.")
+        if rules:
+            brief["rules"] = " ".join(rules)
         pkg = await agents.produce(brief)
         # A real answer echoes our id and carries the agents' trace; anything else is an error reply.
         if pkg and pkg.get("ask_id") == ask_id and pkg.get("trace") and isinstance(pkg.get("answer"), str):
             answer = _localize(lang, _clean(pkg["answer"]))
             if u.get("persona") != "analyst":
                 answer = _plain_for_fans(answer)
+            if room.status == "finished":
+                answer = _no_final_chances(answer)
             answer = _cap_words(answer, 85 if u.get("persona") == "analyst" else 55)
             followups = [_localize(lang, _clean(f))[:60] for f in (pkg.get("followups") or [])
                          if isinstance(f, str) and f.strip()][:2]

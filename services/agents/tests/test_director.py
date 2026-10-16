@@ -36,7 +36,10 @@ class ScriptedClient(BaseChatClient):
             text = system + " " + str(instructions)
             for key, payload in SCRIPT.items():
                 if key in text:
-                    return ChatResponse(messages=[Message("assistant", [json.dumps(payload)])])
+                    if isinstance(payload, list):  # a sequence of replies, one per call
+                        payload = payload.pop(0) if len(payload) > 1 else payload[0]
+                    body = payload if isinstance(payload, str) else json.dumps(payload)  # str: a raw reply
+                    return ChatResponse(messages=[Message("assistant", [body])])
             return ChatResponse(messages=[Message("assistant", ["{}"])])
         return respond()
 
@@ -103,3 +106,30 @@ def test_press_room_skips_the_writer_when_the_scout_rules_a_question_off_topic()
                                      "on_topic": True}
     assert pkg["off_topic"] is True and pkg["answer"] == ""
     assert [t["agent"] for t in pkg["trace"]] == ["scout"]
+
+
+def test_press_room_recovers_an_answer_from_broken_json():
+    keep = SCRIPT["press conference"]
+    SCRIPT["press conference"] = '{"answer": "Il fallait y croire : "dix" contre onze et ils gagnent.", "followups": ['
+    try:
+        agent = build_press_room(make_team()).as_agent(name="Press Room")
+        pkg = parse_json(asyncio.run(agent.run(json.dumps({"kind": "ask", "ask_id": "q3", "lang": "fr",
+                                                             "question": "Fallait-il y croire ?"}))).text)
+    finally:
+        SCRIPT["press conference"] = keep
+    assert pkg["answer"].startswith("Il fallait y croire")
+    assert pkg["trace"][-1].get("recovered") is True
+
+
+def test_press_room_retries_once_when_the_reply_is_unusable():
+    keep = SCRIPT["press conference"]
+    SCRIPT["press conference"] = ["{oops", {"answer": "Penke won it late.", "followups": []}]
+    try:
+        agent = build_press_room(make_team()).as_agent(name="Press Room")
+        pkg = parse_json(asyncio.run(agent.run(json.dumps({"kind": "ask", "ask_id": "q4", "lang": "en",
+                                                             "question": "Who scored the winner?"}))).text)
+    finally:
+        SCRIPT["press conference"] = keep
+    assert pkg["answer"] == "Penke won it late."
+    assert [t["agent"] for t in pkg["trace"]] == ["scout", "presser", "presser"]
+    assert pkg["trace"][-1]["retry"] is True and pkg["trace"][1]["ok"] is False

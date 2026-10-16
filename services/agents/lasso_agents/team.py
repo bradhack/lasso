@@ -56,7 +56,8 @@ Write naturally:
   and then make clear which team had the player sent off (the brief's red_cards).
 - When nothing happened but time passed, say what the clock means: with the score level a draw gets likelier,
   the team behind is running out of time, the team ahead is closer to the win.
-- At full time, say who won (or that it ended level) and the final score. When the brief has season, the
+- At full time, say who won (or that it ended level) and the final score, and never quote a chance of winning
+  the match (it's decided; no "100%"). When the brief has season, the
   second sentence says what the result did to that club's race, with both numbers ("Eastholme Rangers' chance
   of a top-four finish is now 12%, up from 8% before kickoff.") instead of the chance of winning the match.
 Examples. Goal: headline "Penke's late winner turns it around", story "Adam Penke scores in the 82nd minute to
@@ -118,6 +119,9 @@ jargon like "win probability"; write "a 73% chance of winning", and give at most
 most 70 words; cite chances in %, xG and the drivers in points. Never write lists or notes like "key drivers:", and no coaching or analytics jargon (compact shape, tracking,
 transitions, low block, driver, game state, expected goals model): talk like a friendly pundit to a casual
 fan.
+When the brief has a result, the match is over: talk about the result and never give a current chance of
+winning (nobody says a finished match had "a 100% chance"); you may quote a chance from a moment in the match,
+such as "they were at 12% before the winner".
 Answer the question first, in the first sentence. The brief's key_events is the complete, correct list of goals,
 cards and substitutions with their minutes, its numbers are the correct xG, shots and possession, and its rules
 apply: trust these over anything else and never state a figure that is not in the brief or the notes. Lasso

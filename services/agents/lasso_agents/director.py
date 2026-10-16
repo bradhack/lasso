@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 import logging
 import time
 from typing import Any
@@ -53,8 +54,34 @@ def tool_calls(resp) -> list[dict]:
     return calls
 
 
-async def run_agent(agent, prompt: str, timeout: float, stage: int = 1, model: str | None = None
-                    ) -> tuple[dict, dict]:
+_ANSWER_KEYS = ("answer", "respuesta", "resposta", "réponse", "reponse", "response", "reply", "text")
+_ANSWER_RE = re.compile(r'"(?:answer|respuesta|resposta|r[ée]ponse)"\s*:\s*"(.*?)"\s*(?:,\s*"|\s*\})', re.S)
+
+
+def answer_of(out: dict, lang: str) -> tuple[str, list[str], bool]:
+    """The Gaffer's answer from the Presser's reply, as forgiving as it can safely be: the answer key (or a
+    translated one), a per-language object, the answer pulled out of JSON that didn't parse (a stray quote in
+    French or Spanish), or plain prose. Returns (answer, followups, recovered)."""
+    fu = out.get("followups") if isinstance(out.get("followups"), list) else []
+    fu = [f for f in fu if isinstance(f, str)][:2]
+    for k in _ANSWER_KEYS:
+        v = out.get(k)
+        if isinstance(v, dict):
+            v = v.get(lang) or next((x for x in v.values() if isinstance(x, str)), "")
+        if isinstance(v, str) and v.strip():
+            return v.strip(), fu, k != "answer"
+    raw = (out.get("_raw") or "").strip()
+    if raw:
+        m = _ANSWER_RE.search(raw)
+        if m and m.group(1).strip():
+            return m.group(1).replace('\\"', '"').replace("\\n", " ").strip(), [], True
+        if "{" not in raw and len(raw.split()) >= 4:
+            return raw, [], True  # plain prose: the answer itself
+    return "", [], False
+
+
+async def run_agent(agent, prompt: str, timeout: float, stage: int = 1, model: str | None = None,
+                    keep_raw: bool = False) -> tuple[dict, dict]:
     started = time.time()
     t0 = time.perf_counter()
     usage: dict = {}
@@ -65,6 +92,8 @@ async def run_agent(agent, prompt: str, timeout: float, stage: int = 1, model: s
         ok = bool(out)
         if not ok:
             log.warning("%s returned no JSON: %r", agent.name, (resp.text or "")[:300])
+            if keep_raw and resp.text:
+                out = {"_raw": resp.text[:3000]}  # the caller may still recover the text
         u = getattr(resp, "usage_details", None) or {}
         usage = {"in": u.get("input_token_count"), "out": u.get("output_token_count"),
                  "reasoning": u.get("reasoning_output_token_count"), "turns": len(getattr(resp, "messages", []) or [])}
@@ -192,10 +221,23 @@ def build_press_room(team: Team, timeout: float = 25.0) -> Workflow:
                    "trace": c["trace"]}
             await ctx.yield_output(json.dumps(pkg, ensure_ascii=False))
             return
-        out, tr = await run_agent(team.presser, f"Brief: {json.dumps(b)}\nNotes: {json.dumps(c.get('scout', {}))}",
-                                  timeout, 2, team.model_of("presser"))
-        pkg = {"ask_id": b.get("ask_id"), "answer": out.get("answer", ""), "followups": out.get("followups", []),
-               "facts": c.get("scout", {}).get("facts", []), "trace": c["trace"] + [tr]}
+        prompt = f"Brief: {json.dumps(b)}\nNotes: {json.dumps(c.get('scout', {}))}"
+        t0 = time.perf_counter()
+        out, tr = await run_agent(team.presser, prompt, timeout, 2, team.model_of("presser"), keep_raw=True)
+        traces = [tr]
+        answer, followups, recovered = answer_of(out, b.get("lang") or "en")
+        left = timeout - (time.perf_counter() - t0)
+        if not answer and tr.get("error") != "TimeoutError" and left > 8:
+            # A reply we couldn't use (not a timeout): ask once more, firmly, with the time that's left.
+            out, tr2 = await run_agent(team.presser, prompt + "\nYour last reply was not valid JSON. Reply again "
+                                       "with ONLY the JSON object.", left, 2, team.model_of("presser"), keep_raw=True)
+            tr2["retry"] = True
+            traces.append(tr2)
+            answer, followups, recovered = answer_of(out, b.get("lang") or "en")
+        if answer and recovered:
+            traces[-1]["recovered"] = True
+        pkg = {"ask_id": b.get("ask_id"), "answer": answer, "followups": followups,
+               "facts": c.get("scout", {}).get("facts", []), "trace": c["trace"] + traces}
         await ctx.yield_output(json.dumps(pkg, ensure_ascii=False))
 
     return (

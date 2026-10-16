@@ -54,7 +54,7 @@ export function MatchStory({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) 
                   </div>
                   <b>{loc(m.headline, lang)}</b>
                   <p>{loc(m.story, lang)}</p>
-                  {m.trigger !== "kickoff" && before !== after && (
+                  {m.trigger !== "kickoff" && m.trigger !== "full_time" && before !== after && (
                     <span className="st-chance">
                       <i style={{ background: TEAM[m.focus] }} />
                       {club.short} {before}% <span className={after < before ? "down" : "up"}>→ {after}%</span>
