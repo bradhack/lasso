@@ -19,6 +19,9 @@ from .narrative import driver_rows, template_package
 
 SWING_THRESHOLD = 0.08  # 8 points on either side's win chance triggers a moment
 PULSE_EVERY = 15  # match minutes between "pulse" moments
+CLOCK_SWING_GAP = 15  # match minutes between swings caused mostly by the clock (so "time is running out" isn't
+#                       told every six minutes late in a level game; the next one covers the whole drift)
+CLOCK_SHARE = 0.7  # a swing is "mostly the clock" when the clock is at least this share of the change
 MARKET_EVERY = 4  # match minutes between new Call It challenges
 MARKET_OPEN_FOR = 3.0  # match minutes a challenge accepts calls
 IMPACT_SHOWN = 5  # players on the Player of the Match leaderboard (and the vote)
@@ -104,6 +107,7 @@ class MatchRoom:
         self.last_moment_probs = self.gaffer.probabilities(self.live.state)
         self.window = self._empty_window()
         self.last_pulse_min = 0
+        self.last_clock_swing = -99
         self.last_market_min = -99.0
         self.last_meter_push = 0.0
         self.started_at: float | None = None
@@ -703,6 +707,14 @@ class MatchRoom:
         lp = self.last_moment_probs
         deltas = {k: p[k] - lp[k] for k in ("home", "draw", "away")}
         if max(abs(v) for v in deltas.values()) >= SWING_THRESHOLD:
+            side = "home" if abs(deltas["home"]) >= abs(deltas["away"]) else "away"
+            parts = shapley(self.gaffer, self.last_moment_state, self.state, side).contributions
+            total = sum(abs(v) for v in parts.values()) or 1.0
+            clocky = abs(parts.get("clock", 0.0)) / total >= CLOCK_SHARE
+            if clocky and self.minute() - self.last_clock_swing < CLOCK_SWING_GAP:
+                return []  # only the clock moved it, and we said so recently: wait, then tell the whole drift
+            if clocky:
+                self.last_clock_swing = self.minute()
             gainer = max(deltas, key=deltas.get)
             if gainer == "draw":  # nobody is surging; the side losing most is the story
                 return self._moment("swing_draw", focus=0 if deltas["home"] < deltas["away"] else 1)

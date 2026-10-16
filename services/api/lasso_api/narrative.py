@@ -111,6 +111,15 @@ T = {
                       "es": "Sigue la igualdad y pasan los minutos, así que el empate es cada vez más probable.",
                       "pt": "Segue empatado e o tempo passa, então o empate fica mais provável.",
                       "fr": "C'est toujours à égalité et le temps file, alors le nul se rapproche."},
+    # The draw closing in: the chance of a draw is the number that matters.
+    "w_draw_level": {"en": "It's still {hs}-{as_}, and the minutes are ticking away.",
+                     "es": "Sigue el {hs}-{as_} y los minutos pasan.",
+                     "pt": "Segue {hs} x {as_}, e os minutos passam.",
+                     "fr": "C'est toujours {hs}-{as_}, et les minutes filent."},
+    "d_up": {"en": "The chance of a draw rises from {a}% to {b}%.",
+             "es": "La probabilidad de empate sube del {a}% al {b}%.",
+             "pt": "A chance de empate sobe de {a}% para {b}%.",
+             "fr": "Les chances de match nul passent de {a} % à {b} %."},
     "w_clock_behind": {"en": "Time is running out for {team} to find a way back.",
                        "es": "A {team} se le acaba el tiempo para remontar.",
                        "pt": "O tempo está acabando para o {team} buscar a virada.",
@@ -189,10 +198,16 @@ def possessive(name: str) -> str:
 
 
 def _story(lang: str, *, trigger: str, names: tuple[str, str], score: tuple[int, int], focus: int, a: int, b: int,
-           drivers: list[dict], red_team: int | None, var: dict | None) -> str:
-    """Two plain sentences: what happened (or why the chances moved), then the focus team's chance of winning."""
+           drivers: list[dict], red_team: int | None, var: dict | None, draw: tuple[int, int] | None = None) -> str:
+    """Two plain sentences: what happened (or why the chances moved), then the focus team's chance of winning
+    (or, when the draw is closing in, the chance of a draw)."""
     team = names[focus]
     who = {"team": team, "poss": possessive(team)}
+    if trigger == "swing_draw" and draw:
+        hs, as_ = score
+        first = (tr("w_draw_level", lang, hs=hs, as_=as_) if hs == as_ else
+                 tr("w_clock_behind" if (score[focus] < score[1 - focus]) else "w_clock_ahead", lang, team=team))
+        return f"{first} {tr('d_up', lang, a=draw[0], b=draw[1])}"
     if trigger == "var_overturned" and var:
         return tr("var_story", lang, reason=tr(f"r_{var['reason']}", lang), b=b, s=var["stands_pct"], **who)
     if trigger == "full_time":
@@ -261,8 +276,9 @@ def template_package(*, trigger: str, names: tuple[str, str], score: tuple[int, 
             headline[lang] = tr("h_swing_draw", lang)
         else:
             headline[lang] = tr("h_pulse", lang, min=minute)
+    draw = (round(before["draw"] * 100), round(after["draw"] * 100))
     story = {lang: _story(lang, trigger=trigger, names=names, score=score, focus=focus, a=a, b=b,
-                          drivers=drivers, red_team=red_team, var=var) for lang in LANGS}
+                          drivers=drivers, red_team=red_team, var=var, draw=draw) for lang in LANGS}
     if trigger == "full_time" and season:
         # "Their" when the first sentence just named the club (the winner).
         they = score[0] != score[1] and season.get("team") == (0 if score[0] > score[1] else 1)

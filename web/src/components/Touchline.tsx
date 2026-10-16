@@ -144,6 +144,7 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
             )}
           </svg>
           {view === "live" ? (
+            <>
             <div className="pitch-foot">
               <span className="dir"><Crest club={snap.home} size="sm" />{snap.home.short} <b>→</b></span>
               <span className="ticker" aria-live="polite">
@@ -152,6 +153,15 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
               </span>
               <span className="dir right"><b>←</b> {snap.away.short}<Crest club={snap.away} size="sm" /></span>
             </div>
+            {/* What the marks on the pitch are: tackles drawn as a cross read as missed shots without a key. */}
+            <div className="mk-key" aria-hidden="true">
+              <span><svg viewBox="-3 -3 6 6"><circle r="2" className="kball" /></svg>{t("kBall", lang)}</span>
+              <span><svg viewBox="-3 -3 6 6"><path d="M-1.6 -1.6L1.6 1.6M1.6 -1.6L-1.6 1.6" /></svg>{t("kTackle", lang)}</span>
+              <span><svg viewBox="-3 -3 6 6"><path d="M0 -1.9L1.9 0L0 1.9L-1.9 0Z" /></svg>{t("kInterception", lang)}</span>
+              <span><svg viewBox="-3 -4 6 8"><rect x="-1.4" y="-3.2" width="2.8" height="6.4" rx="1" /></svg>{t("kSave", lang)}</span>
+              <span><svg viewBox="-1 -5 6 6"><path d="M0 0V-4.5L3 -3.4L0 -2.3" /></svg>{t("kCorner", lang)}</span>
+            </div>
+            </>
           ) : (
             <div className="shotfoot">
               <div className="legend">

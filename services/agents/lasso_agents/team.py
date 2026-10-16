@@ -58,6 +58,8 @@ Write naturally:
   red card as a cause of this change, or in a goal story for the side that's a man down ("even with ten men").
   Never in clock, pulse, halftime or swing stories: fans already know, and repeating it reads as filler. When you
   do mention it, make clear which team had the player sent off (the brief's red_cards).
+- When the trigger is swing_draw (the draw closing in), the second sentence gives the chance of a draw from the
+  brief's draw_change ("The chance of a draw rises from 40% to 55%."), not a team's chance of winning.
 - When nothing happened but time passed, say what the clock means: with the score level a draw gets likelier,
   the team behind is running out of time, the team ahead is closer to the win.
 - At full time, say who won (or that it ended level) and the final score, and never quote a chance of winning

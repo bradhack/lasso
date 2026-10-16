@@ -257,8 +257,11 @@ function onMessage(d: any) {
     case "meter":
       patchSnap(d.match_id, (s) => ({
         history: [...s.history, d.point].slice(-500),
-        touches: d.touches?.length ? [...(s.touches ?? []), ...d.touches].slice(-60) : s.touches,
-        shots: d.touches?.some((x: Touch) => x.t === "shot") ? [...(s.shots ?? []), ...d.touches.filter((x: Touch) => x.t === "shot")] : s.shots,
+        touches: d.touches?.length ? [...(s.touches ?? []), ...d.touches.filter((x: Touch) => !(s.touches ?? []).some((y) => y.s === x.s))].slice(-60) : s.touches,
+        // Skip anything already on the phone (an update can arrive just after the page loaded the same shot).
+        shots: d.touches?.some((x: Touch) => x.t === "shot")
+          ? [...(s.shots ?? []), ...d.touches.filter((x: Touch) => x.t === "shot" && !(s.shots ?? []).some((y) => y.s === x.s))]
+          : s.shots,
         possession: d.possession ?? s.possession,
         believe: d.believe ?? s.believe,
         probs: { home: d.point.home, draw: d.point.draw, away: d.point.away },

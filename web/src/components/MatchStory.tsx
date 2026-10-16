@@ -72,7 +72,9 @@ export function MatchStory({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) 
 }
 
 function StoryItem({ m, snap, lang, onHood }: { m: Moment; snap: MatchSnapshot; lang: Lang; onHood: (m: Moment) => void }) {
-  const side = m.focus === 0 ? "home" : "away";
+  // A "draw closing in" story is about the draw's chance; every other story, the focus team's.
+  const drawStory = m.trigger === "swing_draw";
+  const side = drawStory ? "draw" : m.focus === 0 ? "home" : "away";
   const club = m.focus === 0 ? snap.home : snap.away;
   const before = Math.round(m.before[side] * 100);
   const after = Math.round(m.after[side] * 100);
@@ -93,8 +95,8 @@ function StoryItem({ m, snap, lang, onHood }: { m: Moment; snap: MatchSnapshot; 
         <p>{loc(m.story, lang)}</p>
         {m.trigger !== "kickoff" && m.trigger !== "full_time" && before !== after && (
           <span className="st-chance">
-            <i style={{ background: TEAM[m.focus] }} />
-            {club.short} {before}% <span className={after < before ? "down" : "up"}>→ {after}%</span>
+            <i style={{ background: drawStory ? "var(--draw-bar)" : TEAM[m.focus] }} />
+            {drawStory ? t("draw", lang) : club.short} {before}% <span className={after < before ? "down" : "up"}>→ {after}%</span>
           </span>
         )}
       </div>

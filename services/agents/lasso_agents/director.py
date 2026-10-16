@@ -54,6 +54,7 @@ def tool_calls(resp) -> list[dict]:
     return calls
 
 
+_XG_FACT = re.compile(r"\bxG\b|\d[.,]\d\d")
 _ANSWER_KEYS = ("answer", "respuesta", "resposta", "réponse", "reponse", "response", "reply", "text")
 _ANSWER_RE = re.compile(r'"(?:answer|respuesta|resposta|r[ée]ponse)"\s*:\s*"(.*?)"\s*(?:,\s*"|\s*\})', re.S)
 
@@ -258,7 +259,11 @@ def build_press_room(team: Team, timeout: float = 25.0) -> Workflow:
                    "trace": c["trace"]}
             await ctx.yield_output(json.dumps(pkg, ensure_ascii=False))
             return
-        prompt = f"Brief: {json.dumps(b)}\nNotes: {json.dumps(c.get('scout', {}))}"
+        notes = c.get("scout", {})
+        if (b.get("version") or "fan") == "fan":
+            # Fans don't get xG decimals; take them out of the notes so the writer has none to quote.
+            notes = {**notes, "facts": [f for f in notes.get("facts", []) if isinstance(f, str) and not _XG_FACT.search(f)]}
+        prompt = f"Brief: {json.dumps(b)}\nNotes: {json.dumps(notes)}"
         lang = b.get("lang") or "en"
         t0 = time.perf_counter()
         out, traces = await _hedged_presser(team, prompt, timeout, lang)

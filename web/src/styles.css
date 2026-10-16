@@ -749,3 +749,9 @@ button.motm-row:active { transform: scale(0.99); }
 .match-banner.goal .ev-icon { color: var(--gold-2); }
 .match-banner.var_out { border-color: var(--live); }
 @media (prefers-reduced-motion: reduce) { .match-banner { animation: none; } }
+
+/* Touchline: a key for the marks in Live view */
+.mk-key { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; font-size: 11px; color: var(--soft); }
+.mk-key span { display: inline-flex; align-items: center; gap: 5px; }
+.mk-key svg { width: 12px; height: 12px; fill: none; stroke: var(--soft); stroke-width: 0.9; stroke-linejoin: round; }
+.mk-key .kball { fill: var(--text); stroke: none; }

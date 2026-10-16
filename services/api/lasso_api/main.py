@@ -271,6 +271,8 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
     else:
         brief["before_pct"], brief["after_pct"] = _pct(moment["before"]), _pct(moment["after"])
         brief["focus_change"] = f"{brief['before_pct'][side]}% to {brief['after_pct'][side]}%"
+        if moment["trigger"] == "swing_draw":  # the draw closing in: the draw's chance is the number to give
+            brief["draw_change"] = f"{brief['before_pct']['draw']}% to {brief['after_pct']['draw']}%"
     if moment["trigger"] != "full_time":
         brief["drivers"] = [{"label": d["label"]["en"], "points": round(float(d["delta"]), 1)}
                             for d in moment["drivers"]]
@@ -293,6 +295,13 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
     # Full time: the instant story is exact (the result, and what it did to the season), so it stays; the
     # agents still write the headline.
     keep_story = moment.get("trigger") == "full_time"
+    # Clock, pulse and halftime stories mention the red card only if it moved the chances; the Narrator keeps
+    # adding "ten men" anyway (it reads it in the Stats agent's notes), so then the exact instant story stays.
+    if (moment.get("trigger") in ("pulse", "swing", "swing_draw", "half_time")
+            and not any(d.get("component") == "red_cards" for d in moment.get("drivers") or [])):
+        st = _lang_map(pkg.get("story"))
+        if any(_RED_FILLER[k].search(v) for k, v in st.items() if k in _RED_FILLER):
+            keep_story = True
     if moment.get("trigger") == "var_overturned" and (moment.get("var") or {}).get("stands_pct") is not None:
         # The instant story says what the ruled-out goal would have meant ("not the 23% it would have been");
         # keep it unless the agents' version says so too.
@@ -682,6 +691,12 @@ def _no_final_chances(text: str) -> str:
 
 
 _SENTENCE = re.compile(r"(?<=[.!?])\s+")
+_RED_FILLER = {
+    "en": re.compile(r"ten men|\b10 men|red card|sent off|man down|a man short", re.I),
+    "es": re.compile(r"\bcon diez\b|\bdiez jugadores\b|\broja\b|expuls|uno menos", re.I),
+    "pt": re.compile(r"\bcom dez\b|\bdez jogadores\b|vermelho|expuls|um a menos", re.I),
+    "fr": re.compile(r"\bà dix\b|\bdix joueurs\b|carton rouge|expuls|un de moins|en infériorité", re.I),
+}
 
 
 _XG = re.compile(r"\bxG\b|\d[.,]\d\d")
@@ -699,7 +714,8 @@ def _plain_for_fans(text: str) -> str:
     text = _XG_CLAUSE.sub("", text).strip()
     sents = _SENTENCE.split(text)
     keep = [s_ for s_ in sents if not _XG.search(s_)]
-    return " ".join(keep) if keep else text
+    # Keep what's left unless that's a stub ("Sí, puede."): then the answer as written beats two words.
+    return " ".join(keep) if keep and len(" ".join(keep).split()) >= 8 else text
 
 
 def _cap_words(text: str, limit: int) -> str:

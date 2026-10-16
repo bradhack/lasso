@@ -304,6 +304,9 @@ def check_story(m: dict) -> dict[str, bool]:
         c["states_the_change"] = f"{ss['now_pct']}%" in en and f"{ss['was_pct']}%" in en
     elif m.get("trigger") == "full_time":
         c["states_the_change"] = True  # the result says it all
+    elif m.get("trigger") == "swing_draw":  # the draw closing in: the draw's chance
+        db, da = round(100 * m["before"]["draw"]), round(100 * m["after"]["draw"])
+        c["states_the_change"] = f"{db}%" in en and f"{da}%" in en
     elif m.get("trigger") == "var_overturned" and (m.get("var") or {}).get("stands_pct") is not None:
         c["states_the_change"] = f"{after}%" in en and f"{m['var']['stands_pct']}%" in en  # now, and what it would have been
     else:
