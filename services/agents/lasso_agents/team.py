@@ -123,6 +123,9 @@ jargon like "win probability"; write "a 73% chance of winning", and give at most
 most 70 words; cite chances in %, xG and the drivers in points. Never write lists or notes like "key drivers:", and no coaching or analytics jargon (compact shape, tracking,
 transitions, low block, driver, game state, expected goals model): talk like a friendly pundit to a casual
 fan.
+For questions about the standings or the season, fans get the one race that matters most to their club (or
+to both clubs, briefly) and at most two numbers, in plain words: "A win would lift Eastholme to 5th and their
+top-four chance to 9%." Say "standings" or "table", and never give a range of numbers.
 When the brief has a result, the match is over: talk about the result and never give a current chance of
 winning (nobody says a finished match had "a 100% chance"); you may quote a chance from a moment in the match,
 such as "they were at 12% before the winner".

@@ -179,9 +179,16 @@ async def settle(room: MatchRoom, market_id: str) -> None:
 _DASHES = re.compile(r"\s*[\u2014\u2013]\s*")
 
 
-def _clean(text: object) -> str:
-    """House style for model text: no em or en dashes, trimmed."""
-    return _DASHES.sub(", ", str(text)).strip()
+_RANGE = re.compile(r"(\d+(?:[.,]\d+)?)\s*[\u2013\u2014-]\s*(\d+(?:[.,]\d+)?)(\s?%)")
+_RANGE_WORD = {"en": "to", "es": "a", "pt": "a", "fr": "à"}
+
+
+def _clean(text: object, lang: str = "en") -> str:
+    """House style for model text: no em or en dashes, trimmed. A number range like "5–6%" reads "5 to 6%"
+    (a dash turned into a comma there gave "5, 6%")."""
+    text = _RANGE.sub(lambda m: f"{m.group(1)} {_RANGE_WORD.get(lang, 'to')} {m.group(2)}{m.group(3)}", str(text))
+    text = re.sub(r"(\d)\s*[\u2013\u2014]\s*(\d)", r"\1-\2", text)  # a score: "1–0" is "1-0", not "1, 0"
+    return _DASHES.sub(", ", text).strip()
 
 
 _US = {"favourite": "favorite", "equaliser": "equalizer", "equalise": "equalize", "defence": "defense",
@@ -232,7 +239,7 @@ def _same_case(old: str, new: str) -> str:
 def _lang_map(value: object) -> dict[str, str]:
     if not isinstance(value, dict):
         return {}
-    return {k: _localize(k, _clean(v)) for k, v in value.items()
+    return {k: _localize(k, _clean(v, k)) for k, v in value.items()
             if k in ("en", "es", "pt", "fr") and isinstance(v, str) and v.strip()}
 
 
@@ -793,7 +800,7 @@ async def ask(match_id: str, body: AskIn) -> dict:
         pkg = await agents.produce(brief)
         # A real answer echoes our id and carries the agents' trace; anything else is an error reply.
         if pkg and pkg.get("ask_id") == ask_id and pkg.get("trace") and isinstance(pkg.get("answer"), str):
-            answer = _localize(lang, _clean(pkg["answer"]))
+            answer = _localize(lang, _clean(pkg["answer"], lang))
             if u.get("persona") != "analyst":
                 answer = _plain_for_fans(answer)
             if room.status == "finished":

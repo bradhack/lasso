@@ -33,7 +33,10 @@ export function AskGaffer({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
   if (!user) return null;
 
   const last = [...items].reverse().find((i) => !i.pending);
-  const suggestions = last?.followups.length ? last.followups : (snap.status === "live" && snap.period === 2) || snap.status === "finished" ? [t("askS1", lang), t("askS4", lang), t("askS5", lang)] : [t("askS1", lang), t("askS4", lang), t("askS3", lang)];
+  // The standings question names the fan's club when they support one of the two sides.
+  const myClub = user?.club_id === snap.home.club_id ? snap.home.name : user?.club_id === snap.away.club_id ? snap.away.name : null;
+  const standings = myClub ? t("askS4Club", lang).replace("{club}", myClub) : t("askS4", lang);
+  const suggestions = last?.followups.length ? last.followups : (snap.status === "live" && snap.period === 2) || snap.status === "finished" ? [t("askS1", lang), standings, t("askS5", lang)] : [t("askS1", lang), standings, t("askS3", lang)];
   const shown = all ? items : items.slice(-2);
 
   async function send(text: string) {
