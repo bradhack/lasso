@@ -43,8 +43,9 @@ checkov -d infra --framework bicep
 
 In VS Code, these extensions scan as you work:
 
-- **Microsoft Security DevOps** (Microsoft): runs bandit, checkov, template analyzers and secret scanning together.
+- **SonarQube for IDE** (SonarSource): code quality and security issues as you type, no account needed.
 - **Snyk Security**: dependencies and code, with fixes suggested inline (free account).
-- **SonarQube for IDE**: code quality and security issues as you type.
+
+Microsoft Security DevOps (the same bandit, checkov and template checks run above) isn't a VS Code extension: it runs in a pipeline, as the `microsoft/security-devops-action` GitHub Action or the Azure DevOps task.
 
 On GitHub, turn on **Dependabot alerts**, **secret scanning** and **code scanning (CodeQL)** under the repository's Settings, then Code security. They're free for public repositories.
