@@ -25,7 +25,8 @@ Lasso is a live, multi-agent match companion for phones and broadcasts, built fo
 - **Listen:** every story and every Gaffer answer can be read aloud in the fan's language, with Azure AI Speech neural voices (or the phone's own voice as a fallback). Text is prepared for the ear first: 82' is read as "the 82nd minute", "v" as "versus" and 2-1 as "2 to 1".
 - **Accessible:** both themes pass an automated WCAG 2.2 AA audit on every screen, sheets work fully by keyboard, the page language follows the fan's choice for screen readers, and looping animations stop on their own.
 - **Under the hood:** tap the AI agents chip on any story or answer to see how it was made: which agents ran, which ran in parallel, the MCP tools each one called (with arguments), and the time, tokens and model for each.
-- **Match story** keeps every story told during the match, newest first, with how each one moved the chances.
+- **Match story** keeps every story told during the match, newest first, with an icon for each kind of moment and how each one moved the chances; **All events** adds every chance, card, substitution and VAR check in between (one timeline instead of a separate feed).
+- **Built to scan:** the match page is three tabs (Live, Play, Table & stats) under a score and Gauge that stay in view, with a pinned mini scoreboard on phones and a banner for every goal and VAR decision.
 - **Touchline** shows the ball live on the pitch: every pass, shot, tackle, save and corner, with the move in progress and a whole-match shot map.
 - It invites fans to make free-to-play **Call It** predictions priced at the Gaffer's own chances, with streaks, a sticker book of 23 achievements (including ones for asking the Gaffer, calling VAR, picking the Player of the Match and watching your club climb the table), missions and friend leagues. Biscuits are in-app points with no cash value.
 

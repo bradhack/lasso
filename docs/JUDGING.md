@@ -1,6 +1,6 @@
 # Lasso for judges
 
-- **Live app:** https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io (built for phones; on a desktop browser the match page spreads into two columns)
+- **Live app:** https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io (built for phones; on a desktop browser the match page spreads into two columns, with Play and Table & stats as tabs beside the match)
 - **Demo video (under 2 minutes):** <!-- VIDEO LINK --> linked from the submission page
 - **Short on time? Jump straight to a moment** in your own private replay of the showcase match (pick a fan name first, then it starts):
   - [The VAR check (8')](https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io/#/replay/S5-MD07-03/6): VAR reviews a goal, and the Gauge shows the chances both ways until the decision
@@ -26,14 +26,11 @@ The app replays four matches on a loop, so something is always live. Each match 
 You don't have to wait for the loop. **Watch the big moments**, at the top of the match list and under every match's Gauge, lists each goal, red card and VAR check; pick one and your own private replay starts just before it. Everything works in it as live (the agents, Ask the Gaffer, VAR, the table, the vote), and nobody else's match changes.
 
 1. Open the link, pick a fan name and a club (choose **Eastholme Rangers** for the full story), then **Fan** or **Analyst**.
-2. Open a live match. The **Gaffer's Gauge** shows each side's chances. **Touchline** shows the ball moving on the pitch; switch to **Shots** for every shot of the match.
-3. Read **Why it moved**, then tap **AI agents ›**. **Under the hood** shows which AI agents wrote that story, which worked at the same time, the data each one looked up, and how long each took.
-4. In **Ask the Gaffer**, tap a suggestion or type your own question, in English, Spanish, Portuguese or French.
-5. **Call it:** pick an option and lasso it. You're playing free biscuits against the Gaffer's odds.
-6. If your club falls behind, **Touch the sign** to say you still believe. If they draw level, every believer gets a bonus.
-   Scroll to **Season outlook** to see what the match means for both clubs' seasons, and tap **Full table** for the league table as it stands. When Eastholme score their winner, they climb from 9th to 5th live.
-   **Player of the Match** ranks players by how much their own actions moved the chances. Vote from halftime; if your pick matches the Gaffer's at full time, you get a bonus.
-   In the featured match, watch the 8th minute: VAR checks a goal, and the **VAR check** card shows the chances both ways until the decision. You can call it in **Call it** before it lands.
+2. Open a live match. The score and the **Gaffer's Gauge** stay on top; below them, three tabs: **Live**, **Play** and **Table & stats**. On a phone, a slim scoreboard pins to the top as you scroll. Goals and VAR decisions flash up as a banner as they happen.
+3. **Live:** read **Why it moved**, then tap **AI agents ›**. **Under the hood** shows which AI agents wrote that story, which worked at the same time, the data each one looked up, and how long each took. **Touchline** shows the ball moving on the pitch (switch to **Shots** for every shot), and the **Match story** keeps every story with an icon for each kind of moment; switch it to **All events** for every chance, card, substitution and VAR check in between.
+4. **Play:** **Call it** (pick an option and lasso it; free biscuits against the Gaffer's odds), **Ask the Gaffer** (tap a suggestion or type your own question in English, Spanish, Portuguese or French) and **Player of the Match**, ranked by how much each player's own actions moved the chances. Vote from halftime; match the Gaffer's pick at full time for a bonus. A dot on the tab means there's something to do.
+5. **Table & stats:** **Season outlook** shows what the match means for both clubs' seasons (tap **Full table** for the table as it stands; when Eastholme score their winner they climb from 9th to 5th live), and the analyst stats show who leads each stat and by how much.
+6. If your club falls behind, **Touch the sign** to say you still believe. If they draw level, every believer gets a bonus. In the featured match, watch the 8th minute: VAR checks a goal, the **VAR check** card shows the chances both ways, and you can call the decision in **Play** before it lands.
 7. Tap **Listen** under a story or an answer to hear it read aloud. Scroll down to **Match story** for everything said so far. Visit **Stickers** and **Me** for the sticker book, your call history, language and light or dark mode.
 8. For TV: add `#/overlay/S5-MD07-03` to the link for a see-through overlay that sits on top of a match broadcast.
 
@@ -120,7 +117,7 @@ Both numbers come from the same run, on the live app, with every feature in plac
 **In short:** a polished phone app with a clear story on every screen and small moments of delight.
 
 - Installs to your phone's home screen like a native app. The Midnight theme (navy and brass) has an Ivory light mode.
-- The match page, top to bottom: the score with cards and minutes, the Gaffer's Gauge, the VAR check (during a review), Touch the sign, Touchline, Why it moved (with Listen), Season outlook, Call it, Ask the Gaffer, Player of the Match, the match story, stats and the event feed.
+- The match page: the score with cards and minutes and the Gaffer's Gauge always in view, the VAR check and Touch the sign when they apply, then three tabs. **Live:** Why it moved (with Listen), Touchline and the match story (one timeline with an icon for each moment, and every event on request). **Play:** Call it, Ask the Gaffer and Player of the Match. **Table & stats:** Season outlook and the analyst stats. Goals and VAR decisions arrive as a banner too.
 - Game features: winning streaks with the **Goldfish** (one missed call a week is forgiven), a 23-sticker book (with stickers for Ask the Gaffer, Listen, VAR calls, Player of the Match picks and climbing the table), daily missions, leagues with friends, and your call history.
 - When we release an update, open phones pick it up on their own.
 - Twenty original club crests, designed as one family (`web/scripts/make_crests.py`).

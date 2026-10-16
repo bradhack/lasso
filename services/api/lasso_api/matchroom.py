@@ -378,7 +378,7 @@ class MatchRoom:
                 "secondary": c["secondary"]}
 
     def snapshot(self) -> dict:
-        return {**self.summary(), "history": self.history[-400:], "feed": self.feed[-60:],
+        return {**self.summary(), "history": self.history[-400:], "feed": self.feed[-150:],
                 "touches": self.touches[-40:], "shots": self.shot_map, "possession": self.possession,
                 "moments": self.moments[-12:], "stats": self.stats_public(),
                 "markets": [m.public() for m in self.markets.values() if m.status != "settled"][-4:],

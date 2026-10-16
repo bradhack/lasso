@@ -1,26 +1,15 @@
-import { useEffect, useState } from "react";
 import { t } from "../i18n";
 import type { Lang, MatchSnapshot, Probs } from "../types";
 import { reasonText } from "../words";
 
-const SHOW_DECISION_MS = 7000;
 const fill = (s: string, v: Record<string, string>) => s.replace(/\{(\w+)\}/g, (_, k) => v[k] ?? "");
 
 /**
  * VAR check, both ways: while VAR reviews a goal, the Gaffer's Gauge shows what happens if it stands and if it's
- * ruled out. Then the decision shows for a few seconds.
+ * ruled out. The decision is announced by the match banner.
  */
 export function VarCheck({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
   const v = snap.var;
-  const d = snap.var_decision;
-  const [, tick] = useState(0);
-  const fresh = !!d && Date.now() - d.at < SHOW_DECISION_MS;
-  useEffect(() => {
-    if (!fresh || !d) return;
-    const tm = window.setTimeout(() => tick((n) => n + 1), SHOW_DECISION_MS - (Date.now() - d.at) + 50);
-    return () => window.clearTimeout(tm);
-  }, [d?.at, fresh]); // eslint-disable-line react-hooks/exhaustive-deps
-
   if (v && v.status === "checking") {
     const team = v.team === 0 ? snap.home : snap.away;
     const side = v.team === 0 ? "home" : "away";
@@ -39,15 +28,7 @@ export function VarCheck({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
     );
   }
 
-  if (d && fresh) {
-    const stands = d.status === "stands";
-    return (
-      <section className={`card var decided ${stands ? "stands" : "out"}`} role="status" aria-live="polite">
-        <span className="var-badge">VAR</span>
-        <b>{stands ? t("varStands", lang) : fill(t("varRuledOut", lang), { reason: reasonText(d.reason, lang) })}</b>
-      </section>
-    );
-  }
+  // The decision itself is announced by the match banner (and recorded in the match story).
   return null;
 }
 

@@ -38,6 +38,24 @@ export function PlayerOfMatch({ snap, lang }: { snap: MatchSnapshot; lang: Lang 
   const fav = players.length ? players.reduce((a, b) => ((imp?.votes[b.id] ?? 0) > (imp?.votes[a.id] ?? 0) ? b : a)) : null;
   const picked = players.find((p) => p.id === pick);
 
+  if (!finished && !open) {
+    // First half: just a line, until there's a vote to cast.
+    const lead = players[0];
+    return (
+      <section className="card motm compact" aria-labelledby="motm-title">
+        <div className="row">
+          <span id="motm-title" className="eyebrow gold">{t("motmTitle", lang)} · {t("motmBy", lang)}</span>
+          <button className="linkbtn" onClick={() => setHow(!how)} aria-expanded={how} aria-controls="motm-how">{t("motmHow", lang)}</button>
+        </div>
+        {how && <p id="motm-how" className="motm-how">{t("motmExplain", lang)}</p>}
+        <p className="motm-teaser">
+          {lead && lead.impact > 0 ? `${fill(t("motmLeads", lang), { player: lead.name, pts: signed(lead.impact) })} ` : ""}
+          {t("motmVoteSoon", lang)}
+        </p>
+      </section>
+    );
+  }
+
   return (
     <section className="card motm" aria-labelledby="motm-title">
       <div className="row">

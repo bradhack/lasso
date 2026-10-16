@@ -3,6 +3,17 @@ import { api } from "./api";
 import { Realtime } from "./realtime";
 import type { AskAnswer, Call, ClubRef, Lang, Market, MatchSnapshot, MatchSummary, Moment, Sticker, Touch, User } from "./types";
 
+export interface Flash {
+  match_id: string;
+  kind: "goal" | "var_stands" | "var_out";
+  team: 0 | 1;
+  player: string;
+  minute: number;
+  score?: [number, number];
+  reason?: string;
+  at: number;
+}
+
 export type Toast =
   | { id: number; kind: "win"; call: Call }
   | { id: number; kind: "loss"; call: Call }
@@ -36,6 +47,8 @@ interface State {
   asks: Record<string, AskAnswer[]>;
   believed: Record<string, boolean>;
   motmPicks: Record<string, string>; // Player of the Match: this fan's pick, by match_id
+  /** Goal and VAR banners: the latest big moment that arrived live (never from a page load or catch-up). */
+  flash: Flash | null;
   speechAzure: boolean; // Listen: Azure AI Speech is on (otherwise the phone's own voice) // Touch the sign: `${match}:${side}:${spell}` this fan touched // Ask the Gaffer, by match_id (only the asker sees these)
   toasts: Toast[];
   connected: boolean;
@@ -83,6 +96,7 @@ export const useStore = create<State>((set, get) => ({
   asks: {},
   believed: {},
   motmPicks: {},
+  flash: null,
   speechAzure: false,
   toasts: [],
   connected: false,
@@ -256,7 +270,11 @@ function onMessage(d: any) {
       }));
       break;
     case "event":
-      patchSnap(d.match_id, (s) => ({ feed: [...s.feed, d.event].slice(-60) }));
+      patchSnap(d.match_id, (s) => ({ feed: [...s.feed, d.event].slice(-150) }));
+      if (d.event?.type === "goal") {
+        useStore.setState({ flash: { match_id: d.match_id, kind: "goal", team: d.event.team, player: d.event.player,
+          minute: d.event.minute, score: d.event.score, at: Date.now() } });
+      }
       break;
     case "moment":
     case "moment_update":
@@ -273,6 +291,10 @@ function onMessage(d: any) {
       patchSnap(d.match_id, () => ({ season: d.season ?? null }));
       break;
     case "var":
+      if (d.decision) {
+        useStore.setState({ flash: { match_id: d.match_id, kind: d.decision.status === "stands" ? "var_stands" : "var_out",
+          team: d.decision.team, player: d.decision.player, minute: d.decision.minute, reason: d.decision.reason, at: Date.now() } });
+      }
       patchSnap(d.match_id, () => ({
         var: d.var ?? null,
         ...(d.decision ? { var_decision: { ...d.decision, at: Date.now() } } : {}),

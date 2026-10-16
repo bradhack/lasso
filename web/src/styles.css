@@ -78,6 +78,7 @@ a { color: var(--silver); }
 .score { font-family: var(--num); font-weight: 600; font-size: 54px; letter-spacing: 0.04em; line-height: 1; }
 .score .sep { color: var(--line-2); padding: 0 10px; }
 .bookings { display: flex; flex-direction: column; align-items: center; gap: 3px; margin-top: 2px; }
+.bk-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
 .bk { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--soft); font-variant-numeric: tabular-nums; }
 .bk i { width: 8px; height: 11px; border-radius: 2px; display: inline-block; }
 .bk.yellow i { background: #F5C842; }
@@ -707,3 +708,44 @@ button.motm-row:active { transform: scale(0.99); }
   .page.lobby > .bm-card .cta { grid-column: 2; grid-row: 1 / span 2; margin-top: 0; }
   .app.wide .nav { max-width: 1180px; grid-template-columns: repeat(4, 132px); justify-content: center; }
 }
+
+/* Match timeline: stories with icons, and every other event as a compact line (All events) */
+.st-tag { display: inline-flex; align-items: center; gap: 5px; }
+.st-tag .ev-icon { flex: none; }
+.ev-goal, .ev-full_time { color: var(--gold-2); }
+.ev-var { color: var(--text-2); }
+.st-ev { display: grid; grid-template-columns: 40px 18px minmax(0, 1fr); gap: 10px; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); font-size: 13px; color: var(--text-2); }
+.st-ev:first-child { border-top: 0; }
+.st-ev .ev-icon { color: var(--soft); justify-self: center; }
+.st-ev.goal .st-ev-text { color: var(--gold-2); font-weight: 700; }
+.st-ev .st-min { padding-top: 0; }
+.tl-mode .tab { height: 32px; }
+.st-more { min-height: 44px; margin-top: 4px; color: var(--gold-2); }
+
+/* Match page tabs (Live, Play, Table & stats) */
+.mtabs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; padding: 4px; border-radius: 16px; border: 1px solid var(--line-3); background: var(--surface); }
+.mtabs.sticky { position: sticky; top: var(--tabs-top, 64px); z-index: 4; box-shadow: 0 6px 16px -10px rgba(0, 0, 0, 0.5); }
+.mtab { position: relative; min-height: 44px; border: 0; border-radius: 12px; background: none; color: var(--soft); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.mtab.sel { background: var(--text); color: var(--bg); }
+.tab-dot { display: inline-block; width: 8px; height: 8px; margin-left: 6px; border-radius: 50%; background: var(--gold); vertical-align: 6px; }
+.tabpanel { display: flex; flex-direction: column; gap: 12px; }
+.tabpanel:focus { outline: none; }
+.motm-teaser { margin: 6px 0 0; font-size: 13px; line-height: 1.45; color: var(--text-2); }
+
+/* Phones: the pinned mini scoreboard once the big one scrolls away */
+.mini-score { position: fixed; left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 448px; z-index: 6; display: grid; gap: 5px; padding: 8px 14px 9px; border-radius: 14px; border: 1px solid var(--line-3); background: color-mix(in srgb, var(--surface) 96%, transparent); backdrop-filter: blur(10px); color: var(--text); font: inherit; cursor: pointer; box-shadow: 0 8px 20px -12px rgba(0, 0, 0, 0.6); }
+.ms-row { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; }
+.ms-team { color: var(--soft); }
+.ms-score { font-family: var(--num); font-size: 18px; }
+.ms-min { margin-left: auto; font-size: 12px; color: var(--soft); }
+.ms-bar { height: 5px; margin-top: 0; }
+.ms-bar > span { display: block; height: 100%; }
+
+/* Goal and VAR banners */
+.match-banner { position: fixed; top: 74px; left: 50%; transform: translateX(-50%); z-index: 30; width: calc(100% - 32px); max-width: 448px; display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 18px; border: 2px solid var(--team, var(--gold)); background: var(--surface); color: var(--text); box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.7); animation: drop 0.45s cubic-bezier(0.2, 1.2, 0.3, 1); cursor: pointer; }
+.match-banner .mb-text { display: grid; gap: 2px; min-width: 0; }
+.match-banner b { font-family: var(--num); font-size: 26px; line-height: 1; letter-spacing: 0.02em; }
+.match-banner span { font-size: 13px; color: var(--text-2); }
+.match-banner.goal .ev-icon { color: var(--gold-2); }
+.match-banner.var_out { border-color: var(--live); }
+@media (prefers-reduced-motion: reduce) { .match-banner { animation: none; } }
