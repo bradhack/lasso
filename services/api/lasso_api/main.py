@@ -183,10 +183,18 @@ _RANGE = re.compile(r"(\d+(?:[.,]\d+)?)\s*[\u2013\u2014-]\s*(\d+(?:[.,]\d+)?)(\s
 _RANGE_WORD = {"en": "to", "es": "a", "pt": "a", "fr": "à"}
 
 
+# A minute range: "between 82'–88'" read "between 82', 88'" once the dash became a comma.
+_MIN_RANGE = re.compile(r"\b(between |entre )?(\d+)['’]\s*[\u2013\u2014-]\s*(\d+)['’]", re.IGNORECASE)
+_AND_WORD = {"en": "and", "es": "y", "pt": "e", "fr": "et"}
+
+
 def _clean(text: object, lang: str = "en") -> str:
     """House style for model text: no em or en dashes, trimmed. A number range like "5–6%" reads "5 to 6%"
-    (a dash turned into a comma there gave "5, 6%")."""
+    (a dash turned into a comma there gave "5, 6%"), and a minute range "82'–88'" reads "82' to 88'"."""
     text = _RANGE.sub(lambda m: f"{m.group(1)} {_RANGE_WORD.get(lang, 'to')} {m.group(2)}{m.group(3)}", str(text))
+    text = _MIN_RANGE.sub(lambda m: (f"{m.group(1)}{m.group(2)}' {_AND_WORD.get(lang, 'and')} {m.group(3)}'"
+                                     if m.group(1) else
+                                     f"{m.group(2)}' {_RANGE_WORD.get(lang, 'to')} {m.group(3)}'"), text)
     text = re.sub(r"(\d)\s*[\u2013\u2014]\s*(\d)", r"\1-\2", text)  # a score: "1–0" is "1-0", not "1, 0"
     return _DASHES.sub(", ", text).strip()
 
@@ -204,7 +212,14 @@ _FIXES = {
     "pt": [(r"\bgolos\b", "gols"), (r"\bgolo\b", "gol"), (r"\bequipas\b", "times"), (r"\bequipa\b", "time"),
            (r"\bremates\b", "chutes"), (r"\bremate\b", "chute"), (r"\ba jogar\b", "jogando"),
            (r"\ba correr\b", "correndo"), (r"\ba ganhar\b", "ganhando"), (r"\ba perder\b", "perdendo"),
-           (r"\ba pressionar\b", "pressionando"), (r"(\d+)\.º", r"\1º")],
+           (r"\ba pressionar\b", "pressionando"), (r"(\d+)\.º", r"\1º"),
+           # "está a controlar" is Portugal's; Brazil says "está controlando".
+           (r"\b(est[áa]|estão|estava|estavam|continua|continuam|segue|seguem|anda|andam|fica|ficam) a "
+            r"(\w{2,}?)(ar|er|ir)\b", None),
+           (r"\baté aos\b", "até os"), (r"\baté ao\b", "até o"), (r"\baté à\b", "até a"),
+           (r"\b(\w+) (mantém|mantêm)-se\b", r"\1 se \2"),
+           (r"\bna primeira parte\b", "no primeiro tempo"), (r"\bna segunda parte\b", "no segundo tempo"),
+           (r"\bprimeira parte\b", "primeiro tempo"), (r"\bsegunda parte\b", "segundo tempo")],
     "es": [(r"\bchances\b", "opciones"), (r"\buna chance\b", "una opción"), (r"\bchance\b", "opción"),
            (r"\bpossession\b", "posesión"), (r"\buna (\d+) ?%", r"un \1%")],
 }
@@ -228,8 +243,35 @@ def _localize(lang: str, text: str) -> str:
     if fmt := _FROM_TO_LANG.get(lang):
         text = _FROM_TO.sub(lambda m: fmt.format(m.group(1), m.group(2)), text)
     for pat, rep in _FIXES.get(lang, []):
+        if rep is None:  # the Portuguese progressive: "está a controlar" -> "está controlando"
+            text = re.sub(pat, lambda m: f"{m.group(1)} {m.group(2)}{_GERUND[m.group(3).lower()]}", text,
+                          flags=re.IGNORECASE)
+            continue
         text = re.sub(pat, lambda m, r=rep: _same_case(m.group(0), m.expand(r)), text, flags=re.IGNORECASE)
-    return text
+    # Spain, Brazil and France write decimals with a comma: "0,74 xG", not "0.74 xG".
+    return re.sub(r"(?<![\d.])(\d+)\.(\d+)(?![\d.])", r"\1,\2", text)
+
+
+_GERUND = {"ar": "ando", "er": "endo", "ir": "indo"}
+
+# The clubs are invented. A real club name in model text is a slip ("Brighton, pardon, Brackenford").
+_REAL_CLUBS = re.compile(
+    r"\b(Arsenal|Aston Villa|Bournemouth|Brentford|Brighton|Burnley|Chelsea|Crystal Palace|Everton|Fulham|Leeds"
+    r"|Liverpool|Manchester City|Manchester United|Man City|Man United|Man Utd|Newcastle|Nottingham Forest"
+    r"|Sunderland|Tottenham|Spurs|West Ham|Wolves|Wolverhampton|Leicester|Southampton|Ipswich|Luton"
+    r"|Sheffield United|Real Madrid|Barcelona|Bayern)\b")
+_SELF_FIX = re.compile(_REAL_CLUBS.pattern + r"\s*,?\s*(?:pardon|sorry|I mean|rather|perdón|perdon|digo|o sea|"
+                       r"quer dizer|desculpe|ou melhor|ou plutôt|enfin)\s*,?\s*", re.IGNORECASE)
+
+
+def _no_real_clubs(text: str) -> str:
+    """Drop a slip like "Brighton, pardon, " and any sentence still naming a real club. Returns "" when
+    nothing usable is left, so the caller falls back."""
+    text = _SELF_FIX.sub("", text)
+    if not _REAL_CLUBS.search(text):
+        return text
+    keep = [s_ for s_ in _SENTENCE.split(text.strip()) if not _REAL_CLUBS.search(s_)]
+    return " ".join(keep) if len(" ".join(keep).split()) >= 8 else ""
 
 
 def _same_case(old: str, new: str) -> str:
@@ -276,6 +318,8 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
     if moment["trigger"] != "full_time":
         brief["drivers"] = [{"label": d["label"]["en"], "points": round(float(d["delta"]), 1)}
                             for d in moment["drivers"]]
+    if moment.get("player"):  # the scorer, or the player sent off
+        brief["player"] = moment["player"]
     if moment.get("var"):  # a goal that survived a VAR check, or one VAR ruled out
         brief["var"] = moment["var"]
     if moment.get("season"):  # full time: what the result did to the season of the club with most at stake
@@ -302,6 +346,10 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
         st = _lang_map(pkg.get("story"))
         if any(_RED_FILLER[k].search(v) for k, v in st.items() if k in _RED_FILLER):
             keep_story = True
+    if any(_REAL_CLUBS.search(v) for key in ("headline", "story") for v in _lang_map(pkg.get(key)).values()):
+        # A real club's name slipped in: the instant headline and story are exact, so they stay.
+        log.warning("real club name in agents' story for %s; keeping template", moment["moment_id"])
+        pkg = {**pkg, "headline": None, "story": None}
     if moment.get("trigger") == "var_overturned" and (moment.get("var") or {}).get("stands_pct") is not None:
         # The instant story says what the ruled-out goal would have meant ("not the 23% it would have been");
         # keep it unless the agents' version says so too.
@@ -718,6 +766,71 @@ def _plain_for_fans(text: str) -> str:
     return " ".join(keep) if keep and len(" ".join(keep).split()) >= 8 else text
 
 
+_PCT = re.compile(r"(\d{1,3})\s?%")
+_DRAW_WORD = re.compile(r"draw|empate|\bnul\b|\btie\b", re.IGNORECASE)
+_SEASON_WORD = re.compile(r"top|title|t[ií]tulo|titre|relega|descenso|rebaix|table|tabla|tabela|classement|standings"
+                          r"|season|temporada|saison|finish|clasific|classifica|place|lugar|lugar|posi", re.IGNORECASE)
+
+
+def _side_pcts(room: MatchRoom, k: int) -> set[int]:
+    """Every percentage that can honestly be one club's: its chances at any point, how far they moved, its
+    possession and field tilt, and its chance of scoring next."""
+    side = "home" if k == 0 else "away"
+    vals = {round(100 * pt[side]) for pt in room.history} | {round(100 * room.probs()[side])}
+    for m in room.moments:
+        b, a = round(100 * m["before"][side]), round(100 * m["after"][side])
+        vals |= {b, a}
+        vals |= {x for x in [abs(a - b)] + [abs(round(float(d.get("delta", 0)))) for d in m.get("drivers") or []]
+                 if x >= 4}
+    t = room.stats_public()["teams"][k]
+    vals |= {t.get("possession", -9), t.get("field_tilt", -9)}
+    if ng := room.next_goal():
+        vals.add(round(100 * ng[side]))
+    return {v + d for v in vals for d in (-2, -1, 0, 1, 2)}
+
+
+_NOW_LINE = {"en": "Right now: {h} {ph}%, draw {pd}%, {a} {pa}%.", "es": "Ahora mismo: {h} {ph}%, empate {pd}%, {a} {pa}%.",
+             "pt": "Agora: {h} {ph}%, empate {pd}%, {a} {pa}%.", "fr": "En ce moment : {h} {ph} %, nul {pd} %, {a} {pa} %."}
+
+
+def _wrong_team_pct(text: str, room: MatchRoom, lang: str = "en") -> str:
+    """Drop a sentence that gives one club's percentage to the other ("Eastholme seemed to have 0%" when that
+    was Brackenford's). If too little is left, the exact chances right now complete the answer."""
+    first = [n.split()[0] for n in room.names]
+    ok = [_side_pcts(room, 0), _side_pcts(room, 1)]
+
+    def bad(sent: str) -> bool:
+        if _SEASON_WORD.search(sent):  # standings answers quote season odds: checked elsewhere
+            return False
+        for k in (0, 1):
+            other = first[1 - k]
+            for mt in re.finditer(rf"\b{re.escape(first[k])}\b", sent):
+                rest = sent[mt.end():mt.end() + 70]
+                pm = _PCT.search(rest)
+                if not pm:
+                    continue
+                between, after = rest[:pm.start()], sent[mt.end() + pm.end():mt.end() + pm.end() + 40]
+                if other in between or _DRAW_WORD.search(between) or other in after or _DRAW_WORD.search(after[:20]):
+                    continue
+                if int(pm.group(1)) not in ok[k]:
+                    return True
+        return False
+
+    sents = _SENTENCE.split(text.strip())
+    keep = [s_ for s_ in sents if not bad(s_)]
+    if len(keep) == len(sents):
+        return text
+    log.warning("dropped a sentence with one club's percentage given to the other: %s", text[:160])
+    kept = " ".join(keep)
+    if len(kept.split()) >= 8:
+        return kept
+    if room.status == "finished" or not keep:
+        return "" if not keep else kept
+    p = _pct(room.probs())
+    return f"{kept} " + _NOW_LINE.get(lang, _NOW_LINE["en"]).format(h=room.names[0], a=room.names[1], ph=p["home"],
+                                                                     pd=p["draw"], pa=p["away"])
+
+
 def _cap_words(text: str, limit: int) -> str:
     """Backstop for long answers: keep whole sentences up to the word limit (always at least the first)."""
     out: list[str] = []
@@ -786,6 +899,10 @@ async def ask(match_id: str, body: AskIn) -> dict:
                  "status": room.status, "minute": room.minute(), "teams": list(room.names),
                  "score_text": f"{room.names[0]} {h}-{a} {room.names[1]}",
                  "chances_pct": {room.names[0]: p["home"], "draw": p["draw"], room.names[1]: p["away"]}}
+        if room.status != "finished" and (ng := room.next_goal()):
+            # "Who scores next?" is its own question: answered with these, never with the chances of winning.
+            brief["next_goal_pct"] = {room.names[0]: round(100 * ng["home"]), room.names[1]: round(100 * ng["away"]),
+                                      "no more goals": round(100 * ng["none"])}
         if any(room.state.reds):
             brief["red_cards"] = {room.names[0]: room.state.reds[0], room.names[1]: room.state.reds[1]}
         # The authoritative timeline and numbers, so basic questions never depend on which tools the Scout picks
@@ -816,11 +933,12 @@ async def ask(match_id: str, body: AskIn) -> dict:
         pkg = await agents.produce(brief)
         # A real answer echoes our id and carries the agents' trace; anything else is an error reply.
         if pkg and pkg.get("ask_id") == ask_id and pkg.get("trace") and isinstance(pkg.get("answer"), str):
-            answer = _localize(lang, _clean(pkg["answer"], lang))
+            answer = _no_real_clubs(_localize(lang, _clean(pkg["answer"], lang)))
             if u.get("persona") != "analyst":
                 answer = _plain_for_fans(answer)
             if room.status == "finished":
                 answer = _no_final_chances(answer)
+            answer = _wrong_team_pct(answer, room, lang)
             answer = _cap_words(answer, 85 if u.get("persona") == "analyst" else 55)
             followups = [_localize(lang, _clean(f))[:60] for f in (pkg.get("followups") or [])
                          if isinstance(f, str) and f.strip()][:2]

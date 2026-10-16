@@ -155,6 +155,12 @@ class MatchRoom:
         p = self.gaffer.probabilities(self.state)
         return {"home": p["home"], "draw": p["draw"], "away": p["away"]}
 
+    def next_goal(self) -> dict:
+        """Who scores the next goal (or nobody): a different question from who wins."""
+        if self.state.finished:
+            return {}
+        return {k: round(v, 3) for k, v in self.gaffer.p_next_goal(self.state).items()}
+
     def _record_point(self) -> dict:
         s = self.state
         p = self.probs()
@@ -189,7 +195,7 @@ class MatchRoom:
             "home": {"club_id": self.home_id, "name": self.names[0], **self._club(self.home_id)},
             "away": {"club_id": self.away_id, "name": self.names[1], **self._club(self.away_id)},
             "score": list(s.goals), "reds": list(s.reds), "period": s.period, "clock": round(s.clock, 2),
-            "minute": self.minute(), "probs": self.probs(), "cards": self.cards, "believe": self.believe_public(),
+            "minute": self.minute(), "probs": self.probs(), "next_goal": self.next_goal(), "cards": self.cards, "believe": self.believe_public(),
             "var": self.var, "race": self.race(),
             "prematch": {"home": self.pre["p_home"], "draw": self.pre["p_draw"], "away": self.pre["p_away"]},
         }
@@ -457,7 +463,8 @@ class MatchRoom:
             out.extend(self._update_believe())
         elif etype == "red_card" and t is not None:
             self.window["reds"].append({"team": t, "minute": self.minute()})
-            out.extend(self._moment("red_card", red_team=t, focus=1 - t))
+            out.extend(self._moment("red_card", red_team=t, focus=1 - t,
+                                    player=self.data.player_label(ev.get("player_id"))))
         elif etype == "half_time":
             self.status = "half_time"
             out.append({"type": "status", "match": self.summary()})
@@ -725,7 +732,7 @@ class MatchRoom:
 
     def _moment(self, trigger: str, *, force: bool = False, scorer: str | None = None,
                 red_team: int | None = None, focus: int | None = None, var: dict | None = None,
-                season: dict | None = None) -> list[dict]:
+                season: dict | None = None, player: str | None = None) -> list[dict]:
         a, b = self.last_moment_state, self.state.copy()
         before, after = self.last_moment_probs, self.probs()
         if focus is None:
@@ -743,6 +750,8 @@ class MatchRoom:
             "since_minute": int(a.clock), "before": before, "after": after, "drivers": drivers,
             "score": list(b.goals), "window": {k: v for k, v in self.window.items()}, **pkg,
         }
+        if scorer or player:  # the scorer, or the player sent off: the Narrator names them
+            moment["player"] = scorer or player
         if var:
             moment["var"] = var
         if season:

@@ -42,10 +42,14 @@ def build_mcp(rooms: dict[str, MatchRoom]) -> FastMCP:
     @mcp.tool()
     def gaffers_gauge(match_id: str) -> dict:
         """Current win/draw/loss probabilities, score, minute, red cards and xG for a match,
-        plus the pre-match probabilities for comparison."""
+        plus the pre-match probabilities for comparison, and next_goal_pct: the chance each team scores
+        the next goal (or that there are no more goals), which is not the chance of winning."""
         r = room(match_id)
         s = r.state
-        return {**r.summary(), "xg": [round(x, 2) for x in s.xg],
+        ng = r.next_goal()
+        nxt = {r.names[0]: round(100 * ng["home"]), r.names[1]: round(100 * ng["away"]),
+               "no more goals": round(100 * ng["none"])} if ng else {}
+        return {**r.summary(), "next_goal_pct": nxt, "xg": [round(x, 2) for x in s.xg],
                 "expected_goals_remaining": {k: round(v, 2) for k, v in r.gaffer.probabilities(s).items()
                                              if k.endswith("remaining")}}
 
