@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import hmac
 import logging
 import os
 import re
@@ -12,7 +13,7 @@ import uuid
 from collections import OrderedDict
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query, Request, WebSocket
+from fastapi import FastAPI, Header, HTTPException, Query, Request, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -24,7 +25,7 @@ from .agents_client import AgentsClient
 from .config import settings
 from .data import DemoData
 from .feed import Scheduler, big_moments, consume_forever, first_seq_at, replay
-from .game import STAKES, GameService, daily_top_up, public_user
+from .game import STAKES, GameService, daily_top_up, league_public, public_user
 from .matchroom import MatchRoom
 from .narrative import event_spoken
 from . import season as season_mod
@@ -46,7 +47,7 @@ rooms: dict[str, MatchRoom] = {mid: MatchRoom(mid, data) for mid in settings.fea
 hub = make_hub(settings.webpubsub_endpoint, settings.webpubsub_hub, settings.managed_identity_client_id)
 store = make_store(settings.cosmos_endpoint, settings.cosmos_database, settings.managed_identity_client_id)
 game = GameService(store)
-agents = AgentsClient(settings.agents_url, settings.agents_timeout) if settings.agents_url else None
+agents = AgentsClient(settings.agents_url, settings.agents_timeout, settings.agents_key) if settings.agents_url else None
 mcp = build_mcp(rooms)
 speech = Speech(settings.speech_region, settings.speech_resource_id, settings.managed_identity_client_id,
                 settings.speech_daily_limit)
@@ -973,8 +974,29 @@ async def ask(match_id: str, body: AskIn) -> dict:
             "trace": trace, "minute": room.minute(), "latency_ms": int((time.time() - t0) * 1000)}
 
 
+_signups: dict = {"day": "", "count": 0, "by_ip": {}}
+SIGNUPS_PER_IP_HOUR = 30
+SIGNUPS_PER_DAY = 5000
+
+
+def _client_ip(request: Request) -> str:
+    # Behind Container Apps ingress the last X-Forwarded-For entry is the address it saw (earlier ones are the
+    # client's own say-so).
+    fwd = [p.strip() for p in request.headers.get("x-forwarded-for", "").split(",") if p.strip()]
+    return fwd[-1] if fwd else (request.client.host if request.client else "?")
+
+
 @app.post("/api/users")
-async def create_user(body: NewUser) -> dict:
+async def create_user(body: NewUser, request: Request) -> dict:
+    # Sign-up is open (no accounts), so cap it: a script can't fill the database with fans.
+    day, now, ip = time.strftime("%Y-%m-%d"), time.time(), _client_ip(request)
+    if _signups["day"] != day:
+        _signups.update(day=day, count=0, by_ip={})
+    recent = [t for t in _signups["by_ip"].get(ip, []) if now - t < 3600]
+    if len(recent) >= SIGNUPS_PER_IP_HOUR or _signups["count"] >= SIGNUPS_PER_DAY:
+        raise HTTPException(429, "slow_down")
+    _signups["by_ip"][ip] = recent + [now]
+    _signups["count"] += 1
     return public_user(await game.create_user(body.name, body.club_id))
 
 
@@ -1048,13 +1070,13 @@ async def stakes() -> list[int]:
 
 
 @app.get("/api/leaderboard")
-async def leaderboard(code: str | None = None) -> dict:
-    return await game.leaderboard(code)
+async def leaderboard(code: str | None = None, me: str | None = Query(None, max_length=40)) -> dict:
+    return await game.leaderboard(code, me)
 
 
 @app.post("/api/leagues")
 async def create_league(body: LeagueIn) -> dict:
-    return await game.create_league(body.user_id, body.name or "My league")
+    return league_public(await game.create_league(body.user_id, body.name or "My league"))
 
 
 @app.post("/api/leagues/join")
@@ -1062,7 +1084,7 @@ async def join_league(body: LeagueIn) -> dict:
     league = await game.join_league(body.user_id, body.code or "")
     if not league:
         raise HTTPException(404, "no league with that code")
-    return league
+    return league_public(league)
 
 
 @app.get("/api/model")
@@ -1081,11 +1103,13 @@ async def model_card() -> dict:
 
 
 @app.post("/api/admin/matches/{match_id}/restart")
-async def restart(match_id: str, key: str, from_minute: float = 0.0, minute_seconds: float | None = None,
-                  agents: bool = False):
+async def restart(match_id: str, key: str = "", from_minute: float = 0.0, minute_seconds: float | None = None,
+                  agents: bool = False, x_admin_key: str = Header("", max_length=200)):
     """Admin: replay a match now. agents=true has the agents write its stories even with no one watching
     (the evaluation checks them over plain HTTP); it lasts until that replay's full time."""
-    if key != settings.admin_key:
+    # The key belongs in the X-Admin-Key header (a URL ends up in access logs); ?key= still works for old scripts.
+    given = (x_admin_key or key).encode()
+    if not settings.admin_key or not hmac.compare_digest(given, settings.admin_key.encode()):
         raise HTTPException(403, "bad key")
     if match_id not in data.matches:
         raise HTTPException(404, "match not found")

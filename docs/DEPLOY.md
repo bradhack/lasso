@@ -49,7 +49,7 @@ Rough cost while it's running: about $7 to $10 a day with everything on, plus mo
 ## Updating an existing deployment
 
 - **Code only:** `azd deploy api` and `azd deploy agents`. Run them in two terminals at once to halve the wait; remote builds start clean each time, so each takes about 4 to 8 minutes.
-- **Infrastructure changes** (new roles or settings, such as Listen's Speech access): run `azd provision` first, then deploy. New role assignments can take a few minutes to apply; until then Listen falls back to the phone's own voice.
+- **Infrastructure changes** (new roles or settings, such as Listen's Speech access): run `azd provision` first, then deploy. The agents key (only the API may run the agents) is one of these: until `azd provision` adds it to both apps, the agents service stays open as before, so the order doesn't break anything. New role assignments can take a few minutes to apply; until then Listen falls back to the phone's own voice.
 - Open phones pick up a new version on their own within about 90 seconds.
 
 ## Useful commands
@@ -58,7 +58,7 @@ Rough cost while it's running: about $7 to $10 a day with everything on, plus mo
 azd deploy agents                # redeploy one service
 azd env get-values               # URLs, endpoints
 # Restart the showcase match from minute 78 at 2 real seconds per match minute (for recording the demo):
-curl -X POST "$LASSO_APP_URL/api/admin/matches/S5-MD07-03/restart?key=<admin key>&from_minute=78&minute_seconds=2"
+curl -X POST -H "X-Admin-Key: <admin key>" "$LASSO_APP_URL/api/admin/matches/S5-MD07-03/restart?from_minute=78&minute_seconds=2"
 # Add &agents=true to have the agents write that replay's stories even with no one watching (the evaluation uses it)
 azd down --purge                 # tear everything down when judging ends (after Nov 10, 2026)
 ```

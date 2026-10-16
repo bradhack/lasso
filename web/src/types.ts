@@ -348,7 +348,10 @@ export interface Call {
 
 export interface LeaderRow {
   rank: number;
-  id: string;
+  /** Opaque row key (a fan's id is never shown to other fans). */
+  key: string;
+  /** This row is the viewer's own. */
+  me: boolean;
   name: string;
   biscuits: number;
   streak: number;

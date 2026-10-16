@@ -26,6 +26,12 @@ param adminKey string = ''
 // Stable across provisions (newGuid() here used to rotate the key on every `azd provision`).
 var effectiveAdminKey = empty(adminKey) ? '${uniqueString(subscription().id, environmentName, 'lasso-admin')}${uniqueString(environmentName, subscription().subscriptionId, 'key')}' : adminKey
 
+@secure()
+@description('Shared key the API sends with every request to the agents service, so only the API can run the agents. Left empty, a stable key is derived for this environment; override with `azd env set LASSO_AGENTS_KEY <value>`.')
+param agentsKey string = ''
+// Stable across provisions: both apps must always hold the same value.
+var effectiveAgentsKey = empty(agentsKey) ? '${uniqueString(subscription().id, environmentName, 'lasso-agents')}${uniqueString(environmentName, subscription().subscriptionId, 'a2a')}' : agentsKey
+
 param apiImage string = ''
 param agentsImage string = ''
 param feedImage string = ''
@@ -51,6 +57,7 @@ module resources 'resources.bicep' = {
     writerModelVersion: writerModelVersion
     modelCapacity: modelCapacity
     adminKey: effectiveAdminKey
+    agentsKey: effectiveAgentsKey
     apiImage: apiImage
     agentsImage: agentsImage
     feedImage: feedImage

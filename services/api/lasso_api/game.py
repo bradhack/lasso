@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import math
 import random
 import secrets
@@ -43,6 +44,19 @@ def level_for(xp: int) -> int:
 
 def streak_bonus(streak: int) -> float:
     return 1.5 if streak >= 5 else 1.25 if streak >= 3 else 1.0
+
+
+_KEY_SALT = secrets.token_bytes(16)
+
+
+def public_key(user_id: str) -> str:
+    """An opaque, stable-per-process stand-in for a fan's id in anything other fans can see."""
+    return hashlib.sha256(_KEY_SALT + user_id.encode()).hexdigest()[:12]
+
+
+def league_public(league: dict) -> dict:
+    """A league as its members see it: no member ids."""
+    return {"code": league["code"], "name": league["name"], "size": len(league.get("members", []))}
 
 
 def new_user(name: str, *, club_id: str | None = None, bot: bool = False, user_id: str | None = None) -> dict:
@@ -401,7 +415,9 @@ class GameService:
             await self.store.put_user(u)
         return league
 
-    async def leaderboard(self, code: str | None = None) -> dict:
+    async def leaderboard(self, code: str | None = None, me: str | None = None) -> dict:
+        """Public standings. A fan's id is what lets someone act as them, so rows never carry it: each row has
+        an opaque key, and `me` marks the viewer's own row."""
         if code:
             league = await self.store.get_league(code.upper())
             if not league:
@@ -411,6 +427,7 @@ class GameService:
         else:
             users, name = await self.store.list_users(), "Global"
         users.sort(key=lambda u: u["biscuits"], reverse=True)
-        rows = [{"rank": i + 1, "id": u["id"], "name": u["name"], "biscuits": u["biscuits"],
-                 "streak": u["streak"], "level": level_for(u["xp"])} for i, u in enumerate(users[:50])]
+        rows = [{"rank": i + 1, "key": public_key(u["id"]), "me": bool(me) and u["id"] == me, "name": u["name"],
+                 "biscuits": u["biscuits"], "streak": u["streak"], "level": level_for(u["xp"])}
+                for i, u in enumerate(users[:50])]
         return {"code": code, "name": name, "rows": rows}

@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import contextlib
+import hmac
 import logging
 import os
 
@@ -119,7 +120,24 @@ async def lifespan(_app):
         await team.mcp.close()
 
 
-app = Starlette(
+class RequireKey:
+    """Only the API may run the agents: the agent cards and /health stay public, but a request to the A2A
+    endpoint must carry the shared key (LASSO_AGENTS_KEY). Without it, anyone who found this address could
+    run the models on our bill and skip the API's daily caps. No key configured (local dev) means no check."""
+
+    def __init__(self, app, key: str):
+        self.app, self.key = app, key.encode()
+
+    async def __call__(self, scope, receive, send):
+        if self.key and scope["type"] == "http" and scope.get("method") == "POST":
+            sent = dict(scope.get("headers") or []).get(b"x-lasso-key", b"")
+            if not hmac.compare_digest(sent, self.key):
+                await JSONResponse({"error": "forbidden"}, status_code=403)(scope, receive, send)
+                return
+        await self.app(scope, receive, send)
+
+
+app = RequireKey(Starlette(
     routes=[Route("/health", health), *create_agent_card_routes(card), *create_jsonrpc_routes(handler, "/")],
     lifespan=lifespan,
-)
+), os.environ.get("LASSO_AGENTS_KEY", ""))

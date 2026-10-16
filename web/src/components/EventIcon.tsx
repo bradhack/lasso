@@ -24,43 +24,54 @@ export function kindOf(type: string): EventKind {
   }
 }
 
-// The ball's geometry, worked out once: a pentagon in the middle, spokes to five more around it.
-const pent = (cx: number, cy: number, r: number, rot: number) =>
-  `M${[0, 1, 2, 3, 4].map((k) => {
-    const a = ((rot + 72 * k) * Math.PI) / 180;
-    return `${(cx + r * Math.cos(a)).toFixed(2)} ${(cy + r * Math.sin(a)).toFixed(2)}`;
-  }).join("L")}Z`;
+// The ball's geometry, worked out once: a patch in the middle, a spoke from each of its corners to a patch on
+// the rim, and seams from those patches out to the edge (the white panels between are hexagons).
+const pt = (r: number, deg: number): [number, number] => {
+  const a = (deg * Math.PI) / 180;
+  return [12 + r * Math.cos(a), 12 + r * Math.sin(a)];
+};
+const at = ([x, y]: [number, number]) => `${x.toFixed(2)} ${y.toFixed(2)}`;
+const poly = (ps: [number, number][]) => `M${ps.map(at).join("L")}Z`;
 const BALL = (() => {
-  const r = 3.1; // the patches' size
-  const out = 8.9; // how far out the rim patches sit (the rim cuts them)
-  const center = pent(12, 12, r, -90);
-  const rim: string[] = [];
-  const seams: string[] = [];
-  for (let k = 0; k < 5; k++) {
-    const a = ((-90 + 72 * k) * Math.PI) / 180;
-    const [c, s_] = [Math.cos(a), Math.sin(a)];
-    rim.push(pent(12 + out * c, 12 + out * s_, r, -90 + 72 * k + 180));
-    seams.push(`M${(12 + r * c).toFixed(2)} ${(12 + r * s_).toFixed(2)}L${(12 + (out - r) * c).toFixed(2)} ${(12 + (out - r) * s_).toFixed(2)}`);
+  const inner = 3.7; // the middle patch
+  const spoke = 5.5; // where a spoke meets a rim patch
+  const rimR = 3.3; // the rim patches
+  const corners = [0, 1, 2, 3, 4].map((k) => -90 + 72 * k);
+  let patches = poly(corners.map((d) => pt(inner, d)));
+  let seams = patches;
+  for (const d of corners) {
+    const tip = pt(spoke, d);
+    // A rim patch: a pentagon pointing at the middle, its center further out along the same line.
+    const c = pt(spoke + rimR, d);
+    const verts = [0, 1, 2, 3, 4].map((k) => {
+      const a = ((d + 180 + 72 * k) * Math.PI) / 180;
+      return [c[0] + rimR * Math.cos(a), c[1] + rimR * Math.sin(a)] as [number, number];
+    });
+    patches += poly(verts);
+    seams += `${poly(verts)}M${at(pt(inner, d))}L${at(tip)}`;
+    // From the patch's two side corners, a seam straight out to the rim.
+    for (const v of [verts[1], verts[4]]) {
+      const len = Math.hypot(v[0] - 12, v[1] - 12);
+      const out: [number, number] = [12 + ((v[0] - 12) / len) * 10, 12 + ((v[1] - 12) / len) * 10];
+      seams += `M${at(v)}L${at(out)}`;
+    }
   }
-  return { center, rim, seams };
+  return { patches, seams };
 })();
 
 export function EventIcon({ kind, size = 18 }: { kind: EventKind; size?: number }) {
   const clip = `ball-${useId().replace(/:/g, "")}`;
   const common = { width: size, height: size, viewBox: "0 0 24 24", "aria-hidden": true as const, className: `ev-icon ev-${kind}` };
   switch (kind) {
-    case "goal": // a football: a black patch in the middle, five more cut off by the rim
+    case "goal": // a football: tinted patches, white panels between them, seams running out to the rim
       return (
-        <svg {...common}>
-          <defs><clipPath id={clip}><circle cx="12" cy="12" r="9" /></clipPath></defs>
-          <g clipPath={`url(#${clip})`} fill="currentColor">
-            <path d={BALL.center} />
-            {BALL.rim.map((d, i) => <path key={i} d={d} />)}
+        <svg {...common} fill="none" stroke="currentColor" strokeWidth={1.3} strokeLinejoin="round" strokeLinecap="round">
+          <defs><clipPath id={clip}><circle cx="12" cy="12" r="9.2" /></clipPath></defs>
+          <g clipPath={`url(#${clip})`}>
+            <path d={BALL.patches} fill="currentColor" fillOpacity={0.35} />
+            <path d={BALL.seams} />
           </g>
-          <g stroke="currentColor" strokeWidth={1.3} strokeLinecap="round">
-            {BALL.seams.map((d, i) => <path key={i} d={d} />)}
-          </g>
-          <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth={1.7} />
+          <circle cx="12" cy="12" r="9.2" strokeWidth={1.8} />
         </svg>
       );
     case "red_card":
@@ -79,13 +90,11 @@ export function EventIcon({ kind, size = 18 }: { kind: EventKind; size?: number 
           <path d="M9 20h6M12 16.5V20" />
         </svg>
       );
-    case "kickoff": // a referee's whistle: round body, mouthpiece out to the right with its air slot, the pea inside
+    case "kickoff": // the start: a play button
       return (
-        <svg {...common} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinejoin="round" strokeLinecap="round">
-          <path d="M9 8.5H21.5V13H14.8" />
-          <path d="M15.2 8.5V10.6H18V8.5" />
-          <circle cx="9" cy="14.5" r="6" />
-          <circle cx="9" cy="14.5" r="1.9" fill="currentColor" stroke="none" />
+        <svg {...common} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinejoin="round">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M10 8.3l5.6 3.7-5.6 3.7z" fill="currentColor" />
         </svg>
       );
     case "half_time": // the break: a pause sign in a circle

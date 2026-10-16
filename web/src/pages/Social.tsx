@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
-import { LANGS, t } from "../i18n";
+import { HTML_LANG, LANGS, t } from "../i18n";
 import { useStore } from "../store";
 import type { Lang, LeaderRow } from "../types";
 import { Crest } from "../components/bits";
@@ -22,14 +22,14 @@ export function Leagues() {
 
   useEffect(() => {
     let alive = true;
-    const load = () => api.leaderboard(tab === "GLOBAL" ? undefined : tab).then((r) => alive && setRows(r.rows)).catch(() => undefined);
+    const load = () => api.leaderboard(tab === "GLOBAL" ? undefined : tab, user?.id).then((r) => alive && setRows(r.rows)).catch(() => undefined);
     load();
     const iv = setInterval(load, 5000);
     return () => {
       alive = false;
       clearInterval(iv);
     };
-  }, [tab]);
+  }, [tab, user?.id]);
 
   const refreshUser = async () => user && setUser(await api.user(user.id));
 
@@ -37,44 +37,44 @@ export function Leagues() {
     <div className="page">
       <div className="hero">
         <span className="eyebrow gold">{t("leagues", lang)}</span>
-        <h1>BRAGGING RIGHTS, <em>LIVE.</em></h1>
+        <h1>{t("lgHero1", lang)} <em>{t("lgHero2", lang)}</em></h1>
       </div>
       <div className="tabs" style={{ flexWrap: "wrap" }}>
         {[...codes, "GLOBAL"].map((c) => (
           <button key={c} className={`tab${tab === c ? " sel" : ""}`} onClick={() => setTab(c)} style={{ flex: "1 1 30%" }}>
-            {c === "DIAMOND" ? "Diamond Dogs" : c === "GLOBAL" ? "Global" : c}
+            {c === "DIAMOND" ? "Diamond Dogs" : c === "GLOBAL" ? t("lgGlobal", lang) : c}
           </button>
         ))}
       </div>
       <section className="card">
         <div className="table">
           {rows.map((r) => (
-            <div key={r.id} className={`trow${r.id === user?.id ? " me" : ""}`}>
+            <div key={r.key} className={`trow${r.me ? " me" : ""}`}>
               <span className={`rk r${r.rank}`}>{r.rank}</span>
-              <span style={{ fontWeight: r.id === user?.id ? 700 : 500 }}>
-                {r.id === user?.id ? `${r.name} (you)` : r.name}
+              <span style={{ fontWeight: r.me ? 700 : 500 }}>
+                {r.me ? `${r.name} ${t("lgYou", lang)}` : r.name}
                 {r.streak >= 3 && <span style={{ color: "var(--gold-2)", marginLeft: 8, fontSize: 12 }}><Flame size={12} /> {r.streak}</span>}
               </span>
-              <span className="num" style={{ fontSize: 20 }}>{r.biscuits.toLocaleString("en-US")}</span>
+              <span className="num" style={{ fontSize: 20 }}>{r.biscuits.toLocaleString(HTML_LANG[lang])}</span>
             </div>
           ))}
           {rows.length === 0 && <div className="empty">…</div>}
         </div>
       </section>
       <section className="card" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <span className="eyebrow">Start or join a league</span>
+        <span className="eyebrow">{t("lgStart", lang)}</span>
         <div style={{ display: "flex", gap: 8 }}>
-          <input placeholder="League name" value={name} maxLength={32} onChange={(e) => setName(e.target.value)} aria-label="League name" />
+          <input id="league-name" name="league_name" autoComplete="off" placeholder={t("lgName", lang)} value={name} maxLength={32} onChange={(e) => setName(e.target.value)} aria-label={t("lgName", lang)} />
           <button className="tab sel" style={{ flex: "0 0 96px", height: 46 }} onClick={async () => {
             if (!user) return;
-            const l = await api.createLeague(user.id, name || `${user.name}'s league`);
+            const l = await api.createLeague(user.id, name || t("lgDefault", lang).replace("{name}", user.name));
             await refreshUser();
             setTab(l.code);
-            toast({ kind: "mission", label: `Share code ${l.code} with your mates`, reward: 0 });
-          }}>Create</button>
+            toast({ kind: "mission", label: t("lgShare", lang).replace("{code}", l.code), reward: 0 });
+          }}>{t("lgCreate", lang)}</button>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <input placeholder="Invite code" value={code} maxLength={8} onChange={(e) => setCode(e.target.value.toUpperCase())} aria-label="Invite code" />
+          <input id="invite-code" name="invite_code" autoComplete="off" autoCapitalize="characters" placeholder={t("lgCode", lang)} value={code} maxLength={8} onChange={(e) => setCode(e.target.value.toUpperCase())} aria-label={t("lgCode", lang)} />
           <button className="tab" style={{ flex: "0 0 96px", height: 46 }} onClick={async () => {
             if (!user || !code) return;
             try {
@@ -84,7 +84,7 @@ export function Leagues() {
             } catch (e) {
               toast({ kind: "error", text: (e as Error).message });
             }
-          }}>Join</button>
+          }}>{t("lgJoin", lang)}</button>
         </div>
       </section>
     </div>
@@ -191,7 +191,7 @@ export function Profile() {
       <section className="card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <span className="eyebrow">{t("settings", lang)}</span>
         <label className="f">{t("language", lang)}
-          <select value={user.lang} onChange={(e) => updatePrefs({ lang: e.target.value as Lang })}>
+          <select id="settings-lang" name="lang" value={user.lang} onChange={(e) => updatePrefs({ lang: e.target.value as Lang })}>
             {LANGS.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
           </select>
         </label>
@@ -209,8 +209,8 @@ export function Profile() {
           <span style={{ fontSize: 12 }}>{t(user.persona === "fan" ? "fanHint" : "analystHint", lang)}</span>
         </div>
         <label className="f">{t("yourClub", lang)}
-          <select value={user.club_id ?? ""} onChange={(e) => updatePrefs({ club_id: e.target.value || null })}>
-            <option value="">None</option>
+          <select id="settings-club" name="club" value={user.club_id ?? ""} onChange={(e) => updatePrefs({ club_id: e.target.value || null })}>
+            <option value="">{t("clubNone", lang)}</option>
             {Object.values(clubs).map((c) => <option key={c.club_id} value={c.club_id}>{c.name}</option>)}
           </select>
         </label>

@@ -9,6 +9,8 @@ param writerModelVersion string
 param modelCapacity int
 @secure()
 param adminKey string
+@secure()
+param agentsKey string
 param apiImage string
 param agentsImage string
 param feedImage string
@@ -171,6 +173,7 @@ resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
   kind: 'GlobalDocumentDB'
   properties: {
     databaseAccountOfferType: 'Standard'
+    disableKeyBasedMetadataWriteAccess: true
     locations: [{ locationName: location, failoverPriority: 0 }]
     capabilities: [{ name: 'EnableServerless' }]
     disableLocalAuth: true
@@ -260,7 +263,7 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
     configuration: {
       ingress: { external: true, targetPort: 8000, transport: 'auto', allowInsecure: false }
       registries: [{ server: registry.properties.loginServer, identity: identity.id }]
-      secrets: [{ name: 'admin-key', value: adminKey }]
+      secrets: [{ name: 'admin-key', value: adminKey }, { name: 'agents-key', value: agentsKey }]
     }
     template: {
       // Match rooms live in memory, so the API runs as a single, always-on replica.
@@ -278,6 +281,7 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
           { name: 'COSMOS_ENDPOINT', value: cosmos.properties.documentEndpoint }
           { name: 'LASSO_AGENTS_URL', value: '${agentsUrl}/' }
           { name: 'LASSO_ADMIN_KEY', secretRef: 'admin-key' }
+          { name: 'LASSO_AGENTS_KEY', secretRef: 'agents-key' }
           { name: 'LASSO_SPEECH_REGION', value: foundry.location }
           { name: 'LASSO_SPEECH_RESOURCE_ID', value: foundry.id }
           { name: 'OTEL_SERVICE_NAME', value: 'lasso-api' }
@@ -296,8 +300,10 @@ resource agents 'Microsoft.App/containerApps@2024-03-01' = {
   properties: {
     managedEnvironmentId: env.id
     configuration: {
+      // Public so judges can read the agent cards; running the agents needs the API's key (LASSO_AGENTS_KEY).
       ingress: { external: true, targetPort: 8100, transport: 'auto', allowInsecure: false }
       registries: [{ server: registry.properties.loginServer, identity: identity.id }]
+      secrets: [{ name: 'agents-key', value: agentsKey }]
     }
     template: {
       scale: {
@@ -315,6 +321,7 @@ resource agents 'Microsoft.App/containerApps@2024-03-01' = {
           { name: 'FOUNDRY_WRITER_MODEL', value: writerModelName }
           { name: 'LASSO_MCP_URL', value: '${apiUrl}/mcp/' }
           { name: 'LASSO_AGENTS_PUBLIC_URL', value: '${agentsUrl}/' }
+          { name: 'LASSO_AGENTS_KEY', secretRef: 'agents-key' }
           { name: 'OTEL_SERVICE_NAME', value: 'lasso-agents' }
         ])
       }]

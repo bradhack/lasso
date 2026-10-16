@@ -10,16 +10,20 @@ log = logging.getLogger("lasso.agents")
 
 
 class AgentsClient:
-    def __init__(self, url: str, timeout: float):
+    def __init__(self, url: str, timeout: float, key: str = ""):
         self.url = url.rstrip("/") + "/"
         self.timeout = timeout
+        self.key = key  # the agents service only runs for requests that carry it
         self._agent = None
 
     def _get(self):
         if self._agent is None:
             from agent_framework.a2a import A2AAgent
 
-            self._agent = A2AAgent(name="match-director", url=self.url, timeout=self.timeout)
+            import httpx
+
+            http = httpx.AsyncClient(timeout=self.timeout, headers={"X-Lasso-Key": self.key} if self.key else None)
+            self._agent = A2AAgent(name="match-director", url=self.url, timeout=self.timeout, http_client=http)
         return self._agent
 
     async def produce(self, request: dict) -> dict | None:

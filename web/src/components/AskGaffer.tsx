@@ -104,7 +104,7 @@ export function AskGaffer({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
         ))}
       </div>
       <form className="ask-form" onSubmit={submit}>
-        <input value={q} onChange={(e) => setQ(e.target.value)} maxLength={200} placeholder={t("askPlaceholder", lang)}
+        <input id="ask-question" name="question" autoComplete="off" value={q} onChange={(e) => setQ(e.target.value)} maxLength={200} placeholder={t("askPlaceholder", lang)}
           aria-label={t("askPlaceholder", lang)} enterKeyHint="send" disabled={busy} />
         <button className="cta" type="submit" disabled={busy || q.trim().length < 3}>{t("askSend", lang)}</button>
       </form>

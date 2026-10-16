@@ -42,6 +42,7 @@ class Settings:
 
     # Agents service (A2A). Empty => built-in template narration only.
     agents_url: str = field(default_factory=lambda: _env("LASSO_AGENTS_URL"))
+    agents_key: str = field(default_factory=lambda: _env("LASSO_AGENTS_KEY"))
     agents_timeout: float = field(default_factory=lambda: float(_env("LASSO_AGENTS_TIMEOUT", "60")))
     # Cost guard-rails: only enrich watched matches, at most one call per match per N seconds, and a daily cap.
     agents_min_gap_seconds: float = field(default_factory=lambda: float(_env("LASSO_AGENTS_MIN_GAP", "20")))

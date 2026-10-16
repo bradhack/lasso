@@ -48,8 +48,9 @@ export const api = {
   calls: (id: string) => req<Call[]>(`/api/users/${id}/calls`),
   placeCall: (body: { user_id: string; market_id: string; option_id: string; stake: number; confidence?: number }) =>
     req<{ call: Call; user: User }>("/api/calls", { method: "POST", body: JSON.stringify(body) }),
-  leaderboard: (code?: string) =>
-    req<{ code: string | null; name: string; rows: LeaderRow[] }>(`/api/leaderboard${code ? `?code=${code}` : ""}`),
+  leaderboard: (code?: string, me?: string) =>
+    req<{ code: string | null; name: string; rows: LeaderRow[] }>(
+      `/api/leaderboard?${new URLSearchParams(Object.entries({ code, me }).filter(([, v]) => v) as [string, string][])}`),
   createLeague: (user_id: string, name: string) =>
     req<{ code: string; name: string }>("/api/leagues", { method: "POST", body: JSON.stringify({ user_id, name }) }),
   joinLeague: (user_id: string, code: string) =>

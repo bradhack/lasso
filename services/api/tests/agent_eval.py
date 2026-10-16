@@ -121,9 +121,10 @@ def detect_lang(text: str) -> str:
     return max(STOP, key=lambda k: sum(1 for x in w if x in STOP[k]))
 
 
-def http(base: str, method: str, path: str, body: dict | None = None, timeout: float = 90) -> tuple[int, dict]:
+def http(base: str, method: str, path: str, body: dict | None = None, timeout: float = 90,
+         headers: dict | None = None) -> tuple[int, dict]:
     req = urllib.request.Request(base + path, method=method, data=json.dumps(body).encode() if body else None,
-                                 headers={"Content-Type": "application/json"})
+                                 headers={"Content-Type": "application/json", **(headers or {})})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return r.status, json.loads(r.read() or b"{}")
@@ -144,7 +145,8 @@ def run(base: str, key: str, minute_seconds: float) -> dict:
         u = http(base, "POST", "/api/users", {"name": f"Eval {k}", "club_id": clubs[club]})[1]
         http(base, "PATCH", f"/api/users/{u['id']}", {"persona": persona, "lang": lang})
         fans[k] = {"id": u["id"], "lang": lang, "persona": persona, "club": club}
-    status, _ = http(base, "POST", f"/api/admin/matches/{MATCH}/restart?key={key}&minute_seconds={minute_seconds}&agents=true")
+    status, _ = http(base, "POST", f"/api/admin/matches/{MATCH}/restart?minute_seconds={minute_seconds}&agents=true",
+                     headers={"X-Admin-Key": key})  # in a header, so the key stays out of access logs
     if status != 200:
         sys.exit(f"restart failed ({status}): check the admin key. It is stored in the API's container app "
                  "secret admin-key; see docs/DEPLOY.md for the command to read it.")

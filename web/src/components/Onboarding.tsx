@@ -32,8 +32,8 @@ export function Onboarding() {
           {t("obSub", lang)}
         </p>
         <label className="f">
-          Your name
-          <input value={name} maxLength={24} onChange={(e) => setName(e.target.value)} placeholder="Fan name" autoComplete="nickname" />
+          {t("obName", lang)}
+          <input id="fan-name" name="nickname" value={name} maxLength={24} onChange={(e) => setName(e.target.value)} placeholder={t("obNamePh", lang)} autoComplete="nickname" />
         </label>
         <div className="f" style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "var(--muted)" }}>
           {t("yourClub", lang)} <span style={{ fontSize: 12 }}>{t("clubHint", lang)}</span>
@@ -56,7 +56,7 @@ export function Onboarding() {
         </div>
         <label className="f">
           {t("language", lang)}
-          <select value={lang} onChange={(e) => setLang(e.target.value as Lang)}>
+          <select id="onboarding-lang" name="lang" value={lang} onChange={(e) => setLang(e.target.value as Lang)}>
             {LANGS.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
           </select>
         </label>

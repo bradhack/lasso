@@ -14,7 +14,8 @@ import logging
 import re
 import time
 from collections import OrderedDict
-from xml.sax.saxutils import escape
+# escape() makes text safe to put into SSML; no XML is ever parsed here.
+from xml.sax.saxutils import escape  # nosec B406
 
 import httpx
 
@@ -104,7 +105,7 @@ class Speech:
             return None
         xml_lang, voice = VOICES.get(lang, VOICES["en"])
         text = spoken(text, lang)
-        key = hashlib.sha1(f"{voice}|{text}".encode()).hexdigest()
+        key = hashlib.sha1(f"{voice}|{text}".encode(), usedforsecurity=False).hexdigest()  # a cache key only
         if key in self._cache:
             self._cache.move_to_end(key)
             return self._cache[key]
