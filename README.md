@@ -7,7 +7,7 @@ Lasso shows your team's chances live, tells you in plain English why they just c
 Lasso is a live, multi-agent match companion for phones and broadcasts, built for the Microsoft and Premier League *Inside the Game* hackathon.
 
 > **Judges start here**
-> - **Live app:** https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io (best on a phone)
+> - **Live app:** https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io (built for phones, with a two-column layout on desktop)
 > - **Demo video:** <!-- VIDEO LINK --> on the submission page
 > - **Jump to a moment:** [the VAR check](https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io/#/replay/S5-MD07-03/6) · [the winner](https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io/#/replay/S5-MD07-03/83) (your own private replay)
 > - **[Lasso for judges](docs/JUDGING.md):** a two-minute tour, and each judging criterion mapped to the screens, files and numbers that back it up
@@ -166,7 +166,7 @@ Here's how the code covers the brief's five stages:
 - **0.95 / 0.91** correlation between the estimated and the hidden true attack and defense strengths
 - The fast Laplace posterior matches full NUTS MCMC (posterior means correlate at 0.99996)
 - **2.2M** synthetic events across 1,900 matches and five seasons, with a hidden truth to evaluate against
-- **24 of 24** Ask the Gaffer answers and **13 of 13** match stories pass every automated check against the match data, in four languages (see the [agent evaluation](docs/agent-eval.md))
+- **24 of 26** Ask the Gaffer answers and **13 of 13** match stories pass every automated check against the match data, in four languages; the two misses were a stalled writer, now hedged with a second attempt (see the [agent evaluation](docs/agent-eval.md))
 
 ### The league
 

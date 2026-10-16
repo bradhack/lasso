@@ -111,7 +111,7 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
       </div>
       {!hidden && (
         <>
-          <svg className="pitch" viewBox={`-3 -3 ${W + 6} ${H + 6}`} role="img"
+          <svg className="pitch" viewBox={`-3 -3 ${W + 6} ${H + 6}`} role="group"
             aria-label={view === "live" ? (last ? describe(last, snap, lang) : t("touchline", lang)) : t("vShots", lang)}>
             <PitchMarkings />
             {view === "live" && (

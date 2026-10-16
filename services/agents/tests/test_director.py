@@ -38,6 +38,9 @@ class ScriptedClient(BaseChatClient):
                 if key in text:
                     if isinstance(payload, list):  # a sequence of replies, one per call
                         payload = payload.pop(0) if len(payload) > 1 else payload[0]
+                    if isinstance(payload, dict) and "_sleep" in payload:  # a stalled model call
+                        await asyncio.sleep(payload["_sleep"])
+                        payload = {k: v for k, v in payload.items() if k != "_sleep"}
                     body = payload if isinstance(payload, str) else json.dumps(payload)  # str: a raw reply
                     return ChatResponse(messages=[Message("assistant", [body])])
             return ChatResponse(messages=[Message("assistant", ["{}"])])
@@ -133,3 +136,22 @@ def test_press_room_retries_once_when_the_reply_is_unusable():
     assert pkg["answer"] == "Penke won it late."
     assert [t["agent"] for t in pkg["trace"]] == ["scout", "presser", "presser"]
     assert pkg["trace"][-1]["retry"] is True and pkg["trace"][1]["ok"] is False
+
+
+def test_press_room_hedges_a_stalled_presser(monkeypatch):
+    import lasso_agents.director as d
+    monkeypatch.setattr(d, "HEDGE_AFTER", 0.2)
+    keep = SCRIPT["press conference"]
+    SCRIPT["press conference"] = [{"_sleep": 5, "answer": "Too late."}, {"answer": "Lorford, at 5'.", "followups": []}]
+    try:
+        agent = d.build_press_room(make_team(), timeout=3).as_agent(name="Press Room")
+        t0 = __import__("time").perf_counter()
+        pkg = parse_json(asyncio.run(agent.run(json.dumps({"kind": "ask", "ask_id": "q5", "lang": "en",
+                                                             "question": "Who got the red card?"}))).text)
+        took = __import__("time").perf_counter() - t0
+    finally:
+        SCRIPT["press conference"] = keep
+    assert pkg["answer"] == "Lorford, at 5'."
+    assert took < 2.5  # didn't wait for the stalled attempt
+    assert [t.get("error") for t in pkg["trace"] if t["agent"] == "presser"] == ["Superseded", None]
+    assert pkg["trace"][-1]["hedge"] is True

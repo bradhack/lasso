@@ -1,6 +1,6 @@
 # Lasso for judges
 
-- **Live app:** https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io (best on a phone, or a narrow browser window)
+- **Live app:** https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io (built for phones; on a desktop browser the match page spreads into two columns)
 - **Demo video (under 2 minutes):** <!-- VIDEO LINK --> linked from the submission page
 - **Short on time? Jump straight to a moment** in your own private replay of the showcase match (pick a fan name first, then it starts):
   - [The VAR check (8')](https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io/#/replay/S5-MD07-03/6): VAR reviews a goal, and the Gauge shows the chances both ways until the decision
@@ -94,12 +94,12 @@ Every answer and story is checked by code, not by eye: the right language, real 
 
 | | Passed every check | Typical time | Slowest |
 |---|---|---|---|
-| Ask the Gaffer answers | **24 of 24** | 7.9 seconds | 10.3 seconds |
-| Match stories (each in four languages) | **13 of 13** | 9.6 seconds | 15.6 seconds |
+| Ask the Gaffer answers | **24 of 26** | 10.6 seconds | 27.3 seconds |
+| Match stories (each in four languages) | **13 of 13** | 20.1 seconds | 33.4 seconds |
 
-An answer uses about 6,000 tokens across both agents, well under a cent. Full results, with every answer word for word: [agent-eval.md](agent-eval.md). The story figures are from the run before the latest one, because the latest replay ran without agent stories.
+Both numbers come from the same run, on the live app, with every feature in place, including questions about the season and the Player of the Match. The two answers that missed weren't wrong: the writing agent stalled and the app fell back to the score and chances. The writer is now hedged: if it hasn't replied within 10 seconds, a second attempt starts and the first reply wins (a stalled call used to cost 25 seconds and the answer). An answer uses about 7,000 tokens across both agents, well under a cent. Full results, with every answer word for word: [agent-eval.md](agent-eval.md).
 
-**The evaluation made the agents better.** The first run looked fine at a glance but, under strict checks, only 14 of 24 answers passed: English words slipped into translations, the Gaffer invented tactics, answered off-topic questions, and once got a red-card minute wrong. Five runs later, each fix is in the code, not just the instructions: the true events, numbers and rules travel with every question; an off-topic question never reaches the writer; and translations are corrected automatically.
+**The evaluation made the agents better.** The first run looked fine at a glance but, under strict checks, only 14 of 24 answers passed: English words slipped into translations, the Gaffer invented tactics, answered off-topic questions, and once got a red-card minute wrong. Seven runs later, each fix is in the code, not just the instructions: the true events, numbers and rules travel with every question; an off-topic question never reaches the writer; translations are corrected automatically; a reply with broken formatting is recovered rather than lost; and after full time the Gaffer talks about the result, never "a 100% chance".
 
 *Where to look:* `services/api/tests/agent_eval.py` (the checks), `services/agents/lasso_agents/director.py` (both teams), `team.py` (the seven agents and their instructions), `server.py` (the A2A front door), `services/api/lasso_api/mcp_tools.py` (the Gaffer's tools).
 

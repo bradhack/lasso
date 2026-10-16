@@ -25,6 +25,20 @@ function statusLabel(m: MatchSummary, lang: Lang) {
 }
 
 const SHOWCASE = "S5-MD07-03";
+const WIDE = "(min-width: 960px)";
+
+/** True on screens wide enough for two columns (desktop and landscape tablets). */
+export function useWide() {
+  const [wide, setWide] = useState(() => typeof window !== "undefined" && !!window.matchMedia?.(WIDE).matches);
+  useEffect(() => {
+    const m = window.matchMedia?.(WIDE);
+    if (!m) return;
+    const on = () => setWide(m.matches);
+    m.addEventListener("change", on);
+    return () => m.removeEventListener("change", on);
+  }, []);
+  return wide;
+}
 
 export function Lobby() {
   const matches = useStore((s) => s.matches);
@@ -32,7 +46,7 @@ export function Lobby() {
   const live = matches.filter((m) => m.status === "live" || m.status === "half_time");
   const other = matches.filter((m) => !(m.status === "live" || m.status === "half_time"));
   return (
-    <div className="page">
+    <div className="page lobby">
       <div className="hero">
         <span className="eyebrow gold">{t("liveNow", lang)}</span>
         <h1>{t("heroA", lang)} <em>{t("heroB", lang)}</em></h1>
@@ -91,6 +105,7 @@ export function MatchPage({ id }: { id: string }) {
   }, [id, connected, watch, unwatch]);
 
   const [moments, setMoments] = useState(false);
+  const wide = useWide();
   const [missing, setMissing] = useState(false);
   useEffect(() => {
     setMissing(false);
@@ -109,8 +124,10 @@ export function MatchPage({ id }: { id: string }) {
   if (!snap) return <div className="page"><div className="empty">…</div></div>;
   const moment = [...snap.moments].reverse().find((m) => m.trigger !== "kickoff") ?? snap.moments[snap.moments.length - 1];
 
-  return (
-    <div className="page">
+  const finished = snap.status === "finished";
+  const analyst = user?.persona === "analyst";
+  const head = (
+    <>
       {snap.private && (
         <div className="replay-bar" role="note">
           <span>{t("bmPrivate", lang)}</span>
@@ -139,16 +156,47 @@ export function MatchPage({ id }: { id: string }) {
       {moments && <BigMomentsSheet matchId={snap.source_id ?? snap.match_id} lang={lang} onClose={() => setMoments(false)} />}
       <VarCheck snap={snap} lang={lang} />
       <Believe snap={snap} lang={lang} />
-      <Touchline snap={snap} lang={lang} />
-      {moment && <WhyItMoved snap={snap} moment={moment} lang={lang} />}
-      <SeasonOutlook snap={snap} lang={lang} />
-      <CallIt snap={snap} lang={lang} />
-      <AskGaffer snap={snap} lang={lang} />
-      <PlayerOfMatch snap={snap} lang={lang} />
-      <MatchStory snap={snap} lang={lang} />
-      {user?.persona === "analyst" && <StatsPanel snap={snap} lang={lang} />}
-      <Feed snap={snap} lang={lang} />
-      {user?.persona !== "analyst" && <StatsPanel snap={snap} lang={lang} />}
+    </>
+  );
+  const why = moment && <WhyItMoved snap={snap} moment={moment} lang={lang} />;
+  const touch = <Touchline snap={snap} lang={lang} />;
+  const call = <CallIt snap={snap} lang={lang} />;
+  const ask = <AskGaffer snap={snap} lang={lang} />;
+  const motm = <PlayerOfMatch snap={snap} lang={lang} />;
+  const season = <SeasonOutlook snap={snap} lang={lang} />;
+  const story = <MatchStory snap={snap} lang={lang} />;
+  const stats = <StatsPanel snap={snap} lang={lang} />;
+  const feed = <Feed snap={snap} lang={lang} />;
+
+  // Now at the top, play-along in the middle, context and reference below. At full time the payoff
+  // (the result, the Player of the Match, what it did to the season) moves up.
+  if (wide) {
+    // Two columns: the match on the left, playing along on the right.
+    return (
+      <div className="page match-wide">
+        <div className="match-cols">
+          <div className="col">
+            {head}
+            {why}
+            {finished ? <>{story}{touch}</> : <>{touch}{story}</>}
+            {feed}
+          </div>
+          <div className="col">
+            {finished ? <>{motm}{season}{ask}{call}</> : <>{call}{ask}{motm}{season}</>}
+            {stats}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="page">
+      {head}
+      {why}
+      {finished ? <>{motm}{season}{story}{ask}{touch}{call}</> : <>{touch}{call}{ask}{motm}{season}{story}</>}
+      {analyst && stats}
+      {feed}
+      {!analyst && stats}
     </div>
   );
 }

@@ -43,7 +43,7 @@ export default function App() {
   if (!ready) return <div className="app"><div className="page"><div className="empty">Warming up…</div></div></div>;
 
   return (
-    <div className="app">
+    <div className={`app${!page || page === "match" ? " wide" : ""}`}>
       <TopBar />
       {page === "match" && arg ? <MatchPage id={arg} /> :
         page === "replay" && arg ? <ReplayGate matchId={arg} minute={extra} lang={appLang} /> :

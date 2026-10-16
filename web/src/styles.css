@@ -281,7 +281,10 @@ button.pill { font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
 .stat { display: grid; grid-template-columns: 52px 1fr 52px; gap: 10px; align-items: center; font-size: 13px; }
 .stat .v { font-family: var(--num); font-size: 18px; font-weight: 600; }
 .stat .v.r { text-align: right; }
-.stat .lbl { text-align: center; color: var(--muted); font-size: 12px; }
+.stat .lbl { display: grid; justify-items: center; gap: 2px; text-align: center; color: var(--muted); font-size: 12px; }
+.stat .gap { font-size: 11px; font-weight: 700; color: var(--text-2); }
+.stat.even .gap { color: var(--soft); font-weight: 600; }
+.stat.even .v { color: var(--soft); }
 .stat .bars { grid-column: 1 / -1; display: flex; gap: 3px; height: 4px; }
 .stat .bars span { border-radius: 2px; }
 
@@ -682,3 +685,25 @@ button.motm-row:active { transform: scale(0.99); }
 .replay-bar a { color: var(--gold-2); font-weight: 700; white-space: nowrap; min-height: 44px; display: inline-flex; align-items: center; }
 .pill.replay { border: 1px solid var(--gold); color: var(--gold-2); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
 .bm-open { display: inline-flex; align-items: center; min-height: 44px; margin-top: 6px; color: var(--gold-2); font-size: 13px; }
+
+/* Analyst stats: a bar growing from the center toward the side that leads; near-ties stay grey */
+.stats-head { margin: 10px 0 0; font-size: 14px; line-height: 1.45; color: var(--text); }
+.dbar { grid-column: 1 / -1; position: relative; height: 6px; border-radius: 3px; background: var(--line); }
+.dbar .mid { position: absolute; left: 50%; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--line-3); }
+.dbar span { position: absolute; top: 0; bottom: 0; border-radius: 3px; transition: width 0.6s; }
+.stats-note { margin: 14px 0 0; font-size: 12px; line-height: 1.4; color: var(--soft); }
+@media (prefers-reduced-motion: reduce) { .dbar span { transition: none; } }
+
+/* Wide screens: the lobby and the match page use two columns (phones keep one) */
+@media (min-width: 960px) {
+  .app.wide { max-width: 1180px; }
+  .app.wide .page { padding-left: 24px; padding-right: 24px; }
+  .match-cols { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  .match-cols > .col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .page.lobby { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; align-content: start; gap: 12px; }
+  .page.lobby > .hero, .page.lobby > .bm-card { grid-column: 1 / -1; }
+  .page.lobby > .bm-card { display: grid; grid-template-columns: minmax(0, 1fr) 260px; column-gap: 24px; align-items: center; }
+  .page.lobby > .bm-card .eyebrow, .page.lobby > .bm-card .bm-lead { grid-column: 1; }
+  .page.lobby > .bm-card .cta { grid-column: 2; grid-row: 1 / span 2; margin-top: 0; }
+  .app.wide .nav { max-width: 1180px; grid-template-columns: repeat(4, 132px); justify-content: center; }
+}

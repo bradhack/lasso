@@ -111,6 +111,43 @@ async def run_agent(agent, prompt: str, timeout: float, stage: int = 1, model: s
     return out, trace
 
 
+HEDGE_AFTER = 10.0  # the Presser usually answers in 2 to 3 seconds; past this, it's likely stuck
+
+
+async def _hedged_presser(team: Team, prompt: str, timeout: float, lang: str) -> tuple[dict, list[dict]]:
+    """Run the Presser; if it hasn't answered after HEDGE_AFTER seconds, start a second attempt alongside it
+    and take whichever answers first (a hedged request). A stuck model call no longer costs the fan an answer."""
+    model = team.model_of("presser")
+    t0, started = time.perf_counter(), time.time()
+    first = asyncio.create_task(run_agent(team.presser, prompt, timeout, 2, model, keep_raw=True))
+    done, _ = await asyncio.wait({first}, timeout=min(HEDGE_AFTER, timeout))
+    if done:
+        out, tr = first.result()
+        return out, [tr]
+    second = asyncio.create_task(run_agent(team.presser, prompt, max(1.0, timeout - HEDGE_AFTER), 2, model,
+                                           keep_raw=True))
+    pending = {first, second}
+    best: tuple[dict, dict] | None = None
+    while pending:
+        done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+        for task in done:
+            out, tr = task.result()
+            if task is second:
+                tr["hedge"] = True
+            if answer_of(out, lang)[0]:
+                for p in pending:
+                    p.cancel()
+                traces = [tr]
+                if pending:  # the attempt we stopped waiting for, so Under the hood shows it
+                    traces.insert(0, {"agent": "presser", "ms": int((time.perf_counter() - t0) * 1000),
+                                      "ok": False, "stage": 2, "start": round(started, 3), "tools": [],
+                                      "error": "Superseded", "model": model})
+                return out, traces
+            best = best or (out, tr)
+    out, tr = best if best else ({}, {"agent": "presser", "ok": False, "stage": 2, "ms": 0})
+    return out, [tr]
+
+
 def build_director(team: Team, timeout: float = 25.0) -> Workflow:
     @executor(id="brief")
     async def brief(messages: list[Message], ctx: WorkflowContext[dict]) -> None:
@@ -222,11 +259,12 @@ def build_press_room(team: Team, timeout: float = 25.0) -> Workflow:
             await ctx.yield_output(json.dumps(pkg, ensure_ascii=False))
             return
         prompt = f"Brief: {json.dumps(b)}\nNotes: {json.dumps(c.get('scout', {}))}"
+        lang = b.get("lang") or "en"
         t0 = time.perf_counter()
-        out, tr = await run_agent(team.presser, prompt, timeout, 2, team.model_of("presser"), keep_raw=True)
-        traces = [tr]
-        answer, followups, recovered = answer_of(out, b.get("lang") or "en")
+        out, traces = await _hedged_presser(team, prompt, timeout, lang)
+        answer, followups, recovered = answer_of(out, lang)
         left = timeout - (time.perf_counter() - t0)
+        tr = traces[-1]
         if not answer and tr.get("error") != "TimeoutError" and left > 8:
             # A reply we couldn't use (not a timeout): ask once more, firmly, with the time that's left.
             out, tr2 = await run_agent(team.presser, prompt + "\nYour last reply was not valid JSON. Reply again "
