@@ -58,6 +58,7 @@ QUESTIONS = [
     ("pt_swing", 88, "pt_analyst", "O que mais mudou as chances no jogo?", {}),
     ("fr_believe", 89, "fr_fan", "Fallait-il y croire ?", {}),
     ("ft_how", 999, "en_analyst", "How did Eastholme win with ten men?", {}),
+    ("motm", 999, "en_fan", "Who was the player of the match?", {"motm": True}),
 ]
 
 # ---------------------------------------------------------------- language and style checks
@@ -196,7 +197,7 @@ def facts(run_: dict) -> dict:
     minutes = {e["minute"] for e in feed} | {m["minute"] for m in run_["story"]} | {45, 90}
     goals = [e for e in feed if e.get("type") == "goal"]
     reds = [e for e in feed if e.get("type") == "red_card"]
-    return {"feed": feed, "ht": ht, "minutes": minutes, "goals": goals, "reds": reds}
+    return {"feed": feed, "ht": ht, "minutes": minutes, "goals": goals, "reds": reds, "final": run_.get("final")}
 
 
 def valid_pcts(a: dict, story: list[dict]) -> set[int]:
@@ -240,6 +241,10 @@ def check_answer(a: dict, f: dict, story: list[dict], names: dict) -> dict[str, 
     if e.get("red_card"):
         r = f["reds"][0] if f["reds"] else None
         c["fact_red_card"] = bool(r) and r["player"].split()[-1].lower() in low and str(r["minute"]) in text
+    if e.get("motm"):
+        imp = (f.get("final") or {}).get("impact") or {}
+        win = next((p for p in imp.get("players", []) if p["id"] == imp.get("winner")), None)
+        c["fact_motm"] = bool(win) and win["short"].lower() in low
     if e.get("season"):
         c["fact_season"] = any(w in low for w in ("relegat", "top four", "top-four", "title", "table", "finish"))
     if e.get("cant_replace"):

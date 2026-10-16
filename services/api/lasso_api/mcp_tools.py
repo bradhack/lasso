@@ -140,4 +140,11 @@ def build_mcp(rooms: dict[str, MatchRoom]) -> FastMCP:
         view = room(match_id).season_tool()
         return view or {"note": "the season outlook is still being calculated; try again in a few seconds"}
 
+    @mcp.tool()
+    def player_impact(match_id: str) -> dict:
+        """Player of the Match by impact: the players whose own actions moved their team's chances most
+        (goals, assists, chances, saves as goals prevented, red cards), in percentage points, with each
+        player's biggest moment. Use it for questions about the best player or the player of the match."""
+        return room(match_id).impact_tool()
+
     return mcp

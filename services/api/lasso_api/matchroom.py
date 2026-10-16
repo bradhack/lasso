@@ -9,6 +9,7 @@ import zlib
 from dataclasses import dataclass, field
 
 from lasso_engine.explain import shapley
+from lasso_engine.impact import ASSIST_SHARE, goal_prevented, swing
 from lasso_engine.inplay import Gaffer, LiveMatch, MatchState, odds_multiplier
 from lasso_engine.markets import generate_markets
 
@@ -20,6 +21,7 @@ SWING_THRESHOLD = 0.08  # 8 points on either side's win chance triggers a moment
 PULSE_EVERY = 15  # match minutes between "pulse" moments
 MARKET_EVERY = 4  # match minutes between new Call It challenges
 MARKET_OPEN_FOR = 3.0  # match minutes a challenge accepts calls
+IMPACT_SHOWN = 5  # players on the Player of the Match leaderboard (and the vote)
 VAR_STANDS_RATE = 0.7  # the base rate a checked goal stands, used to price "Will the goal stand?"
 PITCH_X, PITCH_Y = 105.0, 68.0  # meters; event coordinates are in each team's attacking frame
 TOUCH_TYPES = {"kickoff", "pass", "shot", "tackle", "interception", "save", "corner", "foul",
@@ -115,6 +117,14 @@ class MatchRoom:
         self.var_stood: int | None = None
         self.var_story: dict | None = None
         self.var_items = 0
+        # Player of the Match: each player's impact, the last pass and shot (for assists and saves), the votes.
+        self.players: dict[str, dict] = {}
+        self.last_pass: dict | None = None
+        self.last_shot: dict | None = None
+        self.motm_votes: dict[str, str] = {}
+        self.motm_winner: str | None = None
+        self.crowd: dict[str, int] = {}
+        self.crowd_at: int | None = None
         self.last_seq = 0
         self._record_point()
 
@@ -176,6 +186,142 @@ class MatchRoom:
             "prematch": {"home": self.pre["p_home"], "draw": self.pre["p_draw"], "away": self.pre["p_away"]},
         }
 
+    # ------------------------------------------------------ player of the match
+    def _player(self, pid: str, team: int) -> dict:
+        p = self.players.get(pid)
+        if p is None:
+            name = self.data.player_label(pid)
+            p = self.players[pid] = {"id": pid, "name": name, "short": name.split()[-1] if name else "", "team": team,
+                                     "impact": 0.0, "goals": 0, "assists": 0, "shots": 0, "saves": 0, "reds": 0,
+                                     "best": None}
+        return p
+
+    def _credit(self, p: dict, kind: str, pts: float) -> None:
+        p["impact"] += pts
+        if p["best"] is None or abs(pts) > abs(p["best"]["pts"]):
+            p["best"] = {"kind": kind, "minute": self.minute(), "pts": round(pts, 1)}
+
+    def _impact(self, ev: dict, t: int | None, pre: MatchState | None) -> list[dict]:
+        """Credit the player behind this action with how much it moved their team's chances."""
+        et = ev["type"]
+        pid = ev.get("player_id")
+        if et == "pass" and t is not None:
+            if ev.get("outcome"):
+                self.last_pass = {"team": t, "player": pid, "receiver": ev.get("receiver_id"),
+                                  "clock": float(ev["clock"]), "period": int(ev["period"])}
+            return []
+        if t is None or not pid:
+            return []
+        if et == "shot" and pre is not None:
+            pts = swing(self.gaffer, pre, self.state, t)
+            p = self._player(pid, t)
+            xg = float(ev.get("xg") or 0)
+            if ev.get("outcome"):
+                p["goals"] += 1
+                self._credit(p, "goal", pts)
+                lp = self.last_pass
+                if (lp and lp["team"] == t and lp["receiver"] == pid and lp["player"] != pid
+                        and lp["period"] == int(ev["period"]) and float(ev["clock"]) - lp["clock"] < 0.5):
+                    a = self._player(lp["player"], t)
+                    a["assists"] += 1
+                    self._credit(a, "assist", ASSIST_SHARE * pts)
+            else:
+                p["shots"] += 1
+                self._credit(p, "chance", pts)
+                if ev.get("on_target"):
+                    self.last_shot = {"team": t, "xg": xg, "clock": float(ev["clock"])}
+            self.last_pass = None
+        elif et == "save":
+            ls = self.last_shot
+            if ls and ls["team"] == 1 - t and abs(float(ev["clock"]) - ls["clock"]) < 0.2:
+                pts = goal_prevented(self.gaffer, self.state, t, ls["xg"])
+                p = self._player(pid, t)
+                p["saves"] += 1
+                self._credit(p, "save", pts)
+            self.last_shot = None
+        elif et == "red_card" and pre is not None:
+            p = self._player(pid, t)
+            p["reds"] += 1
+            self._credit(p, "red", swing(self.gaffer, pre, self.state, t))
+        else:
+            return []
+        return [{"type": "impact", "match_id": self.match_id, "impact": self.impact_public()}]
+
+    def leaders(self, n: int = IMPACT_SHOWN) -> list[dict]:
+        return sorted(self.players.values(), key=lambda p: -p["impact"])[:n]
+
+    def vote_open(self) -> bool:
+        """Fans vote from halftime to the final whistle."""
+        return self.status == "half_time" or (self.status == "live" and self.state.period == 2)
+
+    def _crowd_tick(self) -> None:
+        """The simulated crowd's votes (like the bot players in Call It). A first wave votes at halftime and
+        more fans join every minute, each picking mostly the biggest impact at that moment (goalscorers get a
+        little extra love). Votes, once cast, stay, so an early hero keeps fans after a late winner."""
+        if not self.vote_open():
+            return
+        leaders = self.leaders()
+        if not leaders:
+            return
+        m = self.minute()
+        if self.crowd_at is None:
+            n = 240 + zlib.crc32(self.match_id.encode()) % 300
+        else:
+            n = int(9 * (m - self.crowd_at))
+        if n <= 0:
+            return
+        self.crowd_at = m
+        w = [math.exp(min(60.0, max(-20.0, p["impact"])) / 9) * (1.3 if p["goals"] else 1.0) for p in leaders]
+        total = sum(w)
+        for p, x in zip(leaders, w):
+            self.crowd[p["id"]] = self.crowd.get(p["id"], 0) + int(n * x / total)
+
+    def impact_public(self, user_id: str | None = None) -> dict:
+        self._crowd_tick()
+        leaders = self.leaders()
+        counts = dict(self.crowd)
+        for pid in self.motm_votes.values():
+            counts[pid] = counts.get(pid, 0) + 1
+        total = sum(counts.values())
+        players = [{k: (round(v, 1) if k == "impact" else v) for k, v in p.items()} for p in leaders]
+        return {
+            "players": players, "open": self.vote_open(), "winner": self.motm_winner,
+            "votes": {pid: round(c / total, 3) for pid, c in counts.items()} if total else {},
+            "voters": total, "mine": self.motm_votes.get(user_id) if user_id else None,
+        }
+
+    def vote(self, user_id: str, player_id: str) -> dict | None:
+        if not self.vote_open() or player_id not in self.players:
+            return None
+        self.motm_votes[user_id] = player_id
+        return self.impact_public(user_id)
+
+    def _motm_result(self) -> list[dict]:
+        """Full time: the Gaffer's Player of the Match is the biggest impact. Fans who picked them get paid."""
+        leaders = self.leaders(1)
+        if not leaders:
+            return []
+        self.motm_winner = leaders[0]["id"]
+        winners = sorted(u for u, pid in self.motm_votes.items() if pid == self.motm_winner)
+        return [{"type": "motm_result", "match_id": self.match_id, "player": leaders[0]["name"],
+                 "team": leaders[0]["team"], "users": winners}]
+
+    def impact_tool(self) -> dict:
+        """Player of the Match for agents: the impact leaderboard with what each player did."""
+        side = lambda p: self.names[p["team"]]  # noqa: E731
+        return {
+            "how": "Impact is how much a player's own actions moved their team's chances (win plus half a draw), "
+                   "in percentage points: goals, a quarter of the goal for the assist, chances, saves (the goal "
+                   "prevented) and red cards (negative).",
+            "leaders": [{"player": p["name"], "club": side(p), "impact_pts": round(p["impact"], 1),
+                         "goals": p["goals"], "assists": p["assists"], "shots": p["shots"], "saves": p["saves"],
+                         "red_cards": p["reds"],
+                         "biggest_moment": p["best"] and f"{p['best']['kind']} at {p['best']['minute']}' "
+                                                         f"({p['best']['pts']:+.1f} pts)"}
+                        for p in self.leaders(6)],
+            "player_of_the_match": self.players[self.motm_winner]["name"] if self.motm_winner else None,
+        }
+
     # ---------------------------------------------------------------- season
     def _prematch_probs(self) -> dict[str, float]:
         return {"home": self.pre["p_home"], "draw": self.pre["p_draw"], "away": self.pre["p_away"]}
@@ -210,7 +356,7 @@ class MatchRoom:
                 "touches": self.touches[-40:], "shots": self.shot_map, "possession": self.possession,
                 "moments": self.moments[-12:], "stats": self.stats_public(),
                 "markets": [m.public() for m in self.markets.values() if m.status != "settled"][-4:],
-                "season": self.season_public()}
+                "season": self.season_public(), "impact": self.impact_public()}
 
     # ---------------------------------------------------------------- ingest
     def catch_up(self, upto_seq: int) -> int:
@@ -241,7 +387,12 @@ class MatchRoom:
         if etype in ("var_check", "var_decision"):
             return out + (self._var_event(ev, t) if t is not None else [])
         before_period = self.state.period
+        scored = etype in ("shot", "red_card") and t is not None and ev.get("player_id")
+        if scored:  # move the clock to the moment of the action first, so the clock isn't credited to anyone
+            self.live.advance(int(ev["period"]), float(ev["clock"]))
+            pre = self.state.copy()
         moved = self.live.apply(ev)
+        impact_msgs = self._impact(ev, t, pre if scored else None)
         if etype not in ("half_time", "full_time"):
             self.live.advance(int(ev["period"]), float(ev["clock"]))
         if before_period == 1 and self.state.period == 2 and self.status == "half_time":
@@ -289,6 +440,7 @@ class MatchRoom:
             o = season_mod.get(self.match_id)
             ft = season_mod.full_time(o, self.data, tuple(self.state.goals), self._prematch_probs()) if o else None
             out.extend(self._moment("full_time", force=True, season=ft))
+            out.extend(self._motm_result())
         else:
             if etype == "shot" and t is not None:
                 self.window["xg"][t] += float(ev.get("xg") or 0)
@@ -301,6 +453,7 @@ class MatchRoom:
             story, self.var_story = self.var_story, None
             out.extend(self._moment("var_overturned", force=True, focus=story["team"],
                                     var={k: story[k] for k in ("reason", "player", "stands_pct")}))
+        out.extend(impact_msgs)
         now = time.time()
         if moved or etype in PUSH_NOW or now - self.last_meter_push > 1.0:
             self.last_meter_push = now

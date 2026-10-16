@@ -80,7 +80,7 @@ export function Toasts() {
 
   useEffect(() => {
     if (!last) return;
-    if (last.kind === "win" || last.kind === "sticker" || last.kind === "believe") {
+    if (last.kind === "win" || last.kind === "sticker" || last.kind === "believe" || last.kind === "motm") {
       const css = getComputedStyle(document.documentElement);
       const gold = ["--gold", "--gold-2", "--silver", "--text"].map((v) => css.getPropertyValue(v).trim() || "#D8B26E");
       confetti({ particleCount: last.kind === "sticker" ? 140 : 80, spread: 70, origin: { y: 0.15 }, colors: gold, disableForReducedMotion: true });
@@ -143,6 +143,15 @@ export function Toasts() {
               <div>
                 <div className="sub" style={{ color: "var(--gold-2)", letterSpacing: "0.08em" }}>{t("believeRightShort", lang).toUpperCase()} · +{x.reward}</div>
                 <div style={{ fontWeight: 700 }}>{t("cameBack", lang).replace("{team}", x.team)}</div>
+              </div>
+            </>
+          )}
+          {x.kind === "motm" && (
+            <>
+              <Trophy size={22} />
+              <div>
+                <div className="sub" style={{ color: "var(--gold-2)", letterSpacing: "0.08em" }}>{t("motmTitle", lang).toUpperCase()} · +{x.reward}</div>
+                <div style={{ fontWeight: 700 }}>{t("motmYouCalled", lang).replace("{player}", x.player)}</div>
               </div>
             </>
           )}

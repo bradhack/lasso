@@ -120,6 +120,12 @@ Example from the showcase match, Eastholme Rangers 2-1 Brackenford City. Easthol
 
 **The details:** each simulation first draws the team strengths from their Laplace posterior (so the odds include the model's uncertainty about how good each team is), then draws Poisson scores for every remaining fixture. Clubs are ranked by points, goal difference, goals scored, then a random draw. Results of the live match are represented by the nearest final score from the current one (from 1-1, a home win is 2-1). The race shown for each club is the one whose chance differs most between winning and losing, with near ties (within 1.5 points) going to the title, then the top four, then relegation. About a second per match, done once in a worker thread. Tests check that every simulated season has exactly one champion, four top-four clubs and three relegated clubs. *Code:* `engine/lasso_engine/season.py`.
 
+## 7. Player of the Match by impact
+
+**In plain terms:** each player is credited with how much their own actions moved their team's chances, as the Gaffer saw it at that moment. A team's standing is its chance of winning plus half its chance of a draw, so a late equalizer counts as well as a winner. A goal earns the whole swing it caused, and the player who passed to the scorer gets a quarter of it on top. A shot that doesn't go in earns the small lift it gives the Gaffer's view of the team. A save earns the goal it prevented, and a red card counts against the player sent off. The biggest total at full time is the Gaffer's Player of the Match.
+
+**The details:** before each shot or red card, the live state is advanced to the moment of the action, so the change measured is the action's alone, not the clock's. A save's value is `xG × (standing now − standing had the shot gone in)`, computed with the same in-play model. An assist needs a completed pass to the scorer by a teammate within half a minute. Tackles and interceptions don't change the Gaffer's chances directly, so they aren't scored; this is a measure of match-changing actions, not of overall performance. *Code:* `engine/lasso_engine/impact.py`.
+
 ## Glossary
 
 - **Bayesian:** a way of modeling that tracks how sure you are, and updates that belief as new evidence arrives.

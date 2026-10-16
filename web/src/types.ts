@@ -31,6 +31,30 @@ export interface MatchSummary {
   race?: Zone | "none" | null;
 }
 
+/** Player of the Match: one player's impact on their team's chances (win plus half a draw), in points. */
+export interface ImpactPlayer {
+  id: string;
+  name: string;
+  short: string;
+  team: 0 | 1;
+  impact: number;
+  goals: number;
+  assists: number;
+  shots: number;
+  saves: number;
+  reds: number;
+  best: { kind: "goal" | "assist" | "chance" | "save" | "red"; minute: number; pts: number } | null;
+}
+
+export interface Impact {
+  players: ImpactPlayer[];
+  open: boolean;
+  winner: string | null;
+  votes: Record<string, number>;
+  voters: number;
+  mine: string | null;
+}
+
 export type Zone = "title" | "top4" | "relegation";
 export type Result = "home" | "draw" | "away";
 
@@ -246,6 +270,7 @@ export interface MatchSnapshot extends MatchSummary {
   stats: { match_id: string; teams: [TeamStats, TeamStats] };
   markets: Market[];
   season?: Season | null;
+  impact?: Impact | null;
 }
 
 export interface Mission {

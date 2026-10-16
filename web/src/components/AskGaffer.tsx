@@ -33,7 +33,7 @@ export function AskGaffer({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
   if (!user) return null;
 
   const last = [...items].reverse().find((i) => !i.pending);
-  const suggestions = last?.followups.length ? last.followups : [t("askS1", lang), t("askS4", lang), t("askS3", lang)];
+  const suggestions = last?.followups.length ? last.followups : (snap.status === "live" && snap.period === 2) || snap.status === "finished" ? [t("askS1", lang), t("askS4", lang), t("askS5", lang)] : [t("askS1", lang), t("askS4", lang), t("askS3", lang)];
   const shown = all ? items : items.slice(-2);
 
   async function send(text: string) {

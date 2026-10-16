@@ -11,6 +11,7 @@ export type Toast =
   | { id: number; kind: "mission"; label: string; reward: number; mission?: string }
   | { id: number; kind: "goldfish"; streak: number }
   | { id: number; kind: "believe"; team: string; reward: number }
+  | { id: number; kind: "motm"; player: string; reward: number }
   | { id: number; kind: "error"; text: string }
   | { id: number; kind: "update" };
 
@@ -22,6 +23,7 @@ type ToastInput =
   | { kind: "mission"; label: string; reward: number; mission?: string }
   | { kind: "goldfish"; streak: number }
   | { kind: "believe"; team: string; reward: number }
+  | { kind: "motm"; player: string; reward: number }
   | { kind: "error"; text: string }
   | { kind: "update" };
 
@@ -33,6 +35,7 @@ interface State {
   calls: Record<string, Call>; // by market_id
   asks: Record<string, AskAnswer[]>;
   believed: Record<string, boolean>;
+  motmPicks: Record<string, string>; // Player of the Match: this fan's pick, by match_id
   speechAzure: boolean; // Listen: Azure AI Speech is on (otherwise the phone's own voice) // Touch the sign: `${match}:${side}:${spell}` this fan touched // Ask the Gaffer, by match_id (only the asker sees these)
   toasts: Toast[];
   connected: boolean;
@@ -45,6 +48,7 @@ interface State {
   watch: (matchId: string) => Promise<void>;
   setAsks: (matchId: string, fn: (list: AskAnswer[]) => AskAnswer[]) => void;
   touchSign: (matchId: string, side: 0 | 1) => Promise<void>;
+  voteMotm: (matchId: string, playerId: string) => Promise<void>;
   unwatch: (matchId: string) => void;
   placeCall: (m: Market, optionId: string, stake: number) => Promise<void>;
   toast: (t: ToastInput) => void;
@@ -78,6 +82,7 @@ export const useStore = create<State>((set, get) => ({
   calls: {},
   asks: {},
   believed: {},
+  motmPicks: {},
   speechAzure: false,
   toasts: [],
   connected: false,
@@ -141,6 +146,20 @@ export const useStore = create<State>((set, get) => ({
       }));
     } catch {
       set((s) => ({ believed: { ...s.believed, [key]: false } }));
+    }
+  },
+
+  voteMotm: async (matchId, playerId) => {
+    const u = get().user;
+    if (!u) return;
+    const was = get().motmPicks[matchId];
+    set((s) => ({ motmPicks: { ...s.motmPicks, [matchId]: playerId } }));
+    navigator.vibrate?.(15);
+    try {
+      const r = await api.motm(matchId, { user_id: u.id, player_id: playerId });
+      patchSnap(matchId, () => ({ impact: r }));
+    } catch {
+      set((s) => ({ motmPicks: { ...s.motmPicks, [matchId]: was ?? "" } }));
     }
   },
 
@@ -217,7 +236,8 @@ function onMessage(d: any) {
       break;
     }
     case "reset":
-      patchSnap(d.match.match_id, () => ({ believe_won: null, var_decision: null }));
+      patchSnap(d.match.match_id, () => ({ believe_won: null, var_decision: null, impact: null }));
+      useStore.setState((x) => ({ motmPicks: { ...x.motmPicks, [d.match.match_id]: "" } }));
       if (st.snapshots[d.match.match_id]) st.watch(d.match.match_id);
       break;
     case "meter":
@@ -241,6 +261,13 @@ function onMessage(d: any) {
     case "moment":
     case "moment_update":
       patchSnap(d.moment.match_id, (s) => ({ moments: upsertMoment(s.moments, d.moment) }));
+      break;
+    case "impact":
+      patchSnap(d.match_id, () => ({ impact: d.impact ?? null }));
+      break;
+    case "motm_paid":
+      if (st.user && typeof d.biscuits === "number") useStore.setState({ user: { ...st.user, biscuits: d.biscuits } });
+      st.toast({ kind: "motm", player: d.player, reward: d.reward });
       break;
     case "season":
       patchSnap(d.match_id, () => ({ season: d.season ?? null }));

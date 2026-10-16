@@ -1,4 +1,4 @@
-import type { AskAnswer, Call, ClubRef, LeaderRow, MatchSnapshot, MatchSummary, Moment, User } from "./types";
+import type { AskAnswer, Call, ClubRef, LeaderRow, MatchSnapshot, MatchSummary, Moment, User, Impact } from "./types";
 
 export const API_BASE: string = (import.meta.env.VITE_API_BASE as string | undefined) ?? "";
 
@@ -23,6 +23,8 @@ export const api = {
   clubs: () => req<ClubRef[]>("/api/clubs"),
   matches: () => req<MatchSummary[]>("/api/matches"),
   match: (id: string) => req<MatchSnapshot>(`/api/matches/${id}`),
+  motm: (id: string, body: { user_id: string; player_id: string }) =>
+    req<Impact>(`/api/matches/${id}/motm`, { method: "POST", body: JSON.stringify(body) }),
   believe: (id: string, body: { user_id: string; side: number }) =>
     req<{ side: number; spell: number; count: number; new: boolean }>(`/api/matches/${id}/believe`, { method: "POST", body: JSON.stringify(body) }),
   speechStatus: () => req<{ azure: boolean }>("/api/speech"),

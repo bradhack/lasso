@@ -18,6 +18,7 @@ from .store import Store
 START_BISCUITS = 1000
 STAKES = (50, 100, 250)
 BELIEVE_REWARD = 50  # Touch the sign: paid to believers when their side draws level
+MOTM_REWARD = 30  # Player of the Match: paid to fans whose pick matches the Gaffer's (the biggest impact)
 MISSIONS = {
     "correct_calls": {"target": 3, "reward": 150, "label": "Win 3 calls"},
     "underdog": {"target": 1, "reward": 200, "label": "Win a call the Gaffer gave under 25%"},
@@ -174,6 +175,20 @@ class GameService:
             await self.store.put_user(u)
             out.append((uid, {"type": "believe_paid", "match_id": room.match_id, "team": room.names[side],
                               "reward": BELIEVE_REWARD, "biscuits": u["biscuits"]}))
+        return out
+
+    async def pay_motm(self, room: MatchRoom, user_ids: list[str], player: str) -> list[tuple[str, dict]]:
+        """Full time: fans who picked the Gaffer's Player of the Match get a bonus."""
+        out = []
+        for uid in user_ids:
+            u = await self.store.get_user(uid)
+            if not u or u.get("bot"):
+                continue
+            u["biscuits"] += MOTM_REWARD
+            u["xp"] += 5
+            await self.store.put_user(u)
+            out.append((uid, {"type": "motm_paid", "match_id": room.match_id, "player": player,
+                              "reward": MOTM_REWARD, "biscuits": u["biscuits"]}))
         return out
 
     @staticmethod

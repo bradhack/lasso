@@ -7,6 +7,7 @@ import { Believe } from "../components/Believe";
 import { Touchline } from "../components/Touchline";
 import { VarCheck } from "../components/VarCheck";
 import { RACE_LABEL, SeasonOutlook } from "../components/SeasonOutlook";
+import { PlayerOfMatch } from "../components/PlayerOfMatch";
 import { MatchStory } from "../components/MatchStory";
 import { Meter } from "../components/Meter";
 import { Feed, StatsPanel } from "../components/Panels";
@@ -114,6 +115,7 @@ export function MatchPage({ id }: { id: string }) {
       <SeasonOutlook snap={snap} lang={lang} />
       <CallIt snap={snap} lang={lang} />
       <AskGaffer snap={snap} lang={lang} />
+      <PlayerOfMatch snap={snap} lang={lang} />
       <MatchStory snap={snap} lang={lang} />
       {user?.persona === "analyst" && <StatsPanel snap={snap} lang={lang} />}
       <Feed snap={snap} lang={lang} />

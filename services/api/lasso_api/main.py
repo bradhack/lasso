@@ -99,6 +99,11 @@ async def publish(room: MatchRoom, msg: dict) -> None:
             _spawn(pay_believers(room, msg["users"], msg["side"]))
         await hub.to_group(group, {k: v for k, v in msg.items() if k != "users"} | {"type": "believe"})
         return
+    if kind == "motm_result":  # pay the fans who picked the Player of the Match; tell the room who it was
+        if msg["users"]:
+            _spawn(pay_motm(room, msg["users"], msg["player"]))
+        await hub.to_group(group, {"type": "impact", "match_id": room.match_id, "impact": room.impact_public()})
+        return
     await hub.to_group(group, msg)
     if kind in ("status", "meter"):
         if kind == "status" or int(time.time()) % 3 == 0:
@@ -140,6 +145,11 @@ async def _should_enrich(room: MatchRoom, moment: dict) -> bool:
 
 async def pay_believers(room: MatchRoom, users: list[str], side: int) -> None:
     for user_id, msg in await game.pay_believers(room, users, side):
+        await hub.to_user(user_id, msg)
+
+
+async def pay_motm(room: MatchRoom, users: list[str], player: str) -> None:
+    for user_id, msg in await game.pay_motm(room, users, player):
         await hub.to_user(user_id, msg)
 
 
@@ -473,6 +483,26 @@ async def touch_the_sign(match_id: str, body: BelieveIn) -> dict:
     for m in msgs:
         await hub.to_user(body.user_id, m)
     return {**r, "events": msgs}
+
+
+class MotmVote(BaseModel):
+    user_id: str = Field(..., max_length=64)
+    player_id: str = Field(..., max_length=32)
+
+
+@app.post("/api/matches/{match_id}/motm")
+async def vote_motm(match_id: str, body: MotmVote) -> dict:
+    """Player of the Match: pick a player from halftime to the final whistle. If the Gaffer agrees (the
+    biggest impact at full time), the fan gets a bonus."""
+    room = rooms.get(match_id)
+    if room is None:
+        raise HTTPException(404, "match not found")
+    if not await store.get_user(body.user_id):
+        raise HTTPException(404, "user not found")
+    r = room.vote(body.user_id, body.player_id)
+    if r is None:
+        raise HTTPException(409, "vote_closed")
+    return r
 
 
 # ------------------------------------------------------------ Ask the Gaffer

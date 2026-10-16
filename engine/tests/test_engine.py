@@ -165,3 +165,23 @@ def test_season_outlook_is_coherent(league, season):
     assert outcome_scores(2, 0) == {"home": (2, 0), "draw": (2, 2), "away": (2, 3)}
     now = apply_result(t, live.home_id, live.away_id, 2, 0)
     assert now.loc[live.home_id, "pts"] == t.loc[live.home_id, "pts"] + 3 and len(rank(now)) == 20
+
+
+def test_player_impact_values_goals_saves_and_cards():
+    from lasso_engine.impact import goal_prevented, standing, swing
+
+    g = Gaffer(1.4, 1.1, InPlayParams())
+    s = MatchState(period=2, clock=80.0, elapsed=80.0, exposure=[80.0, 80.0])
+    p = g.probabilities(s)
+    assert math.isclose(standing(p, 0) + standing(p, 1), 1.0, abs_tol=1e-6)
+    goal = s.copy()
+    goal.goals[0] += 1
+    up = swing(g, s, goal, 0)
+    assert up > 20  # a late goal in a level game is a big swing
+    assert math.isclose(swing(g, s, goal, 1), -up, abs_tol=1e-6)  # what one side gains, the other loses
+    red = s.copy()
+    red.reds[0] += 1
+    assert swing(g, s, red, 0) < 0
+    saved = goal_prevented(g, s, 1, 0.4)
+    assert math.isclose(saved, 0.4 * up, rel_tol=1e-6)  # a save is worth the goal it prevented, times its xG
+    assert goal_prevented(g, s, 1, 0.0) == 0.0

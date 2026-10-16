@@ -8,7 +8,7 @@ Read `README.md`, `docs/model-report.md` and `docs/DEPLOY.md` before making non-
 
 | Path | What lives there |
 |---|---|
-| `engine/lasso_engine/` | Synthetic league + event simulator (`league.py`, `simulator.py`), the Gaffer (`strength.py` pre-match, `inplay.py` live), Shapley explanations (`explain.py`), Call It pricing (`markets.py`), the season outlook simulator (`season.py`), training/evaluation |
+| `engine/lasso_engine/` | Synthetic league + event simulator (`league.py`, `simulator.py`), the Gaffer (`strength.py` pre-match, `inplay.py` live), Shapley explanations (`explain.py`), Call It pricing (`markets.py`), the season outlook simulator (`season.py`), player impact (`impact.py`), training/evaluation |
 | `services/api/lasso_api/` | FastAPI app: match rooms (`matchroom.py`), game logic (`game.py`, `stickers.py`), the Gaffer **MCP server** (`mcp_tools.py`, mounted at `/mcp`), realtime hub (`realtime.py`), Match Feed (`feed.py`), A2A client (`agents_client.py`), Listen (`speech.py`), season outlook (`season.py`). Agent evaluation: `services/api/tests/agent_eval.py` |
 | `services/agents/lasso_agents/` | Microsoft Agent Framework agents (`team.py`), the Match Director fan-out/fan-in workflow and the Press Room (Ask the Gaffer) workflow (`director.py`), A2A server that routes between them (`server.py`) |
 | `web/src/` | React 19 + TypeScript phone app (PWA) and broadcast overlay (`pages/Overlay.tsx`). Accessibility helpers: `useDialog.ts`, `setPageLang` in `i18n.ts`. Listen: `components/Listen.tsx` |

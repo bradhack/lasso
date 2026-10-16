@@ -642,3 +642,29 @@ button.chip { cursor: pointer; font-family: inherit; }
 .lt tbody tr.live th, .lt tbody tr.live td { color: var(--text); }
 .race-tag { display: inline-block; margin-top: 10px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line-3); font-size: 11px; font-weight: 700; color: var(--soft); }
 @media (prefers-reduced-motion: reduce) { .so-pos { transition: none; } }
+
+/* Player of the Match */
+.card.motm .linkbtn { min-height: 44px; padding: 0 2px; color: var(--gold-2); }
+.motm-how { margin: 4px 0 6px; font-size: 13px; line-height: 1.45; color: var(--text-2); }
+.motm-winner { display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--gold); color: var(--gold-2); }
+.motm-winner b { color: var(--text); font-size: 14px; }
+.motm-list { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px; }
+.motm-row { width: 100%; display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 12px; border: 1px solid transparent; background: none; color: var(--text); text-align: left; font: inherit; }
+button.motm-row { border-color: var(--line-3); cursor: pointer; min-height: 52px; }
+button.motm-row:active { transform: scale(0.99); }
+.motm-row.picked { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 10%, transparent); }
+.motm-row.won { background: color-mix(in srgb, var(--gold) 12%, transparent); }
+.motm-rank { font-family: var(--num); font-size: 18px; color: var(--soft); }
+.motm-who { min-width: 0; display: grid; gap: 3px; }
+.motm-who b { display: flex; align-items: center; gap: 6px; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.motm-who b svg { color: var(--gold-2); flex: none; }
+.motm-who small { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.motm-who small i { flex: none; width: 8px; height: 8px; border-radius: 50%; }
+.motm-bar { display: block; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.motm-bar span { display: block; height: 100%; border-radius: 2px; transition: width 0.6s; }
+.motm-pts { display: grid; justify-items: end; gap: 2px; min-width: 46px; }
+.motm-pts b { font-family: var(--num); font-size: 22px; line-height: 1; font-variant-numeric: tabular-nums; }
+.motm-pts small { font-size: 11px; font-weight: 700; color: var(--soft); }
+.motm-foot { margin: 10px 0 0; font-size: 12px; line-height: 1.4; color: var(--soft); }
+.motm-foot:empty { display: none; }
+@media (prefers-reduced-motion: reduce) { .motm-bar span { transition: none; } }
