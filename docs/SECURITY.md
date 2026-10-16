@@ -46,6 +46,6 @@ In VS Code, these extensions scan as you work:
 - **SonarQube for IDE** (SonarSource): code quality and security issues as you type, no account needed.
 - **Snyk Security**: dependencies and code, with fixes suggested inline (free account).
 
-Microsoft Security DevOps (the same bandit, checkov and template checks run above) isn't a VS Code extension: it runs in a pipeline, as the `microsoft/security-devops-action` GitHub Action or the Azure DevOps task.
+Microsoft Security DevOps isn't a VS Code extension; it runs in a pipeline. Here it's the `security` GitHub workflow (`.github/workflows/security.yml`): bandit, checkov, Template Analyzer and trivy on every push, every pull request and every Monday, with findings under the repo's Security tab, then Code scanning. It never fails the build. Run it by hand from the Actions tab (security, then Run workflow).
 
 On GitHub, turn on **Dependabot alerts**, **secret scanning** and **code scanning (CodeQL)** under the repository's Settings, then Code security. They're free for public repositories.

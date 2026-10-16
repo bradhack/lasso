@@ -1,0 +1,54 @@
+name: security
+
+# Microsoft Security DevOps: the same scans as docs/SECURITY.md, on every push and pull request and weekly
+# (new vulnerabilities are found in old code too). Findings appear under the repo's Security tab, Code
+# scanning; they never fail the build.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 6 * * 1"  # Mondays, 6:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  msdo:
+    name: Microsoft Security DevOps
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      security-events: write  # to publish findings to code scanning
+    steps:
+      - uses: actions/checkout@v5
+
+      # The MSDO command line runs on .NET.
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Run Microsoft Security DevOps
+        id: msdo
+        uses: microsoft/security-devops-action@v1.12.0
+        with:
+          # Python code (bandit), Bicep and Dockerfiles (checkov, Template Analyzer), dependencies and
+          # misconfigurations (trivy).
+          tools: bandit,checkov,templateanalyzer,trivy
+
+      - name: Publish findings to code scanning
+        if: always() && steps.msdo.outputs.sarifFile != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: ${{ steps.msdo.outputs.sarifFile }}
+          category: msdo
+
+      - name: Keep the full report
+        if: always() && steps.msdo.outputs.sarifFile != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: msdo-results
+          path: ${{ steps.msdo.outputs.sarifFile }}
