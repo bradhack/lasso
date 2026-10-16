@@ -55,6 +55,8 @@ export function MatchStory({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) 
               <span className="st-min">{r.f.minute}'</span>
               <EventIcon kind={kindOf(r.f.type)} size={16} />
               <span className="st-ev-text">{feedText(r.f, snap, lang)}</span>
+              <Listen kind="event" id={String(r.f.seq)} matchId={snap.match_id} lang={lang} compact
+                text={`${r.f.minute}' ${feedText(r.f, snap, lang)}`} label={`${r.f.minute}' ${feedText(r.f, snap, lang)}`} />
             </li>
           ) : (
             <StoryItem key={r.m.moment_id} m={r.m} snap={snap} lang={lang} onHood={setHood} />

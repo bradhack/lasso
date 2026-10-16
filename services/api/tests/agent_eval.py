@@ -378,6 +378,9 @@ def check_story(m: dict) -> dict[str, bool]:
     else:
         c["states_the_change"] = before == after or (f"{before}%" in en and f"{after}%" in en)
     c["no_dashes"] = not any(re.search("[—–]", t) for t in texts)
+    if m.get("trigger") != "full_time" and re.search(r"\bdraw\b|stalemate", en, re.I):
+        # A story that talks about the draw gives the draw's chance.
+        c["draw_talk_gives_draw"] = f"{round(100 * m['after']['draw'])}%" in en
     c["no_real_clubs"] = not any(REAL_CLUBS.search(t) for t in texts + list((m.get("headline") or {}).values()))
     c["minutes_as_numbers"] = not any(SPELLED_MINUTE.search(t) for t in texts)
     if m.get("trigger") in ("goal", "red_card") and m.get("player"):

@@ -65,6 +65,9 @@ Write naturally:
   do mention it, make clear which team had the player sent off (the brief's red_cards).
 - When the trigger is swing_draw (the draw closing in), the second sentence gives the chance of a draw from the
   brief's draw_change ("The chance of a draw rises from 40% to 55%."), not a team's chance of winning.
+- Whenever a story says the draw is getting likelier or closer, its second sentence gives the chance of a draw
+  from the brief's draw_change, never a team's chance of winning (a team's chance rising next to "a draw is
+  likelier" reads as a contradiction). Only say a draw is getting likelier when draw_change goes up.
 - When nothing happened but time passed, say what the clock means: with the score level a draw gets likelier,
   the team behind is running out of time, the team ahead is closer to the win.
 - At full time, say who won (or that it ended level) and the final score, and never quote a chance of winning

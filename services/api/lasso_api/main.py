@@ -26,6 +26,7 @@ from .data import DemoData
 from .feed import Scheduler, big_moments, consume_forever, first_seq_at, replay
 from .game import STAKES, GameService, daily_top_up, public_user
 from .matchroom import MatchRoom
+from .narrative import event_spoken
 from . import season as season_mod
 from .mcp_tools import build_mcp
 from .speech import Speech
@@ -253,6 +254,7 @@ def _localize(lang: str, text: str) -> str:
 
 
 _GERUND = {"ar": "ando", "er": "endo", "ir": "indo"}
+_DRAW_TALK = re.compile(r"\bdraw\b|\bstalemate\b|\bshare the points\b", re.IGNORECASE)
 
 # The clubs are invented. A real club name in model text is a slip ("Brighton, pardon, Brackenford").
 _REAL_CLUBS = re.compile(
@@ -313,8 +315,8 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
     else:
         brief["before_pct"], brief["after_pct"] = _pct(moment["before"]), _pct(moment["after"])
         brief["focus_change"] = f"{brief['before_pct'][side]}% to {brief['after_pct'][side]}%"
-        if moment["trigger"] == "swing_draw":  # the draw closing in: the draw's chance is the number to give
-            brief["draw_change"] = f"{brief['before_pct']['draw']}% to {brief['after_pct']['draw']}%"
+        # The draw's chance, for any story that talks about a draw (in swing_draw it's the number to give).
+        brief["draw_change"] = f"{brief['before_pct']['draw']}% to {brief['after_pct']['draw']}%"
     if moment["trigger"] != "full_time":
         brief["drivers"] = [{"label": d["label"]["en"], "points": round(float(d["delta"]), 1)}
                             for d in moment["drivers"]]
@@ -346,6 +348,13 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
         st = _lang_map(pkg.get("story"))
         if any(_RED_FILLER[k].search(v) for k, v in st.items() if k in _RED_FILLER):
             keep_story = True
+    story_en = (_lang_map(pkg.get("story")) or {}).get("en", "")
+    draw_now = round(100 * moment["after"]["draw"])
+    if (moment.get("trigger") != "full_time" and _DRAW_TALK.search(story_en)
+            and not re.search(rf"\b{draw_now}\s?%", story_en)):
+        # "A draw is getting likelier" followed by a team's rising chance reads as a contradiction: a story
+        # that talks about the draw gives the draw's chance, or the exact instant story stays.
+        keep_story = True
     if any(_REAL_CLUBS.search(v) for key in ("headline", "story") for v in _lang_map(pkg.get(key)).values()):
         # A real club's name slipped in: the instant headline and story are exact, so they stay.
         log.warning("real club name in agents' story for %s; keeping template", moment["moment_id"])
@@ -353,8 +362,7 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
     if moment.get("trigger") == "var_overturned" and (moment.get("var") or {}).get("stands_pct") is not None:
         # The instant story says what the ruled-out goal would have meant ("not the 23% it would have been");
         # keep it unless the agents' version says so too.
-        story_en = (_lang_map(pkg.get("story")) or {}).get("en", "")
-        keep_story = f"{moment['var']['stands_pct']}%" not in story_en
+        keep_story = keep_story or f"{moment['var']['stands_pct']}%" not in story_en
     for key in ("headline", "story", "analyst"):
         if key == "story" and keep_story:
             continue
@@ -470,7 +478,7 @@ class BelieveIn(BaseModel):
 
 
 class SpeechIn(BaseModel):
-    kind: str = Field(..., pattern="^(story|answer)$")
+    kind: str = Field(..., pattern="^(story|answer|event)$")
     id: str = Field(..., max_length=80)
     lang: str = Field("en", pattern="^(en|es|pt|fr)$")
     match_id: str | None = Field(None, max_length=40)
@@ -619,10 +627,10 @@ async def speech_status() -> dict:
 
 
 @app.get("/api/speech/audio")
-async def listen(kind: str = Query(..., pattern="^(story|answer)$"), id: str = Query(..., max_length=80),
+async def listen(kind: str = Query(..., pattern="^(story|answer|event)$"), id: str = Query(..., max_length=80),
                  lang: str = Query("en", pattern="^(en|es|pt|fr)$"),
                  match_id: str | None = Query(None, max_length=40)) -> Response:
-    """Listen: a story or a Gaffer answer read aloud in the fan's language (MP3). The text comes from the server,
+    """Listen: a story, a match event or a Gaffer answer read aloud in the fan's language (MP3). The text comes from the server,
     never from the request, so this can't be used to read arbitrary text. It's a plain GET so a phone can start
     playing it inside the tap (iPhones block audio started later)."""
     body = SpeechIn(kind=kind, id=id, lang=lang, match_id=match_id)
@@ -635,6 +643,13 @@ async def listen(kind: str = Query(..., pattern="^(story|answer)$"), id: str = Q
         if head and head[-1] not in ".!?":
             head += "."  # a pause between the headline and the story
         text = f"{head} {(m.get('story') or {}).get(body.lang) or ''}".strip()
+        lang = body.lang
+    elif body.kind == "event":  # one row of the timeline: a chance, a card, a substitution, a VAR check
+        room = rooms.get(body.match_id or "")
+        item = next((x for x in (room.feed if room else []) if str(x.get("seq")) == body.id), None)
+        text = event_spoken(item, room.names, body.lang) if item and room else ""
+        if not text:
+            raise HTTPException(404, "event not found")
         lang = body.lang
     else:
         if body.id not in _answers:

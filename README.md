@@ -22,7 +22,7 @@ Lasso is a live, multi-agent match companion for phones and broadcasts, built fo
 - **Watch the big moments:** pick any goal, red card or VAR check and watch the match play out from just before it, in your own private replay with everything live. Built so judges and late arrivals never miss the best bits.
 - **Player of the Match by impact:** a live leaderboard of the players whose own actions moved their team's chances most: goals, assists, chances, saves (the goal prevented) and red cards, measured by the Gaffer at the moment they happened. From halftime, fans vote; match the Gaffer's pick at full time for a biscuit bonus.
 - **VAR check, both ways:** while VAR reviews a goal, the Gauge shows the chances if it stands and if it's ruled out, side by side. Fans can call the decision before it lands, and the story explains what the ruling cost or saved.
-- **Listen:** every story and every Gaffer answer can be read aloud in the fan's language, with Azure AI Speech neural voices (or the phone's own voice as a fallback). Text is prepared for the ear first: 82' is read as "the 82nd minute", "v" as "versus" and 2-1 as "2 to 1".
+- **Listen:** every story, every match event (chances, cards, substitutions, VAR checks) and every Gaffer answer can be read aloud in the fan's language, with Azure AI Speech neural voices (or the phone's own voice as a fallback). Text is prepared for the ear first: 82' is read as "the 82nd minute", "v" as "versus" and 2-1 as "2 to 1".
 - **Accessible:** both themes pass an automated WCAG 2.2 AA audit on every screen, sheets work fully by keyboard, the page language follows the fan's choice for screen readers, and looping animations stop on their own.
 - **Under the hood:** tap the AI agents chip on any story or answer to see how it was made: which agents ran, which ran in parallel, the MCP tools each one called (with arguments), and the time, tokens and model for each.
 - **Match story** keeps every story told during the match, newest first, with an icon for each kind of moment and how each one moved the chances; **All events** adds every chance, card, substitution and VAR check in between (one timeline instead of a separate feed).
@@ -215,6 +215,6 @@ cd .. && python docs/charts/render_meter.py   # the showcase Gaffer's Gauge char
 - **Free to play.** Biscuits have no cash value and cannot be bought. There's a daily top-up if you run out.
 - **No real-world data.** All clubs, players and matches are synthetic, as the hackathon rules require.
 - **Honest scoring.** The calibration bonus uses a proper scoring rule, so stating your true confidence is always your best strategy.
-- **Accessible.** WCAG 2.2 AA audited in both themes, keyboard-friendly sheets, the page language follows the fan's, Listen for every story and answer, and motion that stops on its own.
+- **Accessible.** WCAG 2.2 AA audited in both themes, keyboard-friendly sheets, the page language follows the fan's, Listen for every story, event and answer, and motion that stops on its own.
 - **Cost guard-rails.** Agents only run for matches someone is watching, with a per-match gap and a daily cap. Ask the Gaffer has its own daily cap plus a per-fan pace and allowance.
 - **Questions are data, not instructions.** The agent that answers a fan's question has no tools, and the Scout's tools only read match data.

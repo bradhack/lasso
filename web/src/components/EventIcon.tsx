@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 /** One small icon per kind of match moment or event, for the timeline and banners. Decorative: the text next to
  * it always says what happened, so the icons are hidden from screen readers. */
 
@@ -22,15 +24,43 @@ export function kindOf(type: string): EventKind {
   }
 }
 
+// The ball's geometry, worked out once: a pentagon in the middle, spokes to five more around it.
+const pent = (cx: number, cy: number, r: number, rot: number) =>
+  `M${[0, 1, 2, 3, 4].map((k) => {
+    const a = ((rot + 72 * k) * Math.PI) / 180;
+    return `${(cx + r * Math.cos(a)).toFixed(2)} ${(cy + r * Math.sin(a)).toFixed(2)}`;
+  }).join("L")}Z`;
+const BALL = (() => {
+  const r = 3.1; // the patches' size
+  const out = 8.9; // how far out the rim patches sit (the rim cuts them)
+  const center = pent(12, 12, r, -90);
+  const rim: string[] = [];
+  const seams: string[] = [];
+  for (let k = 0; k < 5; k++) {
+    const a = ((-90 + 72 * k) * Math.PI) / 180;
+    const [c, s_] = [Math.cos(a), Math.sin(a)];
+    rim.push(pent(12 + out * c, 12 + out * s_, r, -90 + 72 * k + 180));
+    seams.push(`M${(12 + r * c).toFixed(2)} ${(12 + r * s_).toFixed(2)}L${(12 + (out - r) * c).toFixed(2)} ${(12 + (out - r) * s_).toFixed(2)}`);
+  }
+  return { center, rim, seams };
+})();
+
 export function EventIcon({ kind, size = 18 }: { kind: EventKind; size?: number }) {
+  const clip = `ball-${useId().replace(/:/g, "")}`;
   const common = { width: size, height: size, viewBox: "0 0 24 24", "aria-hidden": true as const, className: `ev-icon ev-${kind}` };
   switch (kind) {
-    case "goal": // a ball
+    case "goal": // a football: a black patch in the middle, five more cut off by the rim
       return (
-        <svg {...common} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinejoin="round">
-          <circle cx="12" cy="12" r="9" />
-          <path d="M12 8.2l3.3 2.4-1.3 3.9h-4l-1.3-3.9z" fill="currentColor" />
-          <path d="M12 3v5.2M15.3 10.6l5-1.7M14 14.5l3.2 4.4M10 14.5l-3.2 4.4M8.7 10.6l-5-1.7" />
+        <svg {...common}>
+          <defs><clipPath id={clip}><circle cx="12" cy="12" r="9" /></clipPath></defs>
+          <g clipPath={`url(#${clip})`} fill="currentColor">
+            <path d={BALL.center} />
+            {BALL.rim.map((d, i) => <path key={i} d={d} />)}
+          </g>
+          <g stroke="currentColor" strokeWidth={1.3} strokeLinecap="round">
+            {BALL.seams.map((d, i) => <path key={i} d={d} />)}
+          </g>
+          <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth={1.7} />
         </svg>
       );
     case "red_card":
@@ -49,19 +79,20 @@ export function EventIcon({ kind, size = 18 }: { kind: EventKind; size?: number 
           <path d="M9 20h6M12 16.5V20" />
         </svg>
       );
-    case "kickoff": // a whistle
+    case "kickoff": // a referee's whistle: round body, mouthpiece out to the right with its air slot, the pea inside
       return (
         <svg {...common} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinejoin="round" strokeLinecap="round">
-          <path d="M3 10h9l7-3v4.5a6 6 0 1 1-12 1.5" />
-          <circle cx="11" cy="14.5" r="1.4" fill="currentColor" />
-          <path d="M3 10v3" />
+          <path d="M9 8.5H21.5V13H14.8" />
+          <path d="M15.2 8.5V10.6H18V8.5" />
+          <circle cx="9" cy="14.5" r="6" />
+          <circle cx="9" cy="14.5" r="1.9" fill="currentColor" stroke="none" />
         </svg>
       );
-    case "half_time": // a half-filled clock
+    case "half_time": // the break: a pause sign in a circle
       return (
-        <svg {...common} fill="none" stroke="currentColor" strokeWidth={1.7}>
+        <svg {...common} fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round">
           <circle cx="12" cy="12" r="9" />
-          <path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none" />
+          <path d="M10 8.5v7M14 8.5v7" strokeWidth={2.2} />
         </svg>
       );
     case "full_time": // a checkered flag

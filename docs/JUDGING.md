@@ -31,7 +31,7 @@ You don't have to wait for the loop. **Watch the big moments**, at the top of th
 4. **Play:** **Call it** (pick an option and lasso it; free biscuits against the Gaffer's odds), **Ask the Gaffer** (tap a suggestion or type your own question in English, Spanish, Portuguese or French) and **Player of the Match**, ranked by how much each player's own actions moved the chances. Vote from halftime; match the Gaffer's pick at full time for a bonus. A dot on the tab means there's something to do.
 5. **Standings & stats:** **Season outlook** shows what the match means for both clubs' seasons (tap **Full standings** for the standings as they are now; when Eastholme score their winner they climb from 9th to 5th live), and the analyst stats show who leads each stat and by how much.
 6. If your club falls behind, **Touch the sign** to say you still believe. If they draw level, every believer gets a bonus. In the featured match, watch the 8th minute: VAR checks a goal, the **VAR check** card shows the chances both ways, and you can call the decision in **Play** before it lands.
-7. Tap **Listen** under a story or an answer to hear it read aloud. Scroll down to **Match story** for everything said so far. Visit **Stickers** and **Me** for the sticker book, your call history, language and light or dark mode.
+7. Tap **Listen** on a story, an answer or any event in the timeline (switch it to **All events**) to hear it read aloud. Scroll down to **Match story** for everything said so far. Visit **Stickers** and **Me** for the sticker book, your call history, language and light or dark mode.
 8. For TV: add `#/overlay/S5-MD07-03` to the link for a see-through overlay that sits on top of a match broadcast.
 
 ## 1. Technical implementation

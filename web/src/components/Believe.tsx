@@ -28,29 +28,30 @@ export function Believe({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
     const touched = !!believed[`${snap.match_id}:${side}:${spell.spell}`];
     const touch = () => !touched && touchSign(snap.match_id, side);
     const sign = (
-      <button className="sign" onClick={touch} disabled={touched} aria-label={t("touchSign", lang)}>
+      <button className="sign" onClick={touch} disabled={touched} aria-pressed={touched}
+        aria-label={t("believeIn", lang).replace("{team}", team)}>
         <i className="tape l" />
         <i className="tape r" />
         BELIEVE
       </button>
     );
     return (
-      <section className={`believe card${touched ? " lit" : ""}`} aria-label={t("touchSign", lang)}>
-        {touched ? (
-          <div className="believe-top">
-            {sign}
-            <p className="believe-you">{t("believeYou", lang).replace("{n}", fmt(Math.max(0, spell.count - 1))).replace("{team}", team)}</p>
+      <section className={`believe card${touched ? " lit" : ""}`} aria-labelledby="believe-title">
+        <div className="believe-top">
+          {sign}
+          <div className="believe-text">
+            {/* A heading that says what to do; the sign itself is the only thing to tap. */}
+            <h2 id="believe-title" className="eyebrow gold">{t("touchSign", lang)}</h2>
+            {touched ? (
+              <p className="believe-you">{t("believeYou", lang).replace("{n}", fmt(Math.max(0, spell.count - 1))).replace("{team}", team)}</p>
+            ) : (
+              <>
+                <p className="believe-ask">{t("believeAsk", lang).replace("{team}", team).replace("{r}", String(REWARD))}</p>
+                <span className="believe-count">{t("believeCount", lang).replace("{n}", fmt(spell.count))}</span>
+              </>
+            )}
           </div>
-        ) : (
-          <>
-            <div className="believe-top">
-              {sign}
-              <button className="believe-cta" onClick={touch}>{t("touchSign", lang)}</button>
-            </div>
-            <p className="believe-ask">{t("believeAsk", lang).replace("{team}", team).replace("{r}", String(REWARD))}</p>
-            <span className="believe-count">{t("believeCount", lang).replace("{n}", fmt(spell.count))}</span>
-          </>
-        )}
+        </div>
       </section>
     );
   }

@@ -50,11 +50,13 @@ function tellListened(matchId?: string) {
 let current: { key: string; stop: () => void } | null = null;
 
 /**
- * Listen: reads a story or a Gaffer answer aloud. Uses Azure AI Speech neural voices when the server has it,
+ * Listen: reads a story, a match event or a Gaffer answer aloud. Uses Azure AI Speech neural voices when the server has it,
  * otherwise the phone's own voice. Playback starts inside the tap, which iPhones require.
  */
-export function Listen({ kind, id, matchId, text, lang, compact = false }: {
-  kind: "story" | "answer"; id: string; matchId?: string; text: string; lang: Lang; compact?: boolean;
+export function Listen({ kind, id, matchId, text, lang, compact = false, label }: {
+  kind: "story" | "answer" | "event"; id: string; matchId?: string; text: string; lang: Lang; compact?: boolean;
+  /** What this button reads, for screen readers when many Listen buttons sit in one list. */
+  label?: string;
 }) {
   const azure = useStore((s) => s.speechAzure);
   const [state, setState] = useState<"idle" | "loading" | "playing">("idle");
@@ -107,7 +109,7 @@ export function Listen({ kind, id, matchId, text, lang, compact = false }: {
   const playing = state === "playing";
   return (
     <button className={`listen ${state}${compact ? " compact" : ""}`} onClick={toggle}
-      aria-label={playing ? t("stopListen", lang) : t("listenAria", lang)} aria-pressed={playing}>
+      aria-label={`${playing ? t("stopListen", lang) : t("listenAria", lang)}${label ? `: ${label}` : ""}`} aria-pressed={playing}>
       {playing ? <StopIcon size={compact ? 11 : 13} /> : <Speaker size={compact ? 12 : 14} />}
       {!compact && <span>{playing ? t("stopListen", lang) : t("listen", lang)}</span>}
     </button>

@@ -176,11 +176,12 @@ const S = {
   trPulse: { en: "Update", es: "Actualización", pt: "Atualização", fr: "Point du match" },
   showLess: { en: "Show less", es: "Ver menos", pt: "Ver menos", fr: "Voir moins" },
   touchSign: { en: "Touch the sign", es: "Toca el cartel", pt: "Toque na placa", fr: "Touche le panneau" },
+  believeIn: { en: "I believe in {team}", es: "Creo en {team}", pt: "Eu acredito no {team}", fr: "Je crois en {team}" },
   believeAsk: {
-    en: "{team} is behind. Touch the sign if you still believe. If they draw level, every believer gets {r} biscuits.",
-    es: "{team} va perdiendo. Toca el cartel si aún crees. Si empatan, cada creyente gana {r} galletas.",
-    pt: "{team} está perdendo. Toque na placa se você ainda acredita. Se empatar, quem acreditou ganha {r} biscoitos.",
-    fr: "{team} est mené. Touche le panneau si tu y crois encore. S'ils égalisent, chaque croyant gagne {r} biscuits.",
+    en: "{team} is behind. Still believe? Tap BELIEVE. If they draw level, every believer gets {r} biscuits.",
+    es: "{team} va perdiendo. ¿Aún crees? Toca BELIEVE. Si empatan, cada creyente gana {r} galletas.",
+    pt: "{team} está perdendo. Ainda acredita? Toque em BELIEVE. Se empatar, quem acreditou ganha {r} biscoitos.",
+    fr: "{team} est mené. Tu y crois encore ? Touche BELIEVE. S'ils égalisent, chaque croyant gagne {r} biscuits.",
   },
   believeYou: {
     en: "You and {n} fans believe in {team}.",
@@ -332,7 +333,7 @@ const S = {
   trVar: { en: "VAR", es: "VAR", pt: "VAR", fr: "VAR" },
   // Match feed
   fGoal: { en: "GOAL! {player} ({team}), {xg} xG", es: "¡GOL! {player} ({team}), {xg} xG", pt: "GOL! {player} ({team}), {xg} xG", fr: "BUT ! {player} ({team}), {xg} xG" },
-  fChanceSaved: { en: "Chance for {player} ({team}), {xg} xG, saved", es: "Ocasión de {player} ({team}), {xg} xG, atajada", pt: "Chance de {player} ({team}), {xg} xG, defendida", fr: "Occasion pour {player} ({team}), {xg} xG, arrêtée" },
+  fChanceSaved: { en: "Chance for {player} ({team}), {xg} xG, saved", es: "Ocasión de {player} ({team}), {xg} xG, parada", pt: "Chance de {player} ({team}), {xg} xG, defendida", fr: "Occasion pour {player} ({team}), {xg} xG, arrêtée" },
   fChanceOff: { en: "Chance for {player} ({team}), {xg} xG, off target", es: "Ocasión de {player} ({team}), {xg} xG, desviada", pt: "Chance de {player} ({team}), {xg} xG, para fora", fr: "Occasion pour {player} ({team}), {xg} xG, non cadrée" },
   fRed: { en: "Red card: {player} ({team})", es: "Roja: {player} ({team})", pt: "Vermelho: {player} ({team})", fr: "Carton rouge : {player} ({team})" },
   fYellow: { en: "Yellow card: {player} ({team})", es: "Amarilla: {player} ({team})", pt: "Amarelo: {player} ({team})", fr: "Carton jaune : {player} ({team})" },

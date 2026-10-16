@@ -7,6 +7,8 @@ a language model. When the agents service is available, its richer package
 
 from __future__ import annotations
 
+import re
+
 LANGS = ("en", "es", "pt", "fr")
 
 T = {
@@ -120,6 +122,10 @@ T = {
              "es": "La probabilidad de empate sube del {a}% al {b}%.",
              "pt": "A chance de empate sobe de {a}% para {b}%.",
              "fr": "Les chances de match nul passent de {a} % à {b} %."},
+    "d_down": {"en": "The chance of a draw slips from {a}% to {b}%.",
+               "es": "La probabilidad de empate baja del {a}% al {b}%.",
+               "pt": "A chance de empate cai de {a}% para {b}%.",
+               "fr": "Les chances de match nul passent de {a} % à {b} %."},
     "w_clock_behind": {"en": "Time is running out for {team} to find a way back.",
                        "es": "A {team} se le acaba el tiempo para remontar.",
                        "pt": "O tempo está acabando para o {team} buscar a virada.",
@@ -224,10 +230,14 @@ def _story(lang: str, *, trigger: str, names: tuple[str, str], score: tuple[int,
         first = tr("w_red_now", lang, team=names[red_team if red_team is not None else focus])
     elif trigger == "kickoff":
         first = tr("w_kickoff", lang)
-    elif top and top["component"] == "clock":
-        first = tr("w_clock_level" if mine == theirs else "w_clock_behind" if mine < theirs else "w_clock_ahead",
-                   lang, team=team)
-    elif top and top["component"] in ("goals", "red_cards", "chances") and top.get("team") is not None:
+    elif top and top["component"] == "clock" and mine == theirs and draw and draw[1] > draw[0]:
+        # Level, and the clock is the story: the draw is the thing getting likelier, so its chance is the
+        # number to give ("a draw is getting likelier" next to a team's rising chance made no sense).
+        return f"{tr('w_clock_level', lang)} {tr('d_up', lang, a=draw[0], b=draw[1])}"
+    elif top and top["component"] == "clock" and mine != theirs:
+        first = tr("w_clock_behind" if mine < theirs else "w_clock_ahead", lang, team=team)
+    elif (top := next((d for d in drivers if abs(d["delta"]) >= 1 and d["component"] != "clock"), None)) \
+            and top["component"] in ("goals", "red_cards", "chances") and top.get("team") is not None:
         key = {"goals": "w_goal", "red_cards": "w_red", "chances": "w_chances"}[top["component"]]
         first = tr(key, lang, team=names[top["team"]])
     elif trigger == "half_time":
@@ -303,3 +313,69 @@ def template_package(*, trigger: str, names: tuple[str, str], score: tuple[int, 
                            team=team, drivers=drv)
     return {"headline": headline, "story": story, "analyst": analyst, "club_lines": club_lines,
             "source": "template"}
+
+
+# ---------------------------------------------------------------- events read aloud
+EV = {
+    "goal": {"en": "goal for {team}! {player} scores, and it's {hs}-{as_}.",
+             "es": "¡gol de {team}! Marca {player} y se pone {hs}-{as_}.",
+             "pt": "gol do {team}! {player} marca, e está {hs}-{as_}.",
+             "fr": "but pour {team} ! {player} marque, {hs}-{as_}."},
+    "saved": {"en": "a chance for {player} of {team}, saved.", "es": "ocasión de {player}, de {team}, y el portero la para.",
+              "pt": "chance de {player}, do {team}, e o goleiro defende.", "fr": "occasion pour {player}, de {team}, arrêtée par le gardien."},
+    "off": {"en": "a chance for {player} of {team}, off target.", "es": "ocasión de {player}, de {team}, que se va fuera.",
+            "pt": "chance de {player}, do {team}, para fora.", "fr": "occasion pour {player}, de {team}, non cadrée."},
+    "red_card": {"en": "a red card for {player} of {team}.", "es": "tarjeta roja para {player}, de {team}.",
+                 "pt": "cartão vermelho para {player}, do {team}.", "fr": "carton rouge pour {player}, de {team}."},
+    "yellow_card": {"en": "a yellow card for {player} of {team}.", "es": "tarjeta amarilla para {player}, de {team}.",
+                    "pt": "cartão amarelo para {player}, do {team}.", "fr": "carton jaune pour {player}, de {team}."},
+    "substitution": {"en": "a change for {team}: {player} comes on for {off}.", "es": "cambio en {team}: entra {player} por {off}.",
+                     "pt": "substituição no {team}: entra {player}, sai {off}.", "fr": "changement pour {team} : {player} remplace {off}."},
+    "half_time": {"en": "Halftime. {home} {hs}, {away} {as_}.", "es": "Descanso. {home} {hs}, {away} {as_}.",
+                  "pt": "Intervalo. {home} {hs}, {away} {as_}.", "fr": "Mi-temps. {home} {hs}, {away} {as_}."},
+    "full_time": {"en": "Full time. {home} {hs}, {away} {as_}.", "es": "Final del partido. {home} {hs}, {away} {as_}.",
+                  "pt": "Fim de jogo. {home} {hs}, {away} {as_}.", "fr": "Fin du match. {home} {hs}, {away} {as_}."},
+    "var_check": {"en": "VAR is checking {player}'s goal for {team} for {reason}.",
+                  "es": "el VAR revisa el gol de {player}, de {team}, por {reason}.",
+                  "pt": "o VAR checa o gol de {player}, do {team}, por {reason}.",
+                  "fr": "la VAR vérifie le but de {player}, de {team}, pour {reason}."},
+    "var_stands": {"en": "VAR says {player}'s goal for {team} stands.", "es": "el VAR da por bueno el gol de {player}, de {team}.",
+                   "pt": "o VAR confirma o gol de {player}, do {team}.", "fr": "la VAR valide le but de {player}, de {team}."},
+    "var_out": {"en": "VAR rules out {player}'s goal for {team} for {reason}.",
+                "es": "el VAR anula el gol de {player}, de {team}, por {reason}.",
+                "pt": "o VAR anula o gol de {player}, do {team}, por {reason}.",
+                "fr": "la VAR refuse le but de {player}, de {team}, pour {reason}."},
+}
+
+
+def _ordinal(n: int) -> str:
+    return f"{n}{'th' if 10 <= n % 100 <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
+
+
+def _at_minute(n: int, lang: str) -> str:
+    return {"en": f"In the {_ordinal(n)} minute, ", "es": f"Minuto {n}: ", "pt": f"Aos {n} minutos, ",
+            "fr": f"À la {n}{'re' if n == 1 else 'e'} minute, "}[lang]
+
+
+def event_spoken(item: dict, names: tuple[str, str], lang: str) -> str:
+    """One match event as a sentence to read aloud: "In the 23rd minute, a chance for Kofi Lorford of
+    Eastholme Rangers, saved." No xG or other figures a listener would have to decode."""
+    et = item.get("type")
+    key = ("saved" if item.get("on") else "off") if et == "shot" else \
+        ("var_stands" if item.get("decision") == "stands" else "var_out") if et == "var_decision" else et
+    if key not in EV:
+        return ""
+    t = item.get("team")
+    hs, as_ = (item.get("score") or [0, 0])[:2]
+    reason = item.get("reason") or "offside"
+    text = EV[key][lang].format(team=names[t] if t in (0, 1) else "", player=item.get("player") or "",
+                                off=item.get("off") or "", hs=hs, as_=as_, home=names[0], away=names[1],
+                                reason=tr(f"r_{reason}", lang) if f"r_{reason}" in T else reason)
+    if lang == "fr":  # "le but de Ivan" -> "le but d'Ivan"
+        text = re.sub(r"\b([Dd])e ([AEIOUÉÈ])", r"\1'\2", text)
+    if et in ("half_time", "full_time"):
+        return text
+    prefix = _at_minute(int(item.get("minute") or 0), lang)
+    if prefix.endswith(": "):  # "Minuto 14: ¡Gol de..." starts a new phrase
+        text = text[:1].upper() + text[1:] if not text.startswith("¡") else "¡" + text[1:2].upper() + text[2:]
+    return prefix + text
