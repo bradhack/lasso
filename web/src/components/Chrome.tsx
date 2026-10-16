@@ -8,6 +8,7 @@ import { StickerBadge, stickerText } from "./Stickers";
 import { Biscuit, CardsIcon, Fish, Flame, LassoMark, LiveIcon, Moon, Sun, Trophy, UserIcon } from "./Icons";
 import { currentAppearance, setAppearance } from "../theme";
 import { useDialog } from "../useDialog";
+import { marketQuestion, missionLabel } from "../words";
 
 export function TopBar() {
   const user = useStore((s) => s.user);
@@ -94,13 +95,13 @@ export function Toasts() {
           {x.kind === "win" && (
             <div>
               <div className="big">{t("calledIt", lang).toUpperCase()}</div>
-              <div className="sub">+{x.call.payout} {t("biscuits", lang)} · {x.call.question}</div>
+              <div className="sub">+{x.call.payout} {t("biscuits", lang)} · {marketQuestion(x.call, lang)}</div>
             </div>
           )}
           {x.kind === "loss" && (
             <div>
               <div className="big" style={{ fontSize: 22 }}>{t("notThisTime", lang)}</div>
-              <div className="sub">{x.call.question}{x.call.goldfish ? ` · ${t("stSaved", lang).split("·")[1]?.trim() ?? ""}` : ""}</div>
+              <div className="sub">{marketQuestion(x.call, lang)}{x.call.goldfish ? ` · ${t("stSaved", lang).split("·")[1]?.trim() ?? ""}` : ""}</div>
             </div>
           )}
           {x.kind === "sticker" && (
@@ -118,13 +119,13 @@ export function Toasts() {
           {x.kind === "hope" && (
             <div>
               <div className="big" style={{ fontSize: 20 }}>{t("hopeLine", lang)}</div>
-              <div className="sub">{t("hopeSub", lang)} {Math.round(x.call.p * 100)}% · {x.call.question}</div>
+              <div className="sub">{t("hopeSub", lang)} {Math.round(x.call.p * 100)}% · {marketQuestion(x.call, lang)}</div>
             </div>
           )}
           {x.kind === "mission" && (
             <div>
-              <div className="sub" style={{ color: "var(--gold-2)" }}>MISSION COMPLETE · +{x.reward}</div>
-              <div style={{ fontWeight: 700 }}>{x.label}</div>
+              <div className="sub" style={{ color: "var(--gold-2)" }}>{t("missionDone", lang).toUpperCase()} · +{x.reward}</div>
+              <div style={{ fontWeight: 700 }}>{missionLabel(x.mission ?? "", x.label, lang)}</div>
             </div>
           )}
           {x.kind === "goldfish" && (

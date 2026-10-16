@@ -9,7 +9,7 @@ import zlib
 from dataclasses import dataclass, field
 
 from lasso_engine.explain import shapley
-from lasso_engine.inplay import Gaffer, LiveMatch, MatchState
+from lasso_engine.inplay import Gaffer, LiveMatch, MatchState, odds_multiplier
 from lasso_engine.markets import generate_markets
 
 from .data import DemoData
@@ -19,6 +19,7 @@ SWING_THRESHOLD = 0.08  # 8 points on either side's win chance triggers a moment
 PULSE_EVERY = 15  # match minutes between "pulse" moments
 MARKET_EVERY = 4  # match minutes between new Call It challenges
 MARKET_OPEN_FOR = 3.0  # match minutes a challenge accepts calls
+VAR_STANDS_RATE = 0.7  # the base rate a checked goal stands, used to price "Will the goal stand?"
 PITCH_X, PITCH_Y = 105.0, 68.0  # meters; event coordinates are in each team's attacking frame
 TOUCH_TYPES = {"kickoff", "pass", "shot", "tackle", "interception", "save", "corner", "foul",
                "yellow_card", "red_card", "substitution"}
@@ -60,15 +61,17 @@ class Market:
     closes: tuple[int, float]
     settles: str
     kind: str
-    copy: str | None = None
+    copy: dict | str | None = None  # the Game Master's invitation, by language
     status: str = "open"  # open -> closed -> settled
     result: str | None = None
     goals_at_open: tuple[int, int] = (0, 0)
+    params: dict = field(default_factory=dict)  # what the app needs to phrase the question in any language
 
     def public(self) -> dict:
         return {"market_id": self.market_id, "match_id": self.match_id, "question": self.question,
                 "options": self.options, "closes": {"period": self.closes[0], "clock": self.closes[1]},
-                "status": self.status, "result": self.result, "kind": self.kind, "copy": self.copy}
+                "status": self.status, "result": self.result, "kind": self.kind, "copy": self.copy,
+                "params": self.params}
 
 
 class MatchRoom:
@@ -106,6 +109,11 @@ class MatchRoom:
         self.cards: list[dict] = []  # bookings for the scoreboard: team, yellow/red, surname, minute
         # Touch the sign: per side, the open "behind" spell and the fans who believe in a comeback.
         self.believe: list[dict | None] = [None, None]
+        # VAR: the check in progress (None otherwise), and a goal that just survived one (for its headline).
+        self.var: dict | None = None
+        self.var_stood: int | None = None
+        self.var_story: dict | None = None
+        self.var_items = 0
         self.last_seq = 0
         self._record_point()
 
@@ -163,6 +171,7 @@ class MatchRoom:
             "away": {"club_id": self.away_id, "name": self.names[1], **self._club(self.away_id)},
             "score": list(s.goals), "reds": list(s.reds), "period": s.period, "clock": round(s.clock, 2),
             "minute": self.minute(), "probs": self.probs(), "cards": self.cards, "believe": self.believe_public(),
+            "var": self.var,
             "prematch": {"home": self.pre["p_home"], "draw": self.pre["p_draw"], "away": self.pre["p_away"]},
         }
 
@@ -202,6 +211,8 @@ class MatchRoom:
             out.extend(self._maybe_open_market(kickoff=True))
         etype = ev["type"]
         t = self.team_index(ev.get("team_id"))
+        if etype in ("var_check", "var_decision"):
+            return out + (self._var_event(ev, t) if t is not None else [])
         before_period = self.state.period
         moved = self.live.apply(ev)
         if etype not in ("half_time", "full_time"):
@@ -231,7 +242,9 @@ class MatchRoom:
             self.window["goals"].append({"team": t, "minute": self.minute(),
                                          "player": self.data.player_label(ev.get("player_id"))})
             out.extend(self._resolve_markets(goal_team=t))
-            out.extend(self._moment("goal", scorer=self.data.player_label(ev.get("player_id")), focus=t))
+            out.extend(self._moment("goal", scorer=self.data.player_label(ev.get("player_id")), focus=t,
+                                    var={"stood": True} if self.var_stood == t else None))
+            self.var_stood = None
             out.extend(self._update_believe())
         elif etype == "red_card" and t is not None:
             self.window["reds"].append({"team": t, "minute": self.minute()})
@@ -254,6 +267,10 @@ class MatchRoom:
             out.extend(self._maybe_open_market())
             out.extend(self._close_markets())
 
+        if ev.get("var_disallowed") and self.var_story and t is not None:
+            story, self.var_story = self.var_story, None
+            out.extend(self._moment("var_overturned", force=True, focus=story["team"],
+                                    var={k: story[k] for k in ("reason", "player", "stands_pct")}))
         now = time.time()
         if moved or etype in PUSH_NOW or now - self.last_meter_push > 1.0:
             self.last_meter_push = now
@@ -345,12 +362,14 @@ class MatchRoom:
                 "team": t, "player": player, "score": list(self.state.goals)}
         if et == "shot":
             xg = float(ev.get("xg") or 0)
+            if ev.get("var_disallowed"):
+                return None
             if ev.get("outcome"):
                 return {**base, "type": "goal", "xg": round(xg, 2), "speed": ev.get("ball_speed_kmh"),
                         "text": f"GOAL! {player} ({team}), {xg:.2f} xG, {ev.get('ball_speed_kmh') or 0:.0f} km/h"}
             if xg >= 0.15 or ev.get("on_target"):
                 what = "saved" if ev.get("on_target") else "off target"
-                return {**base, "xg": round(xg, 2), "speed": ev.get("ball_speed_kmh"),
+                return {**base, "xg": round(xg, 2), "speed": ev.get("ball_speed_kmh"), "on": bool(ev.get("on_target")),
                         "text": f"Chance for {player} ({team}), {xg:.2f} xG, {what}"}
             return None
         if et == "red_card":
@@ -359,12 +378,76 @@ class MatchRoom:
             return {**base, "text": f"Yellow card: {player} ({team})"}
         if et == "substitution":
             off = self.data.player_label((ev.get("detail") or "").replace("off:", ""))
-            return {**base, "text": f"Sub ({team}): {player} on for {off}"}
+            return {**base, "off": off, "text": f"Sub ({team}): {player} on for {off}"}
         if et == "half_time":
             return {**base, "text": f"Halftime {self.state.goals[0]}-{self.state.goals[1]}"}
         if et == "full_time":
             return {**base, "text": f"Full time {self.state.goals[0]}-{self.state.goals[1]}"}
         return None
+
+    # -------------------------------------------------------------------- VAR
+    def _probs_with(self, team: int, xg: float, goal: bool) -> dict:
+        s = self.state.copy()
+        s.xg[team] += xg
+        if goal:
+            s.goals[team] += 1
+        p = self.gaffer.probabilities(s)
+        return {"home": p["home"], "draw": p["draw"], "away": p["away"]}
+
+    def _var_feed(self, t: int, player: str, kind: str, reason: str, decision: str | None = None) -> dict:
+        self.var_items += 1
+        item = {"seq": 10_000_000 + self.var_items, "type": kind, "minute": self.minute(), "period": self.state.period,
+                "team": t, "player": player, "score": list(self.state.goals), "reason": reason,
+                "text": f"VAR check: possible {reason} ({player}, {self.names[t]})" if decision is None else
+                        f"VAR: goal stands ({player}, {self.names[t]})" if decision == "stands" else
+                        f"VAR: no goal, {reason} ({player}, {self.names[t]})"}
+        if decision:
+            item["decision"] = decision
+        self.feed.append(item)
+        return {"type": "event", "match_id": self.match_id, "event": item}
+
+    def _var_event(self, ev: dict, t: int) -> list[dict]:
+        """The ball's in the net and VAR is checking: the Gauge shows both outcomes and a quick call opens.
+        Then the decision: the goal stands (its own event follows) or it's ruled out (a story says so)."""
+        player = self.data.player_label(ev.get("player_id"))
+        reason = ev.get("reason") or "offside"
+        xg = float(ev.get("xg") or 0)
+        mid = f"{self.match_id}:var-{self.state.period}-{int(float(ev['clock']) * 10)}"
+        out: list[dict] = []
+        if ev["type"] == "var_check":
+            self.var = {"status": "checking", "team": t, "player": player, "reason": reason, "minute": self.minute(),
+                        "stands": self._probs_with(t, xg, True), "ruled_out": self._probs_with(t, xg, False)}
+            out.append({"type": "var", "match_id": self.match_id, "var": self.var})
+            out.append(self._var_feed(t, player, "var_check", reason))
+            if self.status == "live" and mid not in self.markets:
+                p = VAR_STANDS_RATE
+                m = Market(market_id=mid, match_id=self.match_id, question="Will the goal stand?",
+                           options=[{"id": "yes", "label": "It stands", "p": p, "multiplier": odds_multiplier(p)},
+                                    {"id": "no", "label": "Ruled out", "p": 1 - p,
+                                     "multiplier": odds_multiplier(1 - p)}],
+                           period=self.state.period, opened_clock=self.state.clock,
+                           closes=(self.state.period, self.state.clock + 0.5), settles=f"var:{t}", kind="var",
+                           goals_at_open=tuple(self.state.goals), params={"team": self.names[t]})
+                self.markets[mid] = m
+                out.append({"type": "market_open", "market": m.public()})
+            return out
+        decision = ev.get("decision") or "stands"
+        self.var = None
+        self.var_stood = t if decision == "stands" else None
+        out.append({"type": "var", "match_id": self.match_id, "var": None,
+                    "decision": {"status": decision, "team": t, "player": player, "reason": reason,
+                                 "minute": self.minute()}})
+        out.append(self._var_feed(t, player, "var_decision", reason, decision))
+        m = self.markets.get(mid)
+        if m and m.status != "settled":
+            m.status, m.result = "settled", "yes" if decision == "stands" else "no"
+            out.append({"type": "market_settled", "market": m.public()})
+        if decision == "ruled_out":
+            # The story waits for the disallowed shot itself, so its chance includes that shot's xG and matches
+            # the "if it's ruled out" figure fans just saw.
+            self.var_story = {"reason": reason, "player": player, "team": t,
+                              "stands_pct": round(100 * self._probs_with(t, xg, True)["home" if t == 0 else "away"])}
+        return out
 
     # ---------------------------------------------------------- touch the sign
     def _believers(self, spell: dict) -> int:
@@ -418,7 +501,7 @@ class MatchRoom:
         return []
 
     def _moment(self, trigger: str, *, force: bool = False, scorer: str | None = None,
-                red_team: int | None = None, focus: int | None = None) -> list[dict]:
+                red_team: int | None = None, focus: int | None = None, var: dict | None = None) -> list[dict]:
         a, b = self.last_moment_state, self.state.copy()
         before, after = self.last_moment_probs, self.probs()
         if focus is None:
@@ -429,13 +512,15 @@ class MatchRoom:
         stats = self.stats_public()
         pkg = template_package(trigger=trigger, names=self.names, score=tuple(b.goals), minute=self.minute(),
                                before=before, after=after, focus=focus, drivers=drivers, scorer=scorer,
-                               red_team=red_team, stats=stats)
+                               red_team=red_team, stats=stats, var=var)
         moment = {
             "moment_id": f"{self.match_id}-m{next(_moment_ids)}", "match_id": self.match_id,
             "trigger": trigger, "minute": self.minute(), "period": b.period, "focus": focus,
             "since_minute": int(a.clock), "before": before, "after": after, "drivers": drivers,
             "score": list(b.goals), "window": {k: v for k, v in self.window.items()}, **pkg,
         }
+        if var:
+            moment["var"] = var
         self.moments.append(moment)
         self.last_moment_state, self.last_moment_probs = b, after
         self.window = self._empty_window()
@@ -481,7 +566,7 @@ class MatchRoom:
         cands.sort(key=lambda c: interest(c) - (0.3 if c.market_id.split("-")[0] in recent else 0), reverse=True)
         return cands[0] if cands else None
 
-    def open_market(self, c, copy: str | None = None) -> list[dict]:
+    def open_market(self, c, copy: dict | str | None = None) -> list[dict]:
         if c.market_id in self.markets:
             return []
         p, clock = self.state.period, self.state.clock
@@ -490,10 +575,19 @@ class MatchRoom:
             closes_clock = 10.0
         m = Market(market_id=f"{self.match_id}:{c.market_id}", match_id=self.match_id, question=c.question,
                    options=c.options, period=p, opened_clock=clock, closes=(p, closes_clock), settles=c.settles,
-                   kind=c.market_id.split("-")[0], copy=copy, goals_at_open=tuple(self.state.goals))
+                   kind=c.market_id.split("-")[0], copy=copy, goals_at_open=tuple(self.state.goals),
+                   params=self._market_params(c.settles))
         self.markets[m.market_id] = m
         self.last_market_min = self.minute()
         return [{"type": "market_open", "market": m.public()}]
+
+    def _market_params(self, settles: str) -> dict:
+        rule = settles.split(":")
+        if rule[0] == "team_goal":
+            return {"team": self.names[int(rule[1])], "until": int(float(rule[3]))}
+        if rule[0] in ("not_lose", "var"):
+            return {"team": self.names[int(rule[1])]}
+        return {}
 
     def _close_markets(self) -> list[dict]:
         out = []

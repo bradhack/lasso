@@ -255,6 +255,10 @@ def check_answer(a: dict, f: dict, story: list[dict], names: dict) -> dict[str, 
     return c
 
 
+STIFF = re.compile(r"\b(it matters|matters most|changed everything|win probability|the figure|game still open|"
+                   r"clock effect|realistic chances|clock bites)\b", re.I)
+
+
 def check_story(m: dict) -> dict[str, bool]:
     side = "home" if m["focus"] == 0 else "away"
     before, after = round(100 * m["before"][side]), round(100 * m["after"][side])
@@ -276,6 +280,9 @@ def check_story(m: dict) -> dict[str, bool]:
     c["states_the_change"] = before == after or (f"{before}%" in en and f"{after}%" in en)
     c["no_dashes"] = not any(re.search("[—–]", t) for t in texts)
     c["length"] = len(en.split()) <= 40 and len((m["headline"].get("en") or "").split()) <= 10
+    # Reads like a person talking: no written minute marks (82'), no stiff phrases, no filler endings and no
+    # score-line openers ("Eastholme Rangers 2-1.").
+    c["reads_naturally"] = not STIFF.search(en) and not re.search(r"\d+'", en) and not re.match(r"[A-Z][\w ]+ \d+-\d+\.", en)
     return c
 
 

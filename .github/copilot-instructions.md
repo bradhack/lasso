@@ -52,6 +52,7 @@ Speed up local replays with `LASSO_MINUTE_SECONDS=0.5`. Point the API at the age
 10. **Ask the Gaffer treats questions as data.** The Presser agent has no tools; the Scout's tools only read. The API puts the true events, numbers and rules into every question's brief, an off-topic ruling skips the writer, and answers are cleaned in code (`_localize`, `_plain_for_fans`, `_cap_words`). After changing any agent prompt, run `services/api/tests/agent_eval.py` and keep it passing.
 11. **Listen reads only our own text.** `/api/speech/audio` takes a story or answer id, never text. Keep it that way, and keep the cache and daily cap.
 12. **Accessibility is WCAG 2.2 AA.** Text colors must reach 4.5:1 contrast in both Midnight and Ivory (check new tokens in both). Sheets use `useDialog` (focus in, Tab trapped, Escape closes). Anything tappable is a `<button>` or has a role, a label and keyboard handling. Looping animations stop within 5 seconds. The page language follows the fan's (`setPageLang`). Re-run an axe-core audit after visual changes.
+13. **Stories read like a person talking.** Two short sentences: what happened, then the chance of winning ("Their chance of winning rises from 12% to 83%."). No written minute marks, stats jargon or filler endings, in templates (`narrative.py`) and in the Narrator prompt alike; the eval's `reads_naturally` check enforces it. A story is labeled as the agents' only when they wrote its headline or text.
 
 ## Style
 

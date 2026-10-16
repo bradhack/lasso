@@ -5,6 +5,7 @@ import { CallIt } from "../components/CallIt";
 import { Back, Chevron } from "../components/Icons";
 import { Believe } from "../components/Believe";
 import { Touchline } from "../components/Touchline";
+import { VarCheck } from "../components/VarCheck";
 import { MatchStory } from "../components/MatchStory";
 import { Meter } from "../components/Meter";
 import { Feed, StatsPanel } from "../components/Panels";
@@ -104,6 +105,7 @@ export function MatchPage({ id }: { id: string }) {
         </div>
         <Meter snap={snap} lang={lang} />
       </section>
+      <VarCheck snap={snap} lang={lang} />
       <Believe snap={snap} lang={lang} />
       <Touchline snap={snap} lang={lang} />
       {moment && <WhyItMoved snap={snap} moment={moment} lang={lang} />}

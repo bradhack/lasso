@@ -7,6 +7,7 @@ import { Crest } from "../components/bits";
 import { Fish, Flame } from "../components/Icons";
 import { StickerBadge, stickerText } from "../components/Stickers";
 import { currentAppearance, setAppearance } from "../theme";
+import { marketQuestion, missionLabel, optionLabel } from "../words";
 
 export function Leagues() {
   const user = useStore((s) => s.user);
@@ -182,7 +183,7 @@ export function Profile() {
         <span className="eyebrow gold">{t("missions", lang)}</span>
         {user.missions.map((m) => (
           <div key={m.id} className={`mission${m.done ? " done" : ""}`}>
-            <div className="row"><span>{m.label}</span><span className="muted">{m.done ? `+${m.reward}` : `${m.progress} / ${m.target}`}</span></div>
+            <div className="row"><span>{missionLabel(m.id, m.label, lang)}</span><span className="muted">{m.done ? `+${m.reward}` : `${m.progress} / ${m.target}`}</span></div>
             <div className="bar"><span style={{ width: `${(m.progress / m.target) * 100}%` }} /></div>
           </div>
         ))}
@@ -249,8 +250,8 @@ function CallHistory() {
       {shown.map((c) => (
         <div key={c.id} className={`callrow ${c.status}${c.goldfish ? " saved" : ""}`}>
           <div className="q">
-            <b>{c.question}</b>
-            <span>{c.label} · {c.stake} @ {c.multiplier.toFixed(1)}x · {label(c.market_id)} {c.minute}'</span>
+            <b>{marketQuestion(c, lang)}</b>
+            <span>{optionLabel(c.kind, c.option_id, c.label, lang)} · {c.stake} @ {c.multiplier.toFixed(1)}x · {label(c.market_id)} {c.minute}'</span>
           </div>
           <span className="st">
             {c.status === "open" && t("stOpen", lang)}

@@ -109,7 +109,7 @@ async def publish(room: MatchRoom, msg: dict) -> None:
 
 _enrich_state = {"day": "", "count": 0, "last": {}}
 _forced_agents: set[str] = set()  # matches replayed with agents on even with no live viewers (the evaluation)
-ALWAYS_ENRICH = {"goal", "red_card", "half_time", "full_time"}
+ALWAYS_ENRICH = {"goal", "red_card", "half_time", "full_time", "var_overturned"}
 
 
 async def _should_enrich(room: MatchRoom, moment: dict) -> bool:
@@ -215,6 +215,8 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
     brief["focus_change"] = f"{brief['before_pct'][side]}% to {brief['after_pct'][side]}%"
     brief["drivers"] = [{"label": d["label"]["en"], "points": round(float(d["delta"]), 1)}
                         for d in moment["drivers"]]
+    if moment.get("var"):  # a goal that survived a VAR check, or one VAR ruled out
+        brief["var"] = moment["var"]
     t0 = time.time()
     pkg = await agents.produce(brief)
     # A real package echoes our moment id and carries the agents' trace; anything else is an error reply.
@@ -222,16 +224,17 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
         if pkg:
             log.warning("agents returned no package for %s; keeping template narration", moment["moment_id"])
         return
+    # The story is only labeled as the agents' when they wrote its words (a narrator timeout leaves the
+    # template text, even if the persona's analyst view and club lines arrived).
     applied = False
     for key in ("headline", "story", "analyst"):
         if vals := _lang_map(pkg.get(key)):
             moment[key] = {**moment.get(key, {}), **vals}
-            applied = True
+            applied = applied or key in ("headline", "story")
     lines = pkg.get("club_lines") if isinstance(pkg.get("club_lines"), dict) else {}
     for s_ in ("home", "away"):
         if vals := _lang_map(lines.get(s_)):
             moment.setdefault("club_lines", {})[s_] = {**moment.get("club_lines", {}).get(s_, {}), **vals}
-            applied = True
     moment["agent_trace"] = pkg.get("trace", [])
     moment["latency_ms"] = int((time.time() - t0) * 1000)
     if applied:
@@ -243,7 +246,9 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
         cand = cands.get(challenge["market_id"])
         open_kinds = {m.kind for m in room.markets.values() if m.status == "open"}
         if cand and cand.market_id.split("-")[0] not in open_kinds and len(open_kinds) < 2:
-            for msg in room.open_market(cand, copy=_clean(challenge.get("copy", ""))[:140] or None):
+            copy = challenge.get("copy")
+            copy = _lang_map(copy) if isinstance(copy, dict) else ({"en": _clean(copy)[:140]} if copy else None)
+            for msg in room.open_market(cand, copy=copy or None):
                 await publish(room, msg)
 
 

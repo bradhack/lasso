@@ -11,6 +11,32 @@ export function storyText(headline: string, story: string) {
   return `${h && !/[.!?]$/.test(h) ? `${h}.` : h} ${story}`.trim();
 }
 
+const VS: Record<Lang, string> = { en: "versus", es: "contra", pt: "contra", fr: "contre" };
+const TO: Record<Lang, string> = { en: "to", es: "a", pt: "a", fr: "à" };
+const PLUS: Record<Lang, string> = { en: "plus", es: "más", pt: "mais", fr: "plus" };
+const XG: Record<Lang, string> = { en: "expected goals", es: "goles esperados", pt: "gols esperados", fr: "buts attendus" };
+const PTS: Record<Lang, string> = { en: "points", es: "puntos", pt: "pontos", fr: "points" };
+const ord = (n: number) => `${n}${n % 100 >= 10 && n % 100 <= 13 ? "th" : ({ 1: "st", 2: "nd", 3: "rd" } as Record<number, string>)[n % 10] ?? "th"}`;
+
+/** Text as a voice should read it (same rules as the server): 82' becomes "the 82nd minute", "v" becomes
+ * "versus", 2-1 reads "2 to 1", and abbreviations are spelled out. */
+export function spoken(text: string, lang: Lang) {
+  return text
+    .replace(/(?:\b(at|in|aos|à|a)\s+)?\b(\d{1,3})(?:\s*\+\s*(\d{1,2}))?['’′]/g, (_m, prep: string | undefined, num: string, extra: string | undefined) => {
+      const n = Number(num);
+      const plus = extra ? ` ${PLUS[lang]} ${extra}` : "";
+      if (lang === "en") return prep ? `in the ${ord(n)} minute${plus}` : `${ord(n)} minute${plus}`;
+      if (lang === "pt") return prep === "aos" ? `aos ${n}${plus} minutos` : `minuto ${n}${plus}`;
+      if (lang === "fr") return prep === "à" ? `à la ${n}e minute${plus}` : `${n}e minute${plus}`;
+      return `${prep ? `${prep} ` : ""}minuto ${n}${plus}`;
+    })
+    .replace(/(\w) v\.? (?=\w)/g, `$1 ${VS[lang]} `)
+    .replace(/\b(\d{1,2})\s*-\s*(\d{1,2})\b(?!\s*%)/g, (_m, a: string, b: string) => `${a} ${TO[lang]} ${b}`)
+    .replace(/\bxG\b/g, XG[lang])
+    .replace(/\bpts\b/g, PTS[lang])
+    .replace(/→/g, ` ${TO[lang]} `);
+}
+
 // Only one thing speaks at a time: starting a new one stops the last.
 let current: { key: string; stop: () => void } | null = null;
 
@@ -37,7 +63,7 @@ export function Listen({ kind, id, matchId, text, lang, compact = false }: {
 
   const phoneVoice = () => {
     if (!("speechSynthesis" in window)) return done();
-    const u = new SpeechSynthesisUtterance(text);
+    const u = new SpeechSynthesisUtterance(spoken(text, lang));
     u.lang = HTML_LANG[lang];
     u.rate = 0.98;
     u.onend = done;

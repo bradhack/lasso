@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import re
 import time
 from collections import OrderedDict
 from xml.sax.saxutils import escape
@@ -24,6 +25,42 @@ VOICES = {"en": ("en-US", "en-US-AndrewNeural"), "es": ("es-ES", "es-ES-AlvaroNe
           "pt": ("pt-BR", "pt-BR-AntonioNeural"), "fr": ("fr-FR", "fr-FR-HenriNeural")}
 SCOPE = "https://cognitiveservices.azure.com/.default"
 CACHE_ITEMS = 300
+
+
+def _ordinal(n: int) -> str:
+    return f"{n}{'th' if 10 <= n % 100 <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
+
+
+_MIN = re.compile(r"(?:\b(at|in|aos|à|a)\s+)?\b(\d{1,3})(?:\s*\+\s*(\d{1,2}))?['’′]")
+_VS = {"en": "versus", "es": "contra", "pt": "contra", "fr": "contre"}
+_TO = {"en": "to", "es": "a", "pt": "a", "fr": "à"}
+_PLUS = {"en": "plus", "es": "más", "pt": "mais", "fr": "plus"}
+_WORDS = {"en": (("xG", "expected goals"), ("pts", "points")), "es": (("xG", "goles esperados"), ("pts", "puntos")),
+          "pt": (("xG", "gols esperados"), ("pts", "pontos")), "fr": (("xG", "buts attendus"), ("pts", "points"))}
+
+
+def spoken(text: str, lang: str) -> str:
+    """Text as a voice should read it: written minutes (82') become words a voice says ("the 82nd minute"),
+    "v" between teams becomes "versus", scores read "2 to 1", and abbreviations are spelled out."""
+    lang = lang if lang in _VS else "en"
+
+    def minute(m: re.Match) -> str:
+        prep, n, extra = m.group(1), int(m.group(2)), m.group(3)
+        plus = f" {_PLUS[lang]} {extra}" if extra else ""
+        if lang == "en":
+            return f"in the {_ordinal(n)} minute{plus}" if prep else f"{_ordinal(n)} minute{plus}"
+        if lang == "pt":
+            return f"aos {n}{plus} minutos" if prep == "aos" else f"minuto {n}{plus}"
+        if lang == "fr":
+            return f"à la {n}e minute{plus}" if prep == "à" else f"{n}e minute{plus}"
+        return f"{prep + ' ' if prep else ''}minuto {n}{plus}"
+
+    text = _MIN.sub(minute, text)
+    text = re.sub(r"(?<=\w) v\.? (?=\w)", f" {_VS[lang]} ", text)
+    text = re.sub(r"\b(\d{1,2})\s*-\s*(\d{1,2})\b(?!\s*%)", lambda m: f"{m.group(1)} {_TO[lang]} {m.group(2)}", text)
+    for short, full in _WORDS[lang]:
+        text = re.sub(rf"\b{short}\b", full, text)
+    return text.replace("→", f" {_TO[lang]} ")
 
 
 class Speech:
@@ -66,6 +103,7 @@ class Speech:
         if not self.enabled or not text.strip():
             return None
         xml_lang, voice = VOICES.get(lang, VOICES["en"])
+        text = spoken(text, lang)
         key = hashlib.sha1(f"{voice}|{text}".encode()).hexdigest()
         if key in self._cache:
             self._cache.move_to_end(key)

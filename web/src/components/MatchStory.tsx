@@ -8,7 +8,7 @@ import { UnderTheHood } from "./UnderTheHood";
 
 const LABEL: Record<string, Key> = {
   kickoff: "tKickoff", goal: "goalWord", red_card: "tRed", half_time: "halfTime", full_time: "fullTime",
-  swing: "trSwing", swing_draw: "trSwing", pulse: "trPulse",
+  swing: "trSwing", swing_draw: "trSwing", pulse: "trPulse", var_overturned: "trVar",
 };
 const TEAM = ["var(--home)", "var(--away)"];
 const order = (m: Moment) => Number(m.moment_id.split("-m").pop()) || 0;

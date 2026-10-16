@@ -8,7 +8,7 @@ export type Toast =
   | { id: number; kind: "loss"; call: Call }
   | { id: number; kind: "sticker"; sticker: Sticker }
   | { id: number; kind: "hope"; call: Call }
-  | { id: number; kind: "mission"; label: string; reward: number }
+  | { id: number; kind: "mission"; label: string; reward: number; mission?: string }
   | { id: number; kind: "goldfish"; streak: number }
   | { id: number; kind: "believe"; team: string; reward: number }
   | { id: number; kind: "error"; text: string }
@@ -19,7 +19,7 @@ type ToastInput =
   | { kind: "loss"; call: Call }
   | { kind: "sticker"; sticker: Sticker }
   | { kind: "hope"; call: Call }
-  | { kind: "mission"; label: string; reward: number }
+  | { kind: "mission"; label: string; reward: number; mission?: string }
   | { kind: "goldfish"; streak: number }
   | { kind: "believe"; team: string; reward: number }
   | { kind: "error"; text: string }
@@ -217,7 +217,7 @@ function onMessage(d: any) {
       break;
     }
     case "reset":
-      patchSnap(d.match.match_id, () => ({ believe_won: null }));
+      patchSnap(d.match.match_id, () => ({ believe_won: null, var_decision: null }));
       if (st.snapshots[d.match.match_id]) st.watch(d.match.match_id);
       break;
     case "meter":
@@ -241,6 +241,12 @@ function onMessage(d: any) {
     case "moment":
     case "moment_update":
       patchSnap(d.moment.match_id, (s) => ({ moments: upsertMoment(s.moments, d.moment) }));
+      break;
+    case "var":
+      patchSnap(d.match_id, () => ({
+        var: d.var ?? null,
+        ...(d.decision ? { var_decision: { ...d.decision, at: Date.now() } } : {}),
+      }));
       break;
     case "believe":
       patchSnap(d.match_id, () => ({ believe_won: { side: d.side, count: d.count, minute: d.minute } }));
@@ -269,7 +275,7 @@ function onMessage(d: any) {
       break;
     case "mission_complete":
       if (st.user && typeof d.biscuits === "number") useStore.setState({ user: { ...st.user, biscuits: d.biscuits } });
-      st.toast({ kind: "mission", label: d.label, reward: d.reward });
+      st.toast({ kind: "mission", label: d.label, reward: d.reward, mission: d.mission });
       break;
     case "goldfish":
       st.toast({ kind: "goldfish", streak: d.streak });

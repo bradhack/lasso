@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import zlib
 from collections.abc import Awaitable, Callable
 
 from .config import Settings, settings
@@ -20,10 +21,37 @@ log = logging.getLogger("lasso.feed")
 OnEvent = Callable[[str, dict], Awaitable[None]]
 HALF_TIME_BREAK_SECONDS = 12
 
+# VAR: some goals are checked (and stand), and at most one big chance per match is shown as a goal and then ruled
+# out. Synthetic like everything else, chosen deterministically so every replay of a match is the same.
+VAR_REASONS = ("offside", "handball", "foul")
+VAR_MIN_SECONDS = 8.0
+SHOWCASE_VAR = {"S5-MD07-03": {93: ("ruled_out", "offside"), 1021: ("stands", "offside")}}
+
+
+def var_plan(match_id: str, events: list[dict]) -> dict[int, tuple[str, str]]:
+    """seq -> (decision, reason) for the shots that get a VAR check in this match."""
+    if match_id in SHOWCASE_VAR:
+        return dict(SHOWCASE_VAR[match_id])
+    plan: dict[int, tuple[str, str]] = {}
+    ruled_out = False
+    for e in events:
+        if e["type"] != "shot":
+            continue
+        h = zlib.crc32(f"{match_id}:{e['seq']}".encode())
+        reason = VAR_REASONS[h % len(VAR_REASONS)]
+        xg = float(e.get("xg") or 0)
+        if e.get("outcome") and h % 100 < 30:
+            plan[e["seq"]] = ("stands", reason)
+        elif not e.get("outcome") and not ruled_out and xg >= 0.25 and h % 100 < 35:
+            plan[e["seq"]] = ("ruled_out", reason)
+            ruled_out = True
+    return plan
+
 
 async def replay(data: DemoData, match_id: str, on_event: OnEvent, minute_seconds: float,
                  start_minute: float = 0.0, stop: asyncio.Event | None = None) -> None:
     events = data.events_for(match_id)
+    var = var_plan(match_id, events)
     ht = next((e["clock"] for e in events if e["type"] == "half_time"), 45.0)
     added_1h = max(0.0, ht - 45)
     last = 0.0
@@ -37,6 +65,19 @@ async def replay(data: DemoData, match_id: str, on_event: OnEvent, minute_second
             if wait > 0:
                 await asyncio.sleep(wait)
         last = elapsed
+        if e["seq"] in var and elapsed >= start_minute:
+            # The ball is in the net, VAR checks (the clock stops), then the decision. VAR events carry no seq,
+            # so they never collide with the match's own event numbering.
+            decision, reason = var[e["seq"]]
+            base = {"period": e["period"], "clock": e["clock"], "team_id": e.get("team_id"),
+                    "player_id": e.get("player_id"), "xg": e.get("xg"), "reason": reason}
+            await on_event(match_id, {"type": "var_check", **base})
+            await asyncio.sleep(max(VAR_MIN_SECONDS, 3 * minute_seconds))
+            if stop is not None and stop.is_set():
+                return
+            await on_event(match_id, {"type": "var_decision", **base, "decision": decision})
+            if decision == "ruled_out":
+                e = {**e, "var_disallowed": True}
         await on_event(match_id, e)
         if e["type"] == "half_time" and elapsed >= start_minute:
             await asyncio.sleep(HALF_TIME_BREAK_SECONDS)

@@ -24,6 +24,7 @@ export interface MatchSummary {
   probs: Probs;
   prematch: Probs;
   cards?: Booking[];
+  var?: VarCheck | null;
   /** Touch the sign: per side, the open "behind" spell and how many fans believe. */
   believe?: ({ spell: number; count: number } | null)[];
 }
@@ -101,6 +102,31 @@ export interface FeedItem {
   text: string;
   xg?: number;
   speed?: number;
+  on?: boolean; // a chance on target
+  off?: string; // a substitution: who came off
+  reason?: string; // VAR: offside, handball or foul
+  decision?: "stands" | "ruled_out";
+  score?: [number, number];
+}
+
+/** A VAR check in progress: the Gaffer's Gauge both ways. */
+export interface VarCheck {
+  status: "checking";
+  team: 0 | 1;
+  player: string;
+  reason: string;
+  minute: number;
+  stands: Probs;
+  ruled_out: Probs;
+}
+
+export interface VarDecision {
+  status: "stands" | "ruled_out";
+  team: 0 | 1;
+  player: string;
+  reason: string;
+  minute: number;
+  at: number; // when it arrived (ms), so the result shows for a few seconds
 }
 
 export interface TeamStats {
@@ -139,7 +165,8 @@ export interface Market {
   status: "open" | "closed" | "settled";
   result: string | null;
   kind: string;
-  copy: string | null;
+  copy: string | Localized | null;
+  params?: { team?: string; until?: number };
 }
 
 /** One ball action for the Touchline view. Home attacks left to right; pitch is 105 x 68 m. */
@@ -169,6 +196,7 @@ export interface BelieveWin {
 
 export interface MatchSnapshot extends MatchSummary {
   believe_won?: BelieveWin | null;
+  var_decision?: VarDecision | null;
   history: MeterPoint[];
   touches?: Touch[];
   shots?: Touch[];
@@ -234,6 +262,8 @@ export interface Call {
   goldfish?: boolean;
   match_id?: string;
   placed_at?: number;
+  kind?: string;
+  params?: { team?: string; until?: number };
 }
 
 export interface LeaderRow {

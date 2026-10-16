@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { t } from "../i18n";
 import { useStore } from "../store";
 import type { Lang, Market, MatchSnapshot } from "../types";
+import { marketCopy, marketQuestion, optionLabel } from "../words";
 import { pct } from "./bits";
 
 const STAKES = [50, 100, 250];
@@ -19,7 +20,9 @@ export function CallIt({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
   // Prefer an open market the fan has not called yet; otherwise show their latest locked call.
   const market: Market | undefined = useMemo(() => {
     const open = snap.markets.filter((m) => m.status === "open");
-    return open.find((m) => !calls[m.market_id]) ?? open[open.length - 1] ??
+    // A VAR check is the moment: its question jumps the queue.
+    return open.find((m) => m.kind === "var" && !calls[m.market_id]) ?? open.find((m) => !calls[m.market_id]) ??
+      open[open.length - 1] ??
       [...snap.markets].reverse().find((m) => calls[m.market_id] && m.status !== "settled");
   }, [snap.markets, calls]);
 
@@ -55,9 +58,9 @@ export function CallIt({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
           {open ? `${t("closes", lang)} ${Math.ceil(closeAt)}'` : t("closed", lang)}
         </span>
       </div>
-      <h3>{market.question}</h3>
+      <h3>{marketQuestion(market, lang)}</h3>
       <div className="muted" style={{ fontSize: 12 }}>
-        {market.copy ?? `${t("gafferSays", lang)} ${pct(yes.p)}. ${t("beatIt", lang)}`}
+        {marketCopy(market.copy, lang) ?? `${t("gafferSays", lang)} ${pct(yes.p)}. ${t("beatIt", lang)}`}
       </div>
       <div className={`opts ${cols}`}>
         {market.options.map((o) => (
@@ -68,7 +71,7 @@ export function CallIt({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
             onClick={() => setPick(o.id)}
             aria-pressed={chosen?.id === o.id}
           >
-            <span style={{ fontSize: 13 }}>{o.label}</span>
+            <span style={{ fontSize: 13 }}>{optionLabel(market.kind, o.id, o.label, lang)}</span>
             <span className="m">{o.multiplier.toFixed(1)}x</span>
           </button>
         ))}
@@ -103,7 +106,7 @@ export function CallIt({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
         <div className="lasso-wrap">
           <div className="cta ghost locked">
             <small>{t("lockedIn", lang)}</small>
-            <span>{mine.label} · {mine.stake} → {Math.round(mine.stake * mine.multiplier)}</span>
+            <span>{optionLabel(market.kind, mine.option_id, mine.label, lang)} · {mine.stake} → {Math.round(mine.stake * mine.multiplier)}</span>
           </div>
           {thrown === market?.market_id && <LassoThrow key={thrown} />}
         </div>

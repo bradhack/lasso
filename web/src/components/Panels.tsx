@@ -1,4 +1,6 @@
 import { t } from "../i18n";
+import type { Key } from "../i18n";
+import { feedText } from "../words";
 import type { Lang, MatchSnapshot } from "../types";
 
 export function Feed({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
@@ -11,7 +13,7 @@ export function Feed({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
         {items.map((f) => (
           <div key={f.seq} className={`feed-item ${f.type}`}>
             <span className="min">{f.minute}'</span>
-            <span>{f.text}</span>
+            <span>{feedText(f, snap, lang)}</span>
           </div>
         ))}
       </div>
@@ -19,15 +21,15 @@ export function Feed({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
   );
 }
 
-const ROWS: { key: keyof MatchSnapshot["stats"]["teams"][0]; label: string; fmt?: (v: number) => string }[] = [
+const ROWS: { key: keyof MatchSnapshot["stats"]["teams"][0]; label: Key | "xG"; fmt?: (v: number) => string }[] = [
   { key: "xg", label: "xG", fmt: (v) => v.toFixed(2) },
-  { key: "xg_last_10", label: "xG last 10'", fmt: (v) => v.toFixed(2) },
-  { key: "possession", label: "Possession %" },
-  { key: "field_tilt", label: "Field tilt %" },
-  { key: "shots", label: "Shots" },
-  { key: "pass_accuracy", label: "Pass accuracy %" },
-  { key: "avg_pass_difficulty", label: "Pass difficulty", fmt: (v) => v.toFixed(2) },
-  { key: "fastest_shot_kmh", label: "Fastest shot km/h", fmt: (v) => v.toFixed(0) },
+  { key: "xg_last_10", label: "sXgLast10", fmt: (v) => v.toFixed(2) },
+  { key: "possession", label: "sPossession" },
+  { key: "field_tilt", label: "sFieldTilt" },
+  { key: "shots", label: "sShots" },
+  { key: "pass_accuracy", label: "sPassAcc" },
+  { key: "avg_pass_difficulty", label: "sPassDiff", fmt: (v) => v.toFixed(2) },
+  { key: "fastest_shot_kmh", label: "sFastest", fmt: (v) => v.toFixed(0) },
 ];
 
 export function StatsPanel({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
@@ -46,7 +48,7 @@ export function StatsPanel({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) 
           return (
             <div className="stat" key={r.key}>
               <span className="v">{fmt(hv)}</span>
-              <span className="lbl">{r.label}</span>
+              <span className="lbl">{r.label === "xG" ? "xG" : t(r.label, lang)}</span>
               <span className="v r">{fmt(av)}</span>
               <div className="bars">
                 <span style={{ flex: hv / total, background: "var(--home)" }} />

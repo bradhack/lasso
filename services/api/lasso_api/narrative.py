@@ -20,6 +20,26 @@ T = {
               "fr": "Le chrono tourne"},
     "h_goal": {"en": "{player} scores for {team}!", "es": "¡Gol de {player} para {team}!",
                "pt": "Gol de {player} para o {team}!", "fr": "But de {player} pour {team} !"},
+    "h_goal_var": {"en": "{player} scores for {team}, and VAR says it stands!",
+                   "es": "¡Gol de {player} para {team}, y el VAR lo da por bueno!",
+                   "pt": "Gol de {player} para o {team}, e o VAR confirma!",
+                   "fr": "But de {player} pour {team}, et la VAR le valide !"},
+    "h_var_out": {"en": "No goal! VAR rules out {player}'s strike", "es": "¡No es gol! El VAR anula el tanto de {player}",
+                  "pt": "Não vale! O VAR anula o gol de {player}", "fr": "Pas de but ! La VAR refuse le but de {player}"},
+    "var_story": {"en": "VAR rules it out for {reason}. {poss} chance of winning stays at {b}%, not the {s}% it would have been.",
+                  "es": "El VAR lo anula por {reason}. La probabilidad de victoria de {team} se queda en el {b}%, en vez del {s}% que habría tenido.",
+                  "pt": "O VAR anula por {reason}. A chance de vitória do {team} fica em {b}%, em vez dos {s}% que teria.",
+                  "fr": "La VAR l'annule pour {reason}. Pour {team}, les chances de victoire restent à {b} %, au lieu de {s} %."},
+    "r_offside": {"en": "offside", "es": "fuera de juego", "pt": "impedimento", "fr": "hors-jeu"},
+    "r_handball": {"en": "handball", "es": "mano", "pt": "toque de mão", "fr": "main"},
+    "r_foul": {"en": "a foul in the build-up", "es": "falta previa", "pt": "falta no lance", "fr": "faute en amont"},
+    # The analyst paragraph, in every language (the agents' version replaces it when it arrives).
+    "analyst": {"en": "xG {hx}-{ax} · shots {hs}-{as_} · possession {hp}%-{ap}% · field tilt {ht}%-{at}%. Change in {team}'s win chance by cause: {drivers}.",
+                "es": "xG {hx}-{ax} · tiros {hs}-{as_} · posesión {hp}%-{ap}% · dominio territorial {ht}%-{at}%. Cambio en la probabilidad de {team} por causa: {drivers}.",
+                "pt": "xG {hx}-{ax} · chutes {hs}-{as_} · posse {hp}%-{ap}% · domínio territorial {ht}%-{at}%. Variação na chance do {team} por causa: {drivers}.",
+                "fr": "xG {hx}-{ax} · tirs {hs}-{as_} · possession {hp} %-{ap} % · territoire {ht} %-{at} %. Variation des chances de {team} par cause : {drivers}."},
+    "no_change": {"en": "no material change", "es": "sin cambios relevantes", "pt": "sem mudança relevante",
+                  "fr": "pas de changement notable"},
     "h_red": {"en": "Red card! {team} down to ten", "es": "¡Roja! {team} se queda con diez",
               "pt": "Vermelho! {team} fica com dez", "fr": "Carton rouge ! {team} à dix"},
     "h_swing": {"en": "Momentum swings to {team}", "es": "El partido se inclina hacia {team}",
@@ -35,15 +55,62 @@ T = {
                     "fr": "Fin du match : {home} {hs}-{as_} {away}"},
     "h_kickoff": {"en": "Kickoff: {home} v {away}", "es": "Comienza: {home} vs {away}",
                   "pt": "Começa: {home} x {away}", "fr": "Coup d'envoi : {home} - {away}"},
-    "story": {"en": "{team} win chance: {a}% to {b}%. Biggest factor: {label} ({d:+d} pts).",
-              "es": "Probabilidad de victoria de {team}: del {a}% al {b}%. Factor clave: {label} ({d:+d} pts).",
-              "pt": "Chance de vitória ({team}): de {a}% para {b}%. Fator principal: {label} ({d:+d} pts).",
-              "fr": "Chances de victoire ({team}) : de {a} % à {b} %. Facteur clé : {label} ({d:+d} pts)."},
-    "story_flat": {"en": "{team} win chance holds at {b}%. The Gaffer sees a tight one.",
-                   "es": "La probabilidad de {team} se mantiene en el {b}%. Partido igualado.",
-                   "pt": "A chance do {team} segue em {b}%. Jogo equilibrado.",
-                   "fr": "Les chances de {team} restent à {b} %. Match serré."},
-    "up": {"en": "Believe! {team} are up to {p}%.", "es": "¡A creer! {team} sube al {p}%.",
+    # Stories: one sentence on what happened or why, then one on the focus team's chance of winning.
+    "c_up": {"en": "{poss} chance of winning rises from {a}% to {b}%.",
+             "es": "La probabilidad de victoria de {team} sube del {a}% al {b}%.",
+             "pt": "A chance de vitória do {team} sobe de {a}% para {b}%.",
+             "fr": "Pour {team}, les chances de victoire passent de {a} % à {b} %."},
+    "c_down": {"en": "{poss} chance of winning slips from {a}% to {b}%.",
+               "es": "La probabilidad de victoria de {team} baja del {a}% al {b}%.",
+               "pt": "A chance de vitória do {team} cai de {a}% para {b}%.",
+               "fr": "Pour {team}, les chances de victoire passent de {a} % à {b} %."},
+    "c_flat": {"en": "{poss} chance of winning holds at {b}%.",
+               "es": "La probabilidad de victoria de {team} se mantiene en el {b}%.",
+               "pt": "A chance de vitória do {team} segue em {b}%.",
+               "fr": "Pour {team}, les chances de victoire restent à {b} %."},
+    "c_up_they": {"en": "Their chance of winning rises from {a}% to {b}%.", "es": "Su probabilidad de victoria sube del {a}% al {b}%.",
+                  "pt": "A chance de vitória sobe de {a}% para {b}%.", "fr": "Leurs chances de victoire passent de {a} % à {b} %."},
+    "c_down_they": {"en": "Their chance of winning slips from {a}% to {b}%.", "es": "Su probabilidad de victoria baja del {a}% al {b}%.",
+                    "pt": "A chance de vitória cai de {a}% para {b}%.", "fr": "Leurs chances de victoire passent de {a} % à {b} %."},
+    "c_flat_they": {"en": "Their chance of winning holds at {b}%.", "es": "Su probabilidad de victoria se mantiene en el {b}%.",
+                    "pt": "A chance de vitória segue em {b}%.", "fr": "Leurs chances de victoire restent à {b} %."},
+    "w_goal_now": {"en": "That makes it {home} {hs}, {away} {as_}.", "es": "Con esto, {home} {hs}, {away} {as_}.",
+                   "pt": "Com isso, {home} {hs} x {as_} {away}.", "fr": "Le score passe à {hs}-{as_}."},
+    "w_red_now": {"en": "{team} will play the rest of the match with ten men.",
+                  "es": "{team} jugará con diez el resto del partido.",
+                  "pt": "O {team} vai jogar com dez até o fim.", "fr": "{team} va devoir finir le match à dix."},
+    "w_goal": {"en": "{team}'s goal is the big reason.", "es": "El gol de {team} es la gran razón.",
+               "pt": "O gol do {team} é o grande motivo.", "fr": "Le but de {team} y est pour beaucoup."},
+    "w_red": {"en": "{team} being down to ten men is the big reason.",
+              "es": "Que {team} juegue con diez es la gran razón.",
+              "pt": "O {team} com dez em campo é o grande motivo.", "fr": "{team} à dix, c'est la grande raison."},
+    "w_chances": {"en": "The better chances are coming from {team}.",
+                  "es": "{team} está generando las mejores ocasiones.",
+                  "pt": "O {team} vem criando as melhores chances.", "fr": "{team} se crée les meilleures occasions."},
+    "w_clock_level": {"en": "It's level and the minutes are ticking away, so a draw is getting likelier.",
+                      "es": "Sigue la igualdad y pasan los minutos, así que el empate es cada vez más probable.",
+                      "pt": "Segue empatado e o tempo passa, então o empate fica mais provável.",
+                      "fr": "C'est toujours à égalité et le temps file, alors le nul se rapproche."},
+    "w_clock_behind": {"en": "Time is running out for {team} to find a way back.",
+                       "es": "A {team} se le acaba el tiempo para remontar.",
+                       "pt": "O tempo está acabando para o {team} buscar a virada.",
+                       "fr": "Le temps presse pour {team}, qui doit revenir au score."},
+    "w_clock_ahead": {"en": "Every minute that passes brings {team} closer to the win.",
+                      "es": "Cada minuto que pasa acerca a {team} a la victoria.",
+                      "pt": "Cada minuto que passa deixa o {team} mais perto da vitória.",
+                      "fr": "Chaque minute qui passe rapproche {team} de la victoire."},
+    "w_kickoff": {"en": "The Gaffer sees a close one.", "es": "El Gaffer espera un partido igualado.",
+                  "pt": "O Gaffer espera um jogo equilibrado.", "fr": "Le Gaffer s'attend à un match serré."},
+    "w_half": {"en": "There's plenty still to play for in the second half.",
+               "es": "Queda mucho por jugar en la segunda parte.",
+               "pt": "Ainda tem muito jogo no segundo tempo.", "fr": "Tout reste à jouer en seconde période."},
+    "w_quiet": {"en": "A quiet spell, with not much changing.", "es": "Un rato tranquilo, sin grandes cambios.",
+                "pt": "Um momento tranquilo, sem grandes mudanças.", "fr": "Un moment calme, sans grand changement."},
+    "w_full_win": {"en": "Full time, and it's a {w}-{l} win for {team}.", "es": "Final del partido: {team} gana {w}-{l}.",
+                   "pt": "Fim de jogo: o {team} vence por {w} x {l}.", "fr": "C'est terminé, {team} s'impose {w}-{l}."},
+    "w_full_draw": {"en": "Full time, and it ends level at {hs}-{as_}.", "es": "Final del partido: empate a {hs}.",
+                    "pt": "Fim de jogo: empate em {hs} x {as_}.", "fr": "C'est terminé, match nul {hs}-{as_}."},
+    "up": {"en": "Believe! {team} is up to {p}%.", "es": "¡A creer! {team} sube al {p}%.",
            "pt": "Acredite! {team} sobe para {p}%.", "fr": "Y croire ! {team} grimpe à {p} %."},
     # Halftime team talks for each side's fans, by the score at the break.
     "talk_behind": {"en": "Heads up. One half to turn it around, and the Gaffer still gives {team} {p}%. Believe.",
@@ -58,7 +125,7 @@ T = {
                    "es": "Todo igualado. Un té, respirar hondo y a ganar la segunda parte. {team}: {p}%.",
                    "pt": "Tudo igual. Um chá, respira fundo e vamos ganhar o segundo tempo. {team}: {p}%.",
                    "fr": "Égalité. Une tasse de thé, on respire, et on gagne la deuxième mi-temps. {team} : {p} %."},
-    "down": {"en": "Hold your nerve. {team} still sit at {p}%.", "es": "Calma. {team} sigue con un {p}%.",
+    "down": {"en": "Hold your nerve. {team} still sits at {p}%.", "es": "Calma. {team} sigue con un {p}%.",
              "pt": "Calma. {team} ainda tem {p}%.", "fr": "Gardez la foi. {team} reste à {p} %."},
 }
 
@@ -75,27 +142,72 @@ def driver_rows(contrib: dict[str, float], window: dict, names: tuple[str, str],
         if comp == "goals" and window["goals"]:
             g = window["goals"][-1]
             labels = {lang: tr("goal", lang, team=names[g["team"]], min=g["minute"]) for lang in LANGS}
+            who = g["team"]
             if len(window["goals"]) > 1:
                 labels = {lang: v + f" (+{len(window['goals']) - 1})" for lang, v in labels.items()}
         elif comp == "red_cards" and window["reds"]:
             r = window["reds"][-1]
             labels = {lang: tr("red", lang, team=names[r["team"]], min=r["minute"]) for lang in LANGS}
+            who = r["team"]
         elif comp == "chances":
             h, a = window["xg"]
             labels = {lang: tr("chances", lang, h=f"{h:.2f}", a=f"{a:.2f}") for lang in LANGS}
+            who = 0 if h >= a else 1
         elif comp == "clock":
             labels = {lang: tr("clock", lang) for lang in LANGS}
+            who = None
         else:
             continue
         if pts == 0:
             continue
-        rows.append({"component": comp, "delta": pts, "label": labels})
+        rows.append({"component": comp, "delta": pts, "label": labels, "team": who})
     return rows
+
+
+def possessive(name: str) -> str:
+    return f"{name}'" if name.endswith("s") else f"{name}'s"
+
+
+def _story(lang: str, *, trigger: str, names: tuple[str, str], score: tuple[int, int], focus: int, a: int, b: int,
+           drivers: list[dict], red_team: int | None, var: dict | None) -> str:
+    """Two plain sentences: what happened (or why the chances moved), then the focus team's chance of winning."""
+    team = names[focus]
+    who = {"team": team, "poss": possessive(team)}
+    if trigger == "var_overturned" and var:
+        return tr("var_story", lang, reason=tr(f"r_{var['reason']}", lang), b=b, s=var["stands_pct"], **who)
+    if trigger == "full_time":
+        hs, as_ = score
+        if hs == as_:
+            return tr("w_full_draw", lang, hs=hs, as_=as_)
+        win = 0 if hs > as_ else 1
+        return tr("w_full_win", lang, team=names[win], w=max(hs, as_), l=min(hs, as_))
+    top = next((d for d in drivers if abs(d["delta"]) >= 1), None)
+    mine, theirs = (score[0], score[1]) if focus == 0 else (score[1], score[0])
+    if trigger == "goal":
+        first = tr("w_goal_now", lang, home=names[0], away=names[1], hs=score[0], as_=score[1])
+    elif trigger == "red_card":
+        first = tr("w_red_now", lang, team=names[red_team if red_team is not None else focus])
+    elif trigger == "kickoff":
+        first = tr("w_kickoff", lang)
+    elif top and top["component"] == "clock":
+        first = tr("w_clock_level" if mine == theirs else "w_clock_behind" if mine < theirs else "w_clock_ahead",
+                   lang, team=team)
+    elif top and top["component"] in ("goals", "red_cards", "chances") and top.get("team") is not None:
+        key = {"goals": "w_goal", "red_cards": "w_red", "chances": "w_chances"}[top["component"]]
+        first = tr(key, lang, team=names[top["team"]])
+    elif trigger == "half_time":
+        first = tr("w_half", lang)
+    else:
+        first = tr("w_quiet", lang)
+    change = "c_flat" if a == b else "c_up" if b > a else "c_down"
+    if team in first and names[1 - focus] not in first:
+        change += "_they"  # the first sentence named them: "Their chance of winning..."
+    return f"{first} {tr(change, lang, a=a, b=b, **who)}"
 
 
 def template_package(*, trigger: str, names: tuple[str, str], score: tuple[int, int], minute: int,
                      before: dict, after: dict, focus: int, drivers: list[dict], scorer: str | None,
-                     red_team: int | None, stats: dict) -> dict:
+                     red_team: int | None, stats: dict, var: dict | None = None) -> dict:
     side = "home" if focus == 0 else "away"
     a, b = round(before[side] * 100), round(after[side] * 100)
     team = names[focus]
@@ -103,7 +215,10 @@ def template_package(*, trigger: str, names: tuple[str, str], score: tuple[int, 
     headline = {}
     for lang in LANGS:
         if trigger == "goal":
-            headline[lang] = tr("h_goal", lang, player=scorer or team, team=team)
+            key = "h_goal_var" if var and var.get("stood") else "h_goal"
+            headline[lang] = tr(key, lang, player=scorer or team, team=team)
+        elif trigger == "var_overturned" and var:
+            headline[lang] = tr("h_var_out", lang, player=var["player"].split()[-1])
         elif trigger == "red_card":
             headline[lang] = tr("h_red", lang, team=names[red_team if red_team is not None else focus])
         elif trigger in ("half_time", "full_time", "kickoff"):
@@ -114,13 +229,8 @@ def template_package(*, trigger: str, names: tuple[str, str], score: tuple[int, 
             headline[lang] = tr("h_swing_draw", lang)
         else:
             headline[lang] = tr("h_pulse", lang, min=minute)
-    top = drivers[0] if drivers else None
-    story = {}
-    for lang in LANGS:
-        if top and abs(top["delta"]) >= 1:
-            story[lang] = tr("story", lang, team=team, a=a, b=b, label=top["label"][lang], d=top["delta"])
-        else:
-            story[lang] = tr("story_flat", lang, team=team, b=b)
+    story = {lang: _story(lang, trigger=trigger, names=names, score=score, focus=focus, a=a, b=b,
+                          drivers=drivers, red_team=red_team, var=var) for lang in LANGS}
     club_lines = {}
     for i, key in ((0, "home"), (1, "away")):
         p_now = round(after["home" if i == 0 else "away"] * 100)
@@ -133,9 +243,11 @@ def template_package(*, trigger: str, names: tuple[str, str], score: tuple[int, 
             club_lines[key] = {lang: tr("up" if p_now >= p_was else "down", lang, team=names[i], p=p_now)
                                for lang in LANGS}
     h, aw = stats["teams"]
-    contrib_txt = ", ".join(f"{d['component'].replace('_', ' ')} {d['delta']:+d}" for d in drivers)
-    analyst = (f"xG {h['xg']:.2f}-{aw['xg']:.2f} · shots {h['shots']}-{aw['shots']} · possession "
-               f"{h['possession']}%-{aw['possession']}% · field tilt {h['field_tilt']}%-{aw['field_tilt']}%. "
-               f"Shapley on {team} win: {contrib_txt or 'no material change'}.")
-    return {"headline": headline, "story": story, "analyst": {"en": analyst}, "club_lines": club_lines,
+    analyst = {}
+    for lang in LANGS:
+        drv = ", ".join(f"{d['label'][lang]} {d['delta']:+d}" for d in drivers) or tr("no_change", lang)
+        analyst[lang] = tr("analyst", lang, hx=f"{h['xg']:.2f}", ax=f"{aw['xg']:.2f}", hs=h["shots"], as_=aw["shots"],
+                           hp=h["possession"], ap=aw["possession"], ht=h["field_tilt"], at=aw["field_tilt"],
+                           team=team, drivers=drv)
+    return {"headline": headline, "story": story, "analyst": analyst, "club_lines": club_lines,
             "source": "template"}

@@ -208,7 +208,7 @@ class GameService:
                 "stake": stake, "multiplier": opt["multiplier"], "p": opt["p"],
                 "confidence": confidence if confidence is not None else None,
                 "minute": room.minute(), "status": "open", "payout": 0, "placed_at": time.time(),
-                "kind": m.kind, "score_at_call": list(room.state.goals)}
+                "kind": m.kind, "params": m.params, "score_at_call": list(room.state.goals)}
         msgs: list[dict] = []
         if not u.get("bot"):
             msgs += self._sticker(u, "first_call")
