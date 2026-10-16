@@ -9,9 +9,9 @@ Read `README.md`, `docs/model-report.md` and `docs/DEPLOY.md` before making non-
 | Path | What lives there |
 |---|---|
 | `engine/lasso_engine/` | Synthetic league + event simulator (`league.py`, `simulator.py`), the Gaffer (`strength.py` pre-match, `inplay.py` live), Shapley explanations (`explain.py`), Call It pricing (`markets.py`), training/evaluation |
-| `services/api/lasso_api/` | FastAPI app: match rooms (`matchroom.py`), game logic (`game.py`), the Gaffer **MCP server** (`mcp_tools.py`, mounted at `/mcp`), realtime hub (`realtime.py`), Match Feed (`feed.py`), A2A client (`agents_client.py`) |
+| `services/api/lasso_api/` | FastAPI app: match rooms (`matchroom.py`), game logic (`game.py`, `stickers.py`), the Gaffer **MCP server** (`mcp_tools.py`, mounted at `/mcp`), realtime hub (`realtime.py`), Match Feed (`feed.py`), A2A client (`agents_client.py`), Listen (`speech.py`). Agent evaluation: `services/api/tests/agent_eval.py` |
 | `services/agents/lasso_agents/` | Microsoft Agent Framework agents (`team.py`), the Match Director fan-out/fan-in workflow and the Press Room (Ask the Gaffer) workflow (`director.py`), A2A server that routes between them (`server.py`) |
-| `web/src/` | React 19 + TypeScript phone app (PWA) and broadcast overlay (`pages/Overlay.tsx`) |
+| `web/src/` | React 19 + TypeScript phone app (PWA) and broadcast overlay (`pages/Overlay.tsx`). Accessibility helpers: `useDialog.ts`, `setPageLang` in `i18n.ts`. Listen: `components/Listen.tsx` |
 | `infra/` | Bicep for every Azure resource, deployed with `azd up` |
 | `data/demo/` | Runtime data pack: held-out season events + trained model. `data/league/` is generated and git-ignored |
 
@@ -48,6 +48,10 @@ Speed up local replays with `LASSO_MINUTE_SECONDS=0.5`. Point the API at the age
 6. **Agents get live data through MCP**, not by importing engine code. New capabilities for agents become new tools in `mcp_tools.py` with clear docstrings, since those docstrings are what the model reads.
 7. Agent prompts live in `services/agents/lasso_agents/team.py` and must ask for **JSON only**. Update `tests/test_director.py` when an output shape changes.
 8. **Touchline adds no realtime messages.** Ball actions (`touches`) ride inside the Gauge `meter` message from `matchroom.py`. Keep them compact and keep them batched there; don't publish one message per pass.
+9. **A realtime push must never block a match.** `realtime.py` sends with a short retry and a 3-second timeout, and skips groups nobody has joined. Keep that: an unbounded retry once froze every match when Web PubSub refused messages.
+10. **Ask the Gaffer treats questions as data.** The Presser agent has no tools; the Scout's tools only read. The API puts the true events, numbers and rules into every question's brief, an off-topic ruling skips the writer, and answers are cleaned in code (`_localize`, `_plain_for_fans`, `_cap_words`). After changing any agent prompt, run `services/api/tests/agent_eval.py` and keep it passing.
+11. **Listen reads only our own text.** `/api/speech/audio` takes a story or answer id, never text. Keep it that way, and keep the cache and daily cap.
+12. **Accessibility is WCAG 2.2 AA.** Text colors must reach 4.5:1 contrast in both Midnight and Ivory (check new tokens in both). Sheets use `useDialog` (focus in, Tab trapped, Escape closes). Anything tappable is a `<button>` or has a role, a label and keyboard handling. Looping animations stop within 5 seconds. The page language follows the fan's (`setPageLang`). Re-run an axe-core audit after visual changes.
 
 ## Style
 

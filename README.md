@@ -72,6 +72,7 @@ flowchart LR
     DIRECTOR --- FOUNDRY[("<b>Microsoft Foundry</b><br/>models + tracing")]
     GAME --- COSMOS[("<b>Cosmos DB</b>")]
     ROOM --> WPS["<b>Web PubSub</b>"]
+    API -. "Listen" .-> SPEECH[("<b>Azure AI Speech</b><br/>neural voices")]
     WPS --> APP["<b>Phone app</b>"]
     WPS --> OVL["<b>Broadcast overlay</b>"]
 
@@ -82,7 +83,7 @@ flowchart LR
     classDef client fill:#E6EBF2,stroke:#E6EBF2,color:#0A1020
     class FEED,ROOM,MCP,GAME,WPS svc
     class GAFFER star
-    class EH,COSMOS,FOUNDRY data
+    class EH,COSMOS,FOUNDRY,SPEECH data
     class STATS,GAF,NAR,PER,GM agent
     class CTX data
     class APP,OVL client
@@ -173,12 +174,12 @@ Twenty fictional clubs, each with an original crest designed as one set: a disti
 | Path | What it is |
 |---|---|
 | `engine/` | `lasso_engine`: synthetic league and event simulator, the Gaffer (hierarchical Poisson team strengths plus Gamma-Poisson live updating), Shapley explanations, Call It pricing, evaluation |
-| `services/api/` | FastAPI: match rooms, the game (biscuits, streaks, the Goldfish, stickers, missions, leagues), the Gaffer **MCP server**, realtime hub, A2A client |
+| `services/api/` | FastAPI: match rooms, the game (biscuits, streaks, the Goldfish, stickers, missions, leagues, Touch the sign), the Gaffer **MCP server**, realtime hub, A2A client, Ask the Gaffer, Listen (Azure AI Speech), and the agent evaluation (`tests/agent_eval.py`) |
 | `services/agents/` | **Microsoft Agent Framework** agents: the Match Director fan-out / fan-in workflow (five agents) and the Ask the Gaffer press room (two agents), hosted over **A2A**, on **Microsoft Foundry** models |
 | `web/` | React + TypeScript phone app (installable PWA) and broadcast overlay |
 | `infra/` | Bicep for the whole stack, deployed with `azd up`. Keyless managed identity throughout |
 | `data/demo/` | The held-out season the app replays, plus the trained model |
-| `docs/` | [Model report](docs/model-report.md), [deploy guide](docs/DEPLOY.md) |
+| `docs/` | [Lasso for judges](docs/JUDGING.md), [model report](docs/model-report.md), [agent evaluation](docs/agent-eval.md), [deploy guide](docs/DEPLOY.md) |
 
 ## Quick start
 
@@ -208,5 +209,6 @@ cd .. && python docs/charts/render_meter.py   # the showcase Gaffer's Gauge char
 - **Free to play.** Biscuits have no cash value and cannot be bought. There's a daily top-up if you run out.
 - **No real-world data.** All clubs, players and matches are synthetic, as the hackathon rules require.
 - **Honest scoring.** The calibration bonus uses a proper scoring rule, so stating your true confidence is always your best strategy.
+- **Accessible.** WCAG 2.2 AA audited in both themes, keyboard-friendly sheets, the page language follows the fan's, Listen for every story and answer, and motion that stops on its own.
 - **Cost guard-rails.** Agents only run for matches someone is watching, with a per-match gap and a daily cap. Ask the Gaffer has its own daily cap plus a per-fan pace and allowance.
 - **Questions are data, not instructions.** The agent that answers a fan's question has no tools, and the Scout's tools only read match data.

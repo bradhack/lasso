@@ -36,7 +36,8 @@ The app replays four matches on a loop, so something is always live. Each match 
 - **The Gaffer, a model that learns and updates.** Before kickoff it rates every team's attack and defense from past results and chances created. During the match it updates the odds with every chance, card and goal, in under a millisecond. *Technically:* a Bayesian hierarchical Poisson model for team strength and Gamma-Poisson live updating. *Where:* `engine/lasso_engine/strength.py`, `inplay.py`.
 - **Exact explanations.** Every move of the Gauge is split into its causes (goals, red cards, chances, the clock), and the parts add up exactly to the change. *Technically:* exact Shapley attribution. *Where:* `engine/lasso_engine/explain.py`.
 - **A live feed that doesn't break.** Match events stream through Azure Event Hubs to the app's server. If the connection drops, it reconnects. If the server restarts mid-match, it quietly catches up on what it missed. If the stream goes silent, the server keeps the matches playing itself. *Where:* `services/api/lasso_api/feed.py`, `main.py`.
-- **Instant updates to every phone,** through Azure Web PubSub. The ball's movements ride along with the once-a-second odds update, so the pitch view costs nothing extra. *Where:* `services/api/lasso_api/realtime.py`, `matchroom.py`.
+- **Instant updates to every phone,** through Azure Web PubSub. The ball's movements ride along with the once-a-second odds update, so the pitch view costs nothing extra. A push to phones can never hold up a match: it gives up after three seconds, and matches nobody is watching send nothing. *Where:* `services/api/lasso_api/realtime.py`, `matchroom.py`.
+- **Stories you can hear.** Listen reads stories and answers aloud with Azure AI Speech neural voices, on the same Foundry account and identity (no keys). The server supplies the text, so it can't be used to read anything else, and each clip is made once and cached. *Where:* `services/api/lasso_api/speech.py`, `web/src/components/Listen.tsx`.
 - **One command to deploy everything.** All the Azure resources are defined as code (Bicep) and deployed with `azd up`. Services sign in to each other with Azure identities, so there are no passwords or keys to leak. *Where:* `infra/`, [deploy guide](DEPLOY.md).
 - **Tested on every change.** GitHub Actions runs the model tests, the AI agent workflows (with a scripted stand-in for the AI model), the app build and the infrastructure check on every push. Separate scripts test the live system end to end and play the app in a phone-sized browser. *Where:* `.github/workflows/ci.yml`, `services/api/tests/`, `web/e2e/play.py`.
 
@@ -99,14 +100,14 @@ An answer uses about 6,000 tokens across both agents, well under a cent. Full re
 - **Accessible by design.** Both themes pass an automated WCAG 2.2 AA audit (axe-core) on every screen, including color contrast and touch-target size. Sheets work fully by keyboard (focus moves in, Tab stays inside, Escape closes), the page language follows the fan's choice so screen readers use the right voice, live updates are announced politely, and looping animations stop on their own or immediately for anyone who prefers less motion.
 - **Fun without gambling.** Biscuits are free points with no cash value and can't be bought, and there's a daily top-up so nobody is locked out. The confidence bonus rewards honesty: your best strategy is always to say what you really believe.
 - **Honest numbers.** The Gauge was tested on a season it never saw, and the [model report](model-report.md) shows the results.
-- **Cheap to run.** The AI agents only work on matches someone is watching, with daily limits. The whole system costs about $7 to $10 a day with everything switched on.
+- **Cheap to run.** The AI agents only work on matches someone is watching, with daily limits on stories, questions and spoken clips. The whole system costs about $7 to $10 a day with everything switched on.
 
 ## 4. User experience and demo
 
 **In short:** a polished phone app with a clear story on every screen and small moments of delight.
 
 - Installs to your phone's home screen like a native app. The Midnight theme (navy and brass) has an Ivory light mode.
-- The match page, top to bottom: the score with cards and minutes, the Gaffer's Gauge, Touch the sign, Touchline, Why it moved, Call it, Ask the Gaffer, the match story, stats and the event feed.
+- The match page, top to bottom: the score with cards and minutes, the Gaffer's Gauge, Touch the sign, Touchline, Why it moved (with Listen), Call it, Ask the Gaffer, the match story, stats and the event feed.
 - Game features: winning streaks with the **Goldfish** (one missed call a week is forgiven), a 17-sticker book, daily missions, leagues with friends, and your call history.
 - When we release an update, open phones pick it up on their own.
 - Twenty original club crests, designed as one family (`web/scripts/make_crests.py`).
