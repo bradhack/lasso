@@ -90,11 +90,12 @@ const S = {
   newSticker: { en: "New sticker", es: "Nuevo cromo", pt: "Nova figurinha", fr: "Nouvelle vignette" },
   stickerHead: { en: "YOUR STICKER BOOK", es: "TU ÁLBUM", pt: "SEU ÁLBUM", fr: "TON ALBUM" },
   stickerSub: {
-    en: "Earn them by calling the game well: first calls, long shots, late winners and comebacks.",
-    es: "Gánalos leyendo bien el partido: primeros pronósticos, sorpresas, goles al final y remontadas.",
-    pt: "Ganhe lendo bem o jogo: primeiros palpites, zebras, gols no fim e viradas.",
-    fr: "Gagne-les en lisant bien le match : premiers pronos, coups de poker, buts tardifs et remontadas.",
+    en: "Earn them by calling the game well, asking and listening to the Gaffer, calling VAR, picking the Player of the Match and watching your club climb.",
+    es: "Gánalos leyendo bien el partido, preguntando y escuchando al Gaffer, acertando con el VAR, eligiendo al jugador del partido y viendo subir a tu club.",
+    pt: "Ganhe lendo bem o jogo, perguntando e ouvindo o Gaffer, acertando o VAR, escolhendo o craque do jogo e vendo seu time subir.",
+    fr: "Gagne-les en lisant bien le match, en interrogeant et en écoutant le Gaffer, en devinant la VAR, en choisissant l'homme du match et en voyant ton club grimper.",
   },
+
   gold: { en: "Gold", es: "Oro", pt: "Ouro", fr: "Or" },
   silver: { en: "Silver", es: "Plata", pt: "Prata", fr: "Argent" },
   bronze: { en: "Bronze", es: "Bronce", pt: "Bronze", fr: "Bronze" },

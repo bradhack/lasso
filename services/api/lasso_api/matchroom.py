@@ -124,6 +124,8 @@ class MatchRoom:
         self.motm_votes: dict[str, str] = {}
         self.motm_winner: str | None = None
         self.crowd: dict[str, int] = {}
+        self.motm_since: dict[str, int] = {}  # the minute each fan made their current pick
+        self.fans: set[str] = set()  # fans who took part in this match (a call, a question, a vote, the sign)
         self.crowd_at: int | None = None
         self.last_seq = 0
         self._record_point()
@@ -293,7 +295,10 @@ class MatchRoom:
     def vote(self, user_id: str, player_id: str) -> dict | None:
         if not self.vote_open() or player_id not in self.players:
             return None
+        if self.motm_votes.get(user_id) != player_id:
+            self.motm_since[user_id] = self.minute()
         self.motm_votes[user_id] = player_id
+        self.fans.add(user_id)
         return self.impact_public(user_id)
 
     def _motm_result(self) -> list[dict]:
@@ -303,8 +308,27 @@ class MatchRoom:
             return []
         self.motm_winner = leaders[0]["id"]
         winners = sorted(u for u, pid in self.motm_votes.items() if pid == self.motm_winner)
+        big = (leaders[0]["best"] or {}).get("minute", 0)
+        early = [u for u in winners if self.motm_since.get(u, 999) < big]  # picked before their big moment
         return [{"type": "motm_result", "match_id": self.match_id, "player": leaders[0]["name"],
-                 "team": leaders[0]["team"], "users": winners}]
+                 "team": leaders[0]["team"], "users": winners, "early": early, "minute": big}]
+
+    def climbs(self) -> list[dict]:
+        """Full time: clubs in this match that climbed three or more places in the table, for On the Up."""
+        o = season_mod.get(self.match_id)
+        if not o:
+            return []
+        from lasso_engine.season import apply_result, rank  # local: only needed once per match
+        names = {c: self.data.clubs[c]["name"] for c in o.club_ids}
+        before = rank(o.before, names)
+        after = rank(apply_result(o.before, self.home_id, self.away_id, *self.state.goals), names)
+        out = []
+        for club in (self.home_id, self.away_id):
+            up = before.index(club) - after.index(club)
+            if up >= 3:
+                out.append({"type": "climb", "match_id": self.match_id, "club_id": club, "club": names[club],
+                            "places": up, "position": after.index(club) + 1, "users": sorted(self.fans)})
+        return out
 
     def impact_tool(self) -> dict:
         """Player of the Match for agents: the impact leaderboard with what each player did."""
@@ -441,6 +465,7 @@ class MatchRoom:
             ft = season_mod.full_time(o, self.data, tuple(self.state.goals), self._prematch_probs()) if o else None
             out.extend(self._moment("full_time", force=True, season=ft))
             out.extend(self._motm_result())
+            out.extend(self.climbs())
         else:
             if etype == "shot" and t is not None:
                 self.window["xg"][t] += float(ev.get("xg") or 0)
@@ -667,6 +692,7 @@ class MatchRoom:
             return None
         new = user_id not in spell["users"]
         spell["users"].add(user_id)
+        self.fans.add(user_id)
         return {"side": side, "spell": spell["spell"], "count": self._believers(spell), "new": new}
 
     # --------------------------------------------------------------- moments

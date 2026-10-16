@@ -25,7 +25,7 @@ Lasso is a live, multi-agent match companion for phones and broadcasts, built fo
 - **Under the hood:** tap the AI agents chip on any story or answer to see how it was made: which agents ran, which ran in parallel, the MCP tools each one called (with arguments), and the time, tokens and model for each.
 - **Match story** keeps every story told during the match, newest first, with how each one moved the chances.
 - **Touchline** shows the ball live on the pitch: every pass, shot, tackle, save and corner, with the move in progress and a whole-match shot map.
-- It invites fans to make free-to-play **Call It** predictions priced at the Gaffer's own chances, with streaks, a sticker book of 17 achievements, missions and friend leagues. Biscuits are in-app points with no cash value.
+- It invites fans to make free-to-play **Call It** predictions priced at the Gaffer's own chances, with streaks, a sticker book of 23 achievements (including ones for asking the Gaffer, calling VAR, picking the Player of the Match and watching your club climb the table), missions and friend leagues. Biscuits are in-app points with no cash value.
 
 ![Lasso: watch smarter, call it first](docs/img/submission-1-cover.png)
 

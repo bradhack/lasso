@@ -55,5 +55,11 @@ const ICONS: Record<string, ReactElement> = {
     </>
   ),
   unstoppable: <path d="M13 2L5 13.5h6L10 22l9-12.5h-6z" />,
+  press_pass: <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM6 11a6 6 0 0 0 12 0M12 17v4M9 21h6" />,
+  all_ears: <path d="M4 16v-4a8 8 0 0 1 16 0v4M4 15h3.5v6H4zM16.5 15H20v6h-3.5z" />,
+  var_whisperer: <path d="M3 4h18v12H3zM8 21h8M12 16v5M10 7.5l5 2.5-5 2.5z" />,
+  gaffers_eye: <path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />,
+  on_the_up: <path d="M3 18l6-6 4 4 8-8M15 8h6v6" />,
+  saw_it_coming: <path d="M12 3a7 7 0 1 1 0 14 7 7 0 0 1 0-14zM6.5 21h11M9 17l-1.5 4M15 17l1.5 4M9 9.5a3.5 3.5 0 0 1 3-3" />,
   diamond_dog: <path d="M6 4h12l3.5 5L12 21 2.5 9zM2.5 9h19M9 4l-1.5 5L12 21M15 4l1.5 5L12 21" />,
 };

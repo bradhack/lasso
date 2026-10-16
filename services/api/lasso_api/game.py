@@ -177,19 +177,50 @@ class GameService:
                               "reward": BELIEVE_REWARD, "biscuits": u["biscuits"]}))
         return out
 
-    async def pay_motm(self, room: MatchRoom, user_ids: list[str], player: str) -> list[tuple[str, dict]]:
-        """Full time: fans who picked the Gaffer's Player of the Match get a bonus."""
+    async def pay_motm(self, room: MatchRoom, user_ids: list[str], player: str, early: list[str] | None = None,
+                       minute: int = 0) -> list[tuple[str, dict]]:
+        """Full time: fans who picked the Gaffer's Player of the Match get a bonus and Gaffer's Eye; those
+        who picked them before their big moment also get Saw It Coming."""
         out = []
+        early_set = set(early or [])
         for uid in user_ids:
             u = await self.store.get_user(uid)
             if not u or u.get("bot"):
                 continue
             u["biscuits"] += MOTM_REWARD
             u["xp"] += 5
+            msgs = self._sticker(u, "gaffers_eye", f"{player}, {room.names[0]} v {room.names[1]}")
+            if uid in early_set:
+                msgs += self._sticker(u, "saw_it_coming", f"{player}, before the {minute}' moment")
             await self.store.put_user(u)
             out.append((uid, {"type": "motm_paid", "match_id": room.match_id, "player": player,
                               "reward": MOTM_REWARD, "biscuits": u["biscuits"]}))
+            out.extend((uid, m) for m in msgs)
         return out
+
+    async def climbed(self, room: MatchRoom, user_ids: list[str], club_id: str, club: str, places: int,
+                      position: int) -> list[tuple[str, dict]]:
+        """Full time: fans of a club that climbed three places or more, who took part in the match, get On the Up."""
+        out = []
+        for uid in user_ids:
+            u = await self.store.get_user(uid)
+            if not u or u.get("bot") or u.get("club_id") != club_id:
+                continue
+            msgs = self._sticker(u, "on_the_up", f"{club}, up {places} to {position}")
+            if msgs:
+                await self.store.put_user(u)
+                out.extend((uid, m) for m in msgs)
+        return out
+
+    async def simple_sticker(self, user_id: str, key: str, detail: str | None = None) -> list[dict]:
+        """A sticker earned by doing something once (Press Pass, All Ears)."""
+        u = await self.store.get_user(user_id)
+        if not u or u.get("bot"):
+            return []
+        msgs = self._sticker(u, key, detail)
+        if msgs:
+            await self.store.put_user(u)
+        return msgs
 
     @staticmethod
     def _sticker(u: dict, key: str, detail: str | None = None) -> list[dict]:
@@ -333,6 +364,8 @@ class GameService:
                 out += self._sticker(u, "rom_com", where)
             if room.state.reds[scorer] > 0:
                 out += self._sticker(u, "ten_men", where)
+        if kind == "var":
+            out += self._sticker(u, "var_whisperer", f"{call['label']}, {where}")
         if kind == "comeback" and call["option_id"] == "yes":
             out += self._sticker(u, "comeback", match)
         if kind == "result" and call["minute"] <= 10:

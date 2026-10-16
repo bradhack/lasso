@@ -23,6 +23,8 @@ export const api = {
   clubs: () => req<ClubRef[]>("/api/clubs"),
   matches: () => req<MatchSummary[]>("/api/matches"),
   match: (id: string) => req<MatchSnapshot>(`/api/matches/${id}`),
+  listened: (id: string, body: { user_id: string }) =>
+    req<{ events: unknown[] }>(`/api/matches/${id}/listened`, { method: "POST", body: JSON.stringify(body) }),
   motm: (id: string, body: { user_id: string; player_id: string }) =>
     req<Impact>(`/api/matches/${id}/motm`, { method: "POST", body: JSON.stringify(body) }),
   believe: (id: string, body: { user_id: string; side: number }) =>

@@ -99,9 +99,13 @@ async def publish(room: MatchRoom, msg: dict) -> None:
             _spawn(pay_believers(room, msg["users"], msg["side"]))
         await hub.to_group(group, {k: v for k, v in msg.items() if k != "users"} | {"type": "believe"})
         return
+    if kind == "climb":  # On the Up, for fans of a club that climbed, who took part
+        if msg["users"]:
+            _spawn(award_climb(room, msg))
+        return
     if kind == "motm_result":  # pay the fans who picked the Player of the Match; tell the room who it was
         if msg["users"]:
-            _spawn(pay_motm(room, msg["users"], msg["player"]))
+            _spawn(pay_motm(room, msg["users"], msg["player"], msg.get("early"), msg.get("minute", 0)))
         await hub.to_group(group, {"type": "impact", "match_id": room.match_id, "impact": room.impact_public()})
         return
     await hub.to_group(group, msg)
@@ -148,9 +152,22 @@ async def pay_believers(room: MatchRoom, users: list[str], side: int) -> None:
         await hub.to_user(user_id, msg)
 
 
-async def pay_motm(room: MatchRoom, users: list[str], player: str) -> None:
-    for user_id, msg in await game.pay_motm(room, users, player):
+async def pay_motm(room: MatchRoom, users: list[str], player: str, early: list[str] | None, minute: int) -> None:
+    for user_id, msg in await game.pay_motm(room, users, player, early, minute):
         await hub.to_user(user_id, msg)
+
+
+async def award_climb(room: MatchRoom, msg: dict) -> None:
+    for user_id, m in await game.climbed(room, msg["users"], msg["club_id"], msg["club"], msg["places"],
+                                         msg["position"]):
+        await hub.to_user(user_id, m)
+
+
+async def _simple_sticker(user_id: str, key: str, detail: str | None = None) -> list[dict]:
+    msgs = await game.simple_sticker(user_id, key, detail)
+    for m in msgs:
+        await hub.to_user(user_id, m)
+    return msgs
 
 
 async def settle(room: MatchRoom, market_id: str) -> None:
@@ -653,6 +670,8 @@ async def ask(match_id: str, body: AskIn) -> dict:
     _answers[ask_id] = (lang, answer)
     while len(_answers) > 1000:
         _answers.popitem(last=False)
+    room.fans.add(body.user_id)
+    await _simple_sticker(body.user_id, "press_pass", f"{room.names[0]} v {room.names[1]}, {room.minute()}'")
     return {"ask_id": ask_id, "question": question, "answer": answer, "followups": followups, "source": source,
             "trace": trace, "minute": room.minute(), "latency_ms": int((time.time() - t0) * 1000)}
 
@@ -707,8 +726,23 @@ async def place_call(body: NewCall) -> dict:
         raise HTTPException(400, err)
     for msg in msgs:
         await hub.to_user(body.user_id, msg)
+    room.fans.add(body.user_id)
     u = await store.get_user(body.user_id)
     return {"call": call, "user": public_user(u), "events": msgs}
+
+
+class Listened(BaseModel):
+    user_id: str = Field(..., max_length=64)
+
+
+@app.post("/api/matches/{match_id}/listened")
+async def listened(match_id: str, body: Listened) -> dict:
+    """Listen: a fan played a story or an answer aloud (either voice). Earns All Ears the first time."""
+    room = rooms.get(match_id)
+    if room is None:
+        raise HTTPException(404, "match not found")
+    msgs = await _simple_sticker(body.user_id, "all_ears", f"{room.names[0]} v {room.names[1]}")
+    return {"events": msgs}
 
 
 @app.get("/api/stakes")

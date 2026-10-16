@@ -114,7 +114,7 @@ An answer uses about 6,000 tokens across both agents, well under a cent. Full re
 
 - Installs to your phone's home screen like a native app. The Midnight theme (navy and brass) has an Ivory light mode.
 - The match page, top to bottom: the score with cards and minutes, the Gaffer's Gauge, the VAR check (during a review), Touch the sign, Touchline, Why it moved (with Listen), Season outlook, Call it, Ask the Gaffer, Player of the Match, the match story, stats and the event feed.
-- Game features: winning streaks with the **Goldfish** (one missed call a week is forgiven), a 17-sticker book, daily missions, leagues with friends, and your call history.
+- Game features: winning streaks with the **Goldfish** (one missed call a week is forgiven), a 23-sticker book (with stickers for Ask the Gaffer, Listen, VAR calls, Player of the Match picks and climbing the table), daily missions, leagues with friends, and your call history.
 - When we release an update, open phones pick it up on their own.
 - Twenty original club crests, designed as one family (`web/scripts/make_crests.py`).
 

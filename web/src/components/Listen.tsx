@@ -37,6 +37,15 @@ export function spoken(text: string, lang: Lang) {
     .replace(/→/g, ` ${TO[lang]} `);
 }
 
+// All Ears: tell the server the first time this fan listens (once per visit is plenty).
+let told = false;
+function tellListened(matchId?: string) {
+  const u = useStore.getState().user;
+  if (told || !u || !matchId) return;
+  told = true;
+  api.listened(matchId, { user_id: u.id }).catch(() => { told = false; });
+}
+
 // Only one thing speaks at a time: starting a new one stops the last.
 let current: { key: string; stop: () => void } | null = null;
 
@@ -80,6 +89,7 @@ export function Listen({ kind, id, matchId, text, lang, compact = false }: {
       return;
     }
     current?.stop();
+    tellListened(matchId);
     if (!azure) return phoneVoice();
     const audio = new Audio(api.speechUrl({ kind, id, lang, match_id: matchId }));
     current = { key, stop: () => { audio.pause(); done(); } };

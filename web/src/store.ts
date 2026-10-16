@@ -302,6 +302,12 @@ function onMessage(d: any) {
     }
     case "sticker":
       st.toast({ kind: "sticker", sticker: { ...d.sticker, earned: true, count: 1 } });
+      // Mark it in the sticker book right away (not only when a call settles).
+      if (st.user?.stickers) {
+        const book = st.user.stickers.map((x) => (x.id === d.sticker.id
+          ? { ...x, earned: true, count: Math.max(1, x.count), detail: x.detail ?? d.sticker.detail ?? null } : x));
+        useStore.setState({ user: { ...st.user, stickers: book } });
+      }
       break;
     case "mission_complete":
       if (st.user && typeof d.biscuits === "number") useStore.setState({ user: { ...st.user, biscuits: d.biscuits } });
