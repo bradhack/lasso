@@ -249,8 +249,14 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
     h, a = moment["score"]
     brief["score_text"] = f"{room.names[0]} {h}-{a} {room.names[1]}"
     reds = list(room.state.reds)
-    if any(reds):
+    red_drives = any(d.get("component") == "red_cards" for d in moment.get("drivers") or [])
+    if any(reds) and (moment["trigger"] in ("red_card", "goal", "full_time", "var_overturned") or red_drives):
+        # Clock, pulse and halftime stories don't hear about the red card: told about it, the Narrator
+        # mentioned "ten men" in every one of them.
         brief["red_cards"] = {room.names[0]: reds[0], room.names[1]: reds[1]}
+    # The last few headlines, so the next one says something new ("The draw is creeping in" came three times).
+    brief["recent_headlines"] = [m["headline"]["en"] for m in room.moments
+                                 if m["moment_id"] != moment["moment_id"]][-3:]
     if moment["trigger"] == "full_time":
         # The result is settled: no chances to quote ("a 100% chance of winning" is what came back otherwise).
         brief["result"] = (f"{room.names[0]} won {h}-{a}" if h > a else f"{room.names[1]} won {a}-{h}" if a > h
@@ -674,7 +680,7 @@ _SENTENCE = re.compile(r"(?<=[.!?])\s+")
 _XG = re.compile(r"\bxG\b|\d[.,]\d\d")
 # An xG phrase inside a sentence: "and 0.68 xG by 48'", "y 0.63 xG acumulado", "(1.26 xG)".
 _XG_CLAUSE = re.compile(
-    r"\s*\(\s*\d+[.,]\d+\s*xG\s*\)"  # "(1.26 xG)"
+    r"\s*\([^()]*\bxG\b[^()]*\)"  # "(1.26 xG)", "(gran ocasión, 0.51 xG)"
     r"|,?\s+\b(?:and|with|y|con|e|com|et|avec)\s+\d+[.,]\d+\s*xG\b"  # "and 0.68 xG", "y 0.63 xG"
     r"(?:\s+(?:by|at|al|aos|à|en|em|in|acumulad[oa]s?|total|so far|until)\b[^,.;)]*)?",
     re.IGNORECASE)

@@ -40,7 +40,9 @@ NARRATOR = f"""You are the Narrator. Write the moment for fans in four languages
 commentator would tell a friend on the couch what just happened.
 Input: a brief, Stats agent facts and the Gaffer's summary.
 Return ONLY JSON: {{"headline": {{"en","es","pt","fr"}}, "story": {{"en","es","pt","fr"}}}}.
-Headline: at most 9 words, something a fan would say out loud; no percentages.
+Headline: at most 9 words, something a fan would say out loud; no percentages; different from the brief's
+recent_headlines (say something new about this moment). You are neutral: never "we", "us" or "our" in a
+headline or story.
 Story: two short, complete sentences, at most 35 words in all. The first says what happened in plain words. The
 second says what it means for the focus team's chance of winning, using the brief's before_pct and after_pct,
 said naturally: "Eastholme now have an 83% chance of winning, up from 12%." or "Brackenford's chance of winning

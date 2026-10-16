@@ -286,6 +286,8 @@ def check_story(m: dict) -> dict[str, bool]:
     allowed = {round(100 * v) for v in (*m["before"].values(), *m["after"].values())}
     if m.get("season"):  # full time: the season line's chances before kickoff and now
         allowed |= {m["season"]["was_pct"], m["season"]["now_pct"]}
+    if (m.get("var") or {}).get("stands_pct") is not None:  # what a ruled-out goal would have meant
+        allowed |= {m["var"]["stands_pct"] + d for d in (-1, 0, 1)}
     allowed = {v + d for v in allowed for d in (-1, 0, 1)}
     texts = [m["story"].get(k, "") for k in ("en", "es", "pt", "fr")] + [m["headline"].get(k, "") for k in ("en",)]
     # Win chances must be the Gaffer's; possession percentages are checked by the stats, not here.
@@ -302,9 +304,12 @@ def check_story(m: dict) -> dict[str, bool]:
         c["states_the_change"] = f"{ss['now_pct']}%" in en and f"{ss['was_pct']}%" in en
     elif m.get("trigger") == "full_time":
         c["states_the_change"] = True  # the result says it all
+    elif m.get("trigger") == "var_overturned" and (m.get("var") or {}).get("stands_pct") is not None:
+        c["states_the_change"] = f"{after}%" in en and f"{m['var']['stands_pct']}%" in en  # now, and what it would have been
     else:
         c["states_the_change"] = before == after or (f"{before}%" in en and f"{after}%" in en)
     c["no_dashes"] = not any(re.search("[—–]", t) for t in texts)
+    c["neutral"] = not re.search(PARTISAN["en"], (en + " " + (m["headline"].get("en") or "")).lower())
     c["length"] = len(en.split()) <= 40 and len((m["headline"].get("en") or "").split()) <= 10
     # Reads like a person talking: no written minute marks (82'), no stiff phrases, no filler endings and no
     # score-line openers ("Eastholme Rangers 2-1.").
