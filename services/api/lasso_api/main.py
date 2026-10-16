@@ -258,8 +258,10 @@ def _localize(lang: str, text: str) -> str:
 
 _GERUND = {"ar": "ando", "er": "endo", "ir": "indo"}
 # Words that say a club is gaining: a headline using them about a club whose chance fell is wrong.
-_GAINING = re.compile(r"\b(favou?rs?|favou?red|edge|edges|boost|boosts|lift|lifts|surge|surges|on top|in control|"
-                      r"take charge|takes charge|in charge|on the rise|rising|climb|climbs|momentum)\b", re.IGNORECASE)
+_GAINING = re.compile(r"\b(favou?rs?|edge|edges|boost|boosts|lift|lifts|surge|surges|on the rise|rising|climb|"
+                      r"climbs|momentum|gaining|grows?|take charge|takes charge)\b", re.IGNORECASE)
+# ...and words that say a club is ahead right now: fine while it's still the likeliest winner.
+_AHEAD = re.compile(r"\b(favou?red|favou?rites?|on top|in control|in charge|in front)\b", re.IGNORECASE)
 _DRAW_TALK = re.compile(r"\bdraw\b|\bstalemate\b|\bshare the points\b", re.IGNORECASE)
 
 # The clubs are invented. A real club name in model text is a slip ("Brighton, pardon, Brackenford").
@@ -362,11 +364,16 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
         # that talks about the draw gives the draw's chance, or the exact instant story stays.
         keep_story = True
     head_en = (_lang_map(pkg.get("headline")) or {}).get("en", "")
-    if moment.get("trigger") != "full_time" and _GAINING.search(head_en):
+    gaining, ahead = _GAINING.search(head_en), _AHEAD.search(head_en)
+    if moment.get("trigger") != "full_time" and (gaining or ahead):
+        after = moment["after"]
         for k, side in ((0, "home"), (1, "away")):
-            fell = moment["after"][side] < moment["before"][side] - 0.01
-            if fell and re.search(rf"\b{re.escape(room.names[k].split()[0])}\b", head_en):
-                # "Nerves favor Brackenford" while Brackenford's chance fell: the instant headline is exact.
+            named = re.search(rf"\b{re.escape(room.names[k].split()[0])}\b", head_en)
+            fell = after[side] < moment["before"][side] - 0.01
+            likeliest = after[side] >= max(after.values())
+            # "Nerves favor Brackenford" while Brackenford's chance fell is wrong; "Brackenford still favored"
+            # is right as long as they're the likeliest winner.
+            if named and ((gaining and fell) or (ahead and not gaining and not likeliest)):
                 log.warning("headline favors a club whose chance fell (%s); keeping template", head_en)
                 pkg = {**pkg, "headline": None}
                 break

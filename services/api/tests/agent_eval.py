@@ -105,8 +105,9 @@ TENS = (r"twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|veinte|treinta|c
 SPELLED_MINUTE = re.compile(rf"minut\w*\s+(?:de\s+)?(?:{TENS})|\b(?:{TENS})\w*(?:[- ]\w+){{0,3}}\s+minut", re.I)
 ORDINAL_WORDS = {1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth", 6: "sixth", 7: "seventh",
                  8: "eighth", 9: "ninth", 10: "tenth"}
-GAINING = re.compile(r"\b(favou?rs?|favou?red|edge|edges|boost|boosts|lift|lifts|surge|surges|on top|in control|"
-                     r"take charge|takes charge|in charge|on the rise|rising|climb|climbs|momentum)\b", re.I)
+GAINING = re.compile(r"\b(favou?rs?|edge|edges|boost|boosts|lift|lifts|surge|surges|on the rise|rising|climb|"
+                     r"climbs|momentum|gaining|grows?|take charge|takes charge)\b", re.I)
+AHEAD = re.compile(r"\b(favou?red|favou?rites?|on top|in control|in charge|in front)\b", re.I)
 NAMES = {"home": "Eastholme Rangers", "away": "Brackenford City"}  # the showcase match
 DRAW_WORD = re.compile(r"draw|empate|nul|tie\b", re.I)
 GARBLED = re.compile(r"\d\s?%\d|\d\s?%\s?(?:de\s)?xG")
@@ -387,10 +388,13 @@ def check_story(m: dict) -> dict[str, bool]:
         # A story that talks about the draw gives the draw's chance.
         c["draw_talk_gives_draw"] = f"{round(100 * m['after']['draw'])}%" in en
     head = m["headline"].get("en") or ""
-    if m.get("trigger") != "full_time" and GAINING.search(head):
-        # "Nerves favor Brackenford" while Brackenford's chance fell.
+    gaining, ahead = GAINING.search(head), AHEAD.search(head)
+    if m.get("trigger") != "full_time" and (gaining or ahead):
+        # "Nerves favor Brackenford" while Brackenford's chance fell; "still favored" is fine for the likeliest.
+        top = max(m["after"].values())
         c["headline_matches_numbers"] = not any(
-            m["after"][s] < m["before"][s] - 0.01 and re.search(rf"\b{re.escape(n.split()[0])}\b", head)
+            re.search(rf"\b{re.escape(n.split()[0])}\b", head)
+            and ((gaining and m["after"][s] < m["before"][s] - 0.01) or (ahead and not gaining and m["after"][s] < top))
             for s, n in (("home", NAMES["home"]), ("away", NAMES["away"])))
     c["no_real_clubs"] = not any(REAL_CLUBS.search(t) for t in texts + list((m.get("headline") or {}).values()))
     c["minutes_as_numbers"] = not any(SPELLED_MINUTE.search(t) for t in texts)
