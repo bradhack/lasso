@@ -131,7 +131,8 @@ def run(base: str, key: str, minute_seconds: float) -> dict:
         fans[k] = {"id": u["id"], "lang": lang, "persona": persona, "club": club}
     status, _ = http(base, "POST", f"/api/admin/matches/{MATCH}/restart?key={key}&minute_seconds={minute_seconds}&agents=true")
     if status != 200:
-        sys.exit(f"restart failed ({status}): check the admin key")
+        sys.exit(f"restart failed ({status}): check the admin key. It is stored in the API's container app "
+                 "secret admin-key; see docs/DEPLOY.md for the command to read it.")
     print(f"Replaying {names['home']} v {names['away']} at {minute_seconds}s per minute...")
     time.sleep(minute_seconds * 2)
     # Right after a deploy, the restart can land on the old version just before it shuts down, and the

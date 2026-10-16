@@ -63,7 +63,14 @@ curl -X POST "$LASSO_APP_URL/api/admin/matches/S5-MD07-03/restart?key=<admin key
 azd down --purge                 # tear everything down when judging ends (after Nov 10, 2026)
 ```
 
-The admin key is generated at provision time. To read it, run `az containerapp secret show -n ca-api-<token> -g rg-lasso --secret-name admin-key`. During an admin restart, the API replays that match itself and ignores Event Hubs for it until the replay ends.
+The admin key stays the same across provisions. Pin it to a value of your choice once with `azd env set LASSO_ADMIN_KEY <value>` (then `azd provision`); otherwise a stable key is derived for the environment. To read the current key (PowerShell):
+
+```powershell
+$rg = azd env get-value AZURE_RESOURCE_GROUP
+az containerapp list -g $rg --query "[?starts_with(name,'ca-api-')].name" -o tsv   # the API app's name
+az containerapp secret show -n <that name> -g $rg --secret-name admin-key --query value -o tsv
+```
+ During an admin restart, the API replays that match itself and ignores Event Hubs for it until the replay ends.
 
 ## Evaluate the agents
 

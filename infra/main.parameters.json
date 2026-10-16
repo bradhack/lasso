@@ -10,6 +10,7 @@
     "writerModelVersion": { "value": "${FOUNDRY_WRITER_MODEL_VERSION=2025-08-07}" },
     "apiImage": { "value": "${SERVICE_API_IMAGE_NAME=}" },
     "agentsImage": { "value": "${SERVICE_AGENTS_IMAGE_NAME=}" },
-    "feedImage": { "value": "${SERVICE_FEED_IMAGE_NAME=}" }
+    "feedImage": { "value": "${SERVICE_FEED_IMAGE_NAME=}" },
+    "adminKey": { "value": "${LASSO_ADMIN_KEY=}" }
   }
 }

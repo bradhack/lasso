@@ -20,8 +20,11 @@ param writerModelVersion string = '2025-08-07'
 param modelCapacity int = 50
 
 @secure()
-@description('Key for the demo admin endpoint (restart a match from a given minute)')
-param adminKey string = newGuid()
+@description('Key for the demo admin endpoint (restart a match from a given minute). Set it once with `azd env set LASSO_ADMIN_KEY <value>` so it survives every provision; left empty, a stable key is derived for this environment.')
+param adminKey string = ''
+
+// Stable across provisions (newGuid() here used to rotate the key on every `azd provision`).
+var effectiveAdminKey = empty(adminKey) ? '${uniqueString(subscription().id, environmentName, 'lasso-admin')}${uniqueString(environmentName, subscription().subscriptionId, 'key')}' : adminKey
 
 param apiImage string = ''
 param agentsImage string = ''
@@ -47,7 +50,7 @@ module resources 'resources.bicep' = {
     writerModelName: writerModelName
     writerModelVersion: writerModelVersion
     modelCapacity: modelCapacity
-    adminKey: adminKey
+    adminKey: effectiveAdminKey
     apiImage: apiImage
     agentsImage: agentsImage
     feedImage: feedImage
