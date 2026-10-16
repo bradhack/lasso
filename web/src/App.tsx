@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { BottomNav, Toasts, TopBar } from "./components/Chrome";
 import { Onboarding } from "./components/Onboarding";
+import { ReplayGate } from "./components/BigMoments";
 import { Lobby, MatchPage } from "./pages/Live";
 import { Overlay } from "./pages/Overlay";
 import { Leagues, Profile, StickersPage } from "./pages/Social";
@@ -24,6 +25,7 @@ export default function App() {
   const route = useHashRoute();
   const init = useStore((s) => s.init);
   const user = useStore((s) => s.user);
+  const appLang = useStore((s) => s.lang);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,6 +46,7 @@ export default function App() {
     <div className="app">
       <TopBar />
       {page === "match" && arg ? <MatchPage id={arg} /> :
+        page === "replay" && arg ? <ReplayGate matchId={arg} minute={extra} lang={appLang} /> :
         page === "leagues" ? <Leagues /> :
         page === "cards" ? <StickersPage /> :
         page === "me" ? <Profile /> : <Lobby />}

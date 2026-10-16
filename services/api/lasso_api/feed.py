@@ -28,6 +28,42 @@ VAR_MIN_SECONDS = 8.0
 SHOWCASE_VAR = {"S5-MD07-03": {93: ("ruled_out", "offside"), 1021: ("stands", "offside")}}
 
 
+def first_seq_at(data: DemoData, match_id: str, minute: float) -> int:
+    """The first event at or after an elapsed minute (where a replay from that minute picks up)."""
+    events = data.events_for(match_id)
+    ht = next((e["clock"] for e in events if e["type"] == "half_time"), 45.0)
+    added_1h = max(0.0, ht - 45)
+    for e in events:
+        if (e["clock"] if e["period"] == 1 else e["clock"] + added_1h) >= minute:
+            return int(e["seq"])
+    return int(events[-1]["seq"]) + 1 if events else 1
+
+
+def big_moments(data: DemoData, match_id: str) -> list[dict]:
+    """The moments worth jumping to in a match: goals, red cards and VAR checks, each with the elapsed minute
+    to start watching from (a little before, so the build-up shows)."""
+    events = data.events_for(match_id)
+    var = var_plan(match_id, events)
+    ht = next((e["clock"] for e in events if e["type"] == "half_time"), 45.0)
+    added_1h = max(0.0, ht - 45)
+    out = []
+    for e in events:
+        kind = ("goal" if e["type"] == "shot" and e.get("outcome") else "red_card" if e["type"] == "red_card"
+                else "var" if e["seq"] in var else None)  # a goal VAR checked stays a goal, with its decision
+        if kind is None:
+            continue
+        elapsed = e["clock"] if e["period"] == 1 else e["clock"] + added_1h
+        minute = int(e["clock"]) if e["period"] == 1 else int(max(e["clock"], 45))
+        item = {"kind": kind, "minute": minute, "start": round(max(0.0, elapsed - 2.0), 1),
+                "team_id": e.get("team_id"), "player": data.player_label(e.get("player_id"))}
+        if e["seq"] in var:
+            item["decision"], item["reason"] = var[e["seq"]]
+        out.append(item)
+    second = {"kind": "second_half", "minute": 46, "start": round(45 + added_1h, 1), "team_id": None, "player": ""}
+    out.append(second)
+    return sorted(out, key=lambda m: m["start"])
+
+
 def var_plan(match_id: str, events: list[dict]) -> dict[int, tuple[str, str]]:
     """seq -> (decision, reason) for the shots that get a VAR check in this match."""
     if match_id in SHOWCASE_VAR:
@@ -49,13 +85,19 @@ def var_plan(match_id: str, events: list[dict]) -> dict[int, tuple[str, str]]:
 
 
 async def replay(data: DemoData, match_id: str, on_event: OnEvent, minute_seconds: float,
-                 start_minute: float = 0.0, stop: asyncio.Event | None = None) -> None:
+                 start_minute: float = 0.0, stop: asyncio.Event | None = None, room_id: str | None = None,
+                 quiet_before: bool = False, reset: bool = True) -> None:
+    """Play a match's events in real time. ``room_id`` plays them into another room (a private replay);
+    ``quiet_before`` skips sending the events before ``start_minute``, and the room catches up on them
+    silently (no stories, calls or agent runs for minutes nobody watched)."""
     events = data.events_for(match_id)
+    target = room_id or match_id
     var = var_plan(match_id, events)
     ht = next((e["clock"] for e in events if e["type"] == "half_time"), 45.0)
     added_1h = max(0.0, ht - 45)
     last = 0.0
-    await on_event(match_id, {"type": "match_reset", "match_id": match_id})
+    if reset:
+        await on_event(target, {"type": "match_reset", "match_id": target})
     for e in events:
         if stop is not None and stop.is_set():
             return
@@ -65,20 +107,22 @@ async def replay(data: DemoData, match_id: str, on_event: OnEvent, minute_second
             if wait > 0:
                 await asyncio.sleep(wait)
         last = elapsed
+        if quiet_before and elapsed < start_minute:
+            continue
         if e["seq"] in var and elapsed >= start_minute:
             # The ball is in the net, VAR checks (the clock stops), then the decision. VAR events carry no seq,
             # so they never collide with the match's own event numbering.
             decision, reason = var[e["seq"]]
             base = {"period": e["period"], "clock": e["clock"], "team_id": e.get("team_id"),
                     "player_id": e.get("player_id"), "xg": e.get("xg"), "reason": reason}
-            await on_event(match_id, {"type": "var_check", **base})
+            await on_event(target, {"type": "var_check", **base})
             await asyncio.sleep(max(VAR_MIN_SECONDS, 3 * minute_seconds))
             if stop is not None and stop.is_set():
                 return
-            await on_event(match_id, {"type": "var_decision", **base, "decision": decision})
+            await on_event(target, {"type": "var_decision", **base, "decision": decision})
             if decision == "ruled_out":
                 e = {**e, "var_disallowed": True}
-        await on_event(match_id, e)
+        await on_event(target, e)
         if e["type"] == "half_time" and elapsed >= start_minute:
             await asyncio.sleep(HALF_TIME_BREAK_SECONDS)
 

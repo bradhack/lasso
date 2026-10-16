@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AskGaffer } from "../components/AskGaffer";
 import { Crest, pct } from "../components/bits";
 import { CallIt } from "../components/CallIt";
@@ -8,6 +8,7 @@ import { Touchline } from "../components/Touchline";
 import { VarCheck } from "../components/VarCheck";
 import { RACE_LABEL, SeasonOutlook } from "../components/SeasonOutlook";
 import { PlayerOfMatch } from "../components/PlayerOfMatch";
+import { BigMomentsCard, BigMomentsSheet } from "../components/BigMoments";
 import { MatchStory } from "../components/MatchStory";
 import { Meter } from "../components/Meter";
 import { Feed, StatsPanel } from "../components/Panels";
@@ -23,6 +24,8 @@ function statusLabel(m: MatchSummary, lang: Lang) {
   return `${m.minute}'`;
 }
 
+const SHOWCASE = "S5-MD07-03";
+
 export function Lobby() {
   const matches = useStore((s) => s.matches);
   const lang = useStore((s) => s.lang);
@@ -35,6 +38,7 @@ export function Lobby() {
         <h1>{t("heroA", lang)} <em>{t("heroB", lang)}</em></h1>
         <p>{t("heroSub", lang)}</p>
       </div>
+      {matches.length > 0 && <BigMomentsCard matchId={(matches.find((m) => m.match_id === SHOWCASE) ?? matches[0]).match_id} lang={lang} />}
       {[...live, ...other].map((m) => (
         <a key={m.match_id} className="card matchcard" href={`#/match/${m.match_id}`}>
           <div className="row">
@@ -86,17 +90,40 @@ export function MatchPage({ id }: { id: string }) {
     return () => unwatch(id);
   }, [id, connected, watch, unwatch]);
 
+  const [moments, setMoments] = useState(false);
+  const [missing, setMissing] = useState(false);
+  useEffect(() => {
+    setMissing(false);
+    if (!id.includes("~")) return;
+    const tm = window.setTimeout(() => { if (!useStore.getState().snapshots[id]) setMissing(true); }, 4000);
+    return () => window.clearTimeout(tm);
+  }, [id]);
+  if (!snap && missing) {
+    return (
+      <div className="page"><div className="empty">
+        <p>{t("bmEnded", lang)}</p>
+        <a className="cta" href="#/" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", textDecoration: "none" }}>{t("bmBackLive", lang)}</a>
+      </div></div>
+    );
+  }
   if (!snap) return <div className="page"><div className="empty">…</div></div>;
   const moment = [...snap.moments].reverse().find((m) => m.trigger !== "kickoff") ?? snap.moments[snap.moments.length - 1];
 
   return (
     <div className="page">
+      {snap.private && (
+        <div className="replay-bar" role="note">
+          <span>{t("bmPrivate", lang)}</span>
+          <a href="#/">{t("bmBackLive", lang)}</a>
+        </div>
+      )}
       <section className="card">
         <div className="row" style={{ fontSize: 12 }}>
           <a href="#/" aria-label={t("backLive", lang)} style={{ display: "flex", alignItems: "center", color: "var(--muted)" }}>
             <Back size={18} /> <span className="eyebrow" style={{ marginLeft: 4 }}>{t("league", lang)}</span>
           </a>
           <span style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700 }}>
+            {snap.private && <span className="pill replay">{t("bmReplay", lang)}</span>}
             {snap.status === "live" && <i className="dot pulse" />}
             {statusLabel(snap, lang)}
           </span>
@@ -107,7 +134,9 @@ export function MatchPage({ id }: { id: string }) {
           <div className="team"><Crest club={snap.away} round />{snap.away.name}<Bookings cards={(snap.cards ?? []).filter((c) => c.k === 1)} reds={snap.reds[1]} lang={lang} /></div>
         </div>
         <Meter snap={snap} lang={lang} />
+        <button className="linkbtn bm-open" onClick={() => setMoments(true)} aria-haspopup="dialog">▶ {t("bmButton", lang)}</button>
       </section>
+      {moments && <BigMomentsSheet matchId={snap.source_id ?? snap.match_id} lang={lang} onClose={() => setMoments(false)} />}
       <VarCheck snap={snap} lang={lang} />
       <Believe snap={snap} lang={lang} />
       <Touchline snap={snap} lang={lang} />

@@ -37,7 +37,7 @@ def build_mcp(rooms: dict[str, MatchRoom]) -> FastMCP:
     def list_live_matches() -> list[dict]:
         """List matches with status, score, minute and the current Gaffer's Gauge."""
         return [{k: r.summary()[k] for k in ("match_id", "status", "score", "minute", "probs")}
-                | {"home": r.names[0], "away": r.names[1]} for r in rooms.values()]
+                | {"home": r.names[0], "away": r.names[1]} for r in rooms.values() if not r.private]
 
     @mcp.tool()
     def gaffers_gauge(match_id: str) -> dict:

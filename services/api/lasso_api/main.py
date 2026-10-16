@@ -23,7 +23,7 @@ from lasso_engine.markets import generate_markets
 from .agents_client import AgentsClient
 from .config import settings
 from .data import DemoData
-from .feed import Scheduler, consume_forever, replay
+from .feed import Scheduler, big_moments, consume_forever, first_seq_at, replay
 from .game import STAKES, GameService, daily_top_up, public_user
 from .matchroom import MatchRoom
 from . import season as season_mod
@@ -73,7 +73,8 @@ async def on_event(match_id: str, ev: dict) -> None:
         await hub.to_group(f"match:{match_id}", {"type": "reset", "match": room.summary()})
         for msg in room._season_msg():
             await hub.to_group(f"match:{match_id}", msg)
-        await hub.to_group("lobby", {"type": "status", "match": room.summary()})
+        if not room.private:
+            await hub.to_group("lobby", {"type": "status", "match": room.summary()})
         return
     seq = int(ev.get("seq") or 0)
     if seq and seq <= room.last_seq:
@@ -109,7 +110,7 @@ async def publish(room: MatchRoom, msg: dict) -> None:
         await hub.to_group(group, {"type": "impact", "match_id": room.match_id, "impact": room.impact_public()})
         return
     await hub.to_group(group, msg)
-    if kind in ("status", "meter"):
+    if kind in ("status", "meter") and not room.private:
         if kind == "status" or int(time.time()) % 3 == 0:
             await hub.to_group("lobby", {"type": "status", "match": room.summary()})
     elif kind == "market_open":
@@ -421,7 +422,7 @@ async def clubs() -> list[dict]:
 @app.get("/api/matches")
 async def matches() -> list[dict]:
     order = {"live": 0, "half_time": 0, "scheduled": 1, "finished": 2}
-    return sorted((r.summary() for r in rooms.values()), key=lambda m: order.get(m["status"], 3))
+    return sorted((r.summary() for r in rooms.values() if not r.private), key=lambda m: order.get(m["status"], 3))
 
 
 @app.get("/api/matches/{match_id}")
@@ -441,6 +442,70 @@ async def match_season(match_id: str) -> dict:
         await asyncio.to_thread(season_mod.compute, data, match_id)
         view = rooms[match_id].season_tool()
     return view or {}
+
+
+@app.get("/api/matches/{match_id}/moments")
+async def match_moments(match_id: str) -> list[dict]:
+    """Watch from the big moments: the goals, red cards and VAR checks of a match, with where to start."""
+    room = rooms.get(match_id)
+    if room is None:
+        raise HTTPException(404, "match not found")
+    return big_moments(data, room.source_id)
+
+
+class ReplayIn(BaseModel):
+    user_id: str = Field(..., max_length=64)
+    from_minute: float = Field(0.0, ge=0, le=100)
+
+
+MAX_PRIVATE_REPLAYS = 12  # private replays at once (each is a few KB of state and one replay task)
+PRIVATE_KEEP_SECONDS = 15 * 60  # how long a finished private replay stays open
+_private: dict[str, dict] = {}  # room_id -> {"user", "stop", "started"}
+
+
+@app.post("/api/matches/{match_id}/replay")
+async def private_replay(match_id: str, body: ReplayIn) -> dict:
+    """Watch from the big moments: a private replay of a match from any minute, for one fan (built for judges
+    who drop in at any time). Earlier minutes are caught up silently; everything else works as live."""
+    base = rooms.get(match_id)
+    if base is None or base.private:
+        raise HTTPException(404, "match not found")
+    if not await store.get_user(body.user_id):
+        raise HTTPException(404, "user not found")
+    for rid, p in list(_private.items()):  # one private replay per fan: starting another ends the last
+        if p["user"] == body.user_id:
+            _end_private(rid)
+    if len(_private) >= MAX_PRIVATE_REPLAYS:
+        _end_private(min(_private, key=lambda r: _private[r]["started"]))
+    room_id = f"{base.source_id}~{uuid.uuid4().hex[:6]}"
+    room = rooms[room_id] = MatchRoom(room_id, data, source=base.source_id)
+    if body.from_minute > 0:  # catch up on the earlier minutes now, so the first screen is already there
+        await asyncio.to_thread(room.catch_up, first_seq_at(data, base.source_id, body.from_minute))
+    stop = asyncio.Event()
+    _private[room_id] = {"user": body.user_id, "stop": stop, "started": time.time()}
+
+    async def run() -> None:
+        try:
+            await replay(data, base.source_id, on_event, settings.minute_seconds, body.from_minute, stop=stop,
+                         room_id=room_id, quiet_before=True, reset=False)
+            await asyncio.wait_for(stop.wait(), timeout=PRIVATE_KEEP_SECONDS)
+        except asyncio.TimeoutError:
+            pass
+        except Exception:  # noqa: BLE001
+            log.exception("private replay failed for %s", room_id)
+        finally:
+            _end_private(room_id)
+
+    _spawn(run())
+    log.info("private replay %s from %.0f' for %s", room_id, body.from_minute, body.user_id)
+    return {"room_id": room_id, "match_id": base.source_id, "from_minute": body.from_minute}
+
+
+def _end_private(room_id: str) -> None:
+    p = _private.pop(room_id, None)
+    if p:
+        p["stop"].set()
+    rooms.pop(room_id, None)
 
 
 @app.get("/api/matches/{match_id}/story")

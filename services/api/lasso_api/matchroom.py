@@ -78,17 +78,19 @@ class Market:
 
 
 class MatchRoom:
-    def __init__(self, match_id: str, data: DemoData):
-        self.match_id = match_id
+    def __init__(self, match_id: str, data: DemoData, source: str | None = None):
+        self.match_id = match_id  # the room's id (a private replay has its own, like "S5-MD07-03~a1b2c3")
+        self.source_id = source or match_id  # the match whose data it plays
+        self.private = source is not None and source != match_id
         self.data = data
-        self.meta = data.matches[match_id]
+        self.meta = data.matches[self.source_id]
         self.home_id, self.away_id = self.meta["home_id"], self.meta["away_id"]
         self.names = (data.club_name(self.home_id), data.club_name(self.away_id))
         self.reset()
 
     # ----------------------------------------------------------------- setup
     def reset(self) -> None:
-        pre = self.data.prematch[self.match_id]
+        pre = self.data.prematch[self.source_id]
         self.pre = pre
         self.gaffer = Gaffer(pre["home_rate"], pre["away_rate"], self.data.params)
         self.live = LiveMatch(self.gaffer, self.home_id, self.away_id)
@@ -179,7 +181,7 @@ class MatchRoom:
     def summary(self) -> dict:
         s = self.state
         return {
-            "match_id": self.match_id, "status": self.status,
+            "match_id": self.match_id, "status": self.status, "source_id": self.source_id, "private": self.private,
             "home": {"club_id": self.home_id, "name": self.names[0], **self._club(self.home_id)},
             "away": {"club_id": self.away_id, "name": self.names[1], **self._club(self.away_id)},
             "score": list(s.goals), "reds": list(s.reds), "period": s.period, "clock": round(s.clock, 2),
@@ -315,7 +317,7 @@ class MatchRoom:
 
     def climbs(self) -> list[dict]:
         """Full time: clubs in this match that climbed three or more places in the table, for On the Up."""
-        o = season_mod.get(self.match_id)
+        o = season_mod.get(self.source_id)
         if not o:
             return []
         from lasso_engine.season import apply_result, rank  # local: only needed once per match
@@ -351,16 +353,16 @@ class MatchRoom:
         return {"home": self.pre["p_home"], "draw": self.pre["p_draw"], "away": self.pre["p_away"]}
 
     def race(self) -> str | None:
-        o = season_mod.get(self.match_id)
+        o = season_mod.get(self.source_id)
         return season_mod.race(o) if o else None
 
     def season_public(self) -> dict | None:
         """The season outlook from the current score, or None until the simulations are ready."""
-        o = season_mod.get(self.match_id)
+        o = season_mod.get(self.source_id)
         return season_mod.public(o, self.data, tuple(self.state.goals), self._prematch_probs()) if o else None
 
     def season_tool(self) -> dict | None:
-        o = season_mod.get(self.match_id)
+        o = season_mod.get(self.source_id)
         if not o:
             return None
         p = self.probs()
@@ -389,7 +391,7 @@ class MatchRoom:
         The synthetic match is in our own data, so state, score, stats and the Gauge stay correct even
         when the live stream is joined part-way through. Returns how many events were replayed.
         """
-        missed = [e for e in self.data.events_for(self.match_id) if self.last_seq < int(e["seq"]) < upto_seq]
+        missed = [e for e in self.data.events_for(self.source_id) if self.last_seq < int(e["seq"]) < upto_seq]
         for e in missed:
             self.ingest(e)
         self.pending_touches = []
@@ -461,7 +463,7 @@ class MatchRoom:
             self.believe = [None, None]  # still behind at the final whistle: the sign comes down, no reward
             out.extend(self._resolve_markets(full_time=True))
             out.append({"type": "status", "match": self.summary()})
-            o = season_mod.get(self.match_id)
+            o = season_mod.get(self.source_id)
             ft = season_mod.full_time(o, self.data, tuple(self.state.goals), self._prematch_probs()) if o else None
             out.extend(self._moment("full_time", force=True, season=ft))
             out.extend(self._motm_result())

@@ -27,6 +27,9 @@ export interface MatchSummary {
   var?: VarCheck | null;
   /** Touch the sign: per side, the open "behind" spell and how many fans believe. */
   believe?: ({ spell: number; count: number } | null)[];
+  /** A private replay (Watch from the big moments) plays another match's data: `source_id`. */
+  private?: boolean;
+  source_id?: string;
   /** The season race this match matters most to (from the season outlook). */
   race?: Zone | "none" | null;
 }
@@ -53,6 +56,17 @@ export interface Impact {
   votes: Record<string, number>;
   voters: number;
   mine: string | null;
+}
+
+/** A moment worth jumping to: where to start watching (elapsed minutes) and what happens. */
+export interface BigMoment {
+  kind: "goal" | "red_card" | "var" | "second_half";
+  minute: number;
+  start: number;
+  team_id: string;
+  player: string;
+  decision?: "stands" | "ruled_out";
+  reason?: string;
 }
 
 export type Zone = "title" | "top4" | "relegation";

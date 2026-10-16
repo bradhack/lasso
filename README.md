@@ -9,6 +9,7 @@ Lasso is a live, multi-agent match companion for phones and broadcasts, built fo
 > **Judges start here**
 > - **Live app:** https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io (best on a phone)
 > - **Demo video:** <!-- VIDEO LINK --> on the submission page
+> - **Jump to a moment:** [the VAR check](https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io/#/replay/S5-MD07-03/6) · [the winner](https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io/#/replay/S5-MD07-03/83) (your own private replay)
 > - **[Lasso for judges](docs/JUDGING.md):** a two-minute tour, and each judging criterion mapped to the screens, files and numbers that back it up
 
 - It ingests synthetic football events in real time.
@@ -18,6 +19,7 @@ Lasso is a live, multi-agent match companion for phones and broadcasts, built fo
 - **Ask the Gaffer:** fans ask anything about the match in their own words ("Why did our chances drop at 5'?") and get an answer in their language. A Scout agent picks the Gaffer's MCP tools that answer it, and the Gaffer replies from those facts alone.
 - **Touch the sign:** when a side falls behind, a BELIEVE sign goes up. Fans who still believe touch it, see how many others believe, and get a biscuit bonus if their side draws level.
 - **Season outlook:** the league table as it stands, moving live as goals go in, and what this match means for each club's season: their title, top-four or relegation chance now and if they win, draw or lose. The Gaffer plays out the rest of the season 10,000 times, and the odds blend with the live Gauge every second. At full time, the story says what the result did to the season.
+- **Watch the big moments:** pick any goal, red card or VAR check and watch the match play out from just before it, in your own private replay with everything live. Built so judges and late arrivals never miss the best bits.
 - **Player of the Match by impact:** a live leaderboard of the players whose own actions moved their team's chances most: goals, assists, chances, saves (the goal prevented) and red cards, measured by the Gaffer at the moment they happened. From halftime, fans vote; match the Gaffer's pick at full time for a biscuit bonus.
 - **VAR check, both ways:** while VAR reviews a goal, the Gauge shows the chances if it stands and if it's ruled out, side by side. Fans can call the decision before it lands, and the story explains what the ruling cost or saved.
 - **Listen:** every story and every Gaffer answer can be read aloud in the fan's language, with Azure AI Speech neural voices (or the phone's own voice as a fallback). Text is prepared for the ear first: 82' is read as "the 82nd minute", "v" as "versus" and 2-1 as "2 to 1".

@@ -2,6 +2,10 @@
 
 - **Live app:** https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io (best on a phone, or a narrow browser window)
 - **Demo video (under 2 minutes):** <!-- VIDEO LINK --> linked from the submission page
+- **Short on time? Jump straight to a moment** in your own private replay of the showcase match (pick a fan name first, then it starts):
+  - [The VAR check (8')](https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io/#/replay/S5-MD07-03/6): VAR reviews a goal, and the Gauge shows the chances both ways until the decision
+  - [The equalizer (14')](https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io/#/replay/S5-MD07-03/12.5): ten men, a goal down, and level
+  - [The winner (82')](https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io/#/replay/S5-MD07-03/83): a VAR check, the winner, the climb up the table and the Player of the Match vote
 - **Category:** Best Multi-Agent System
 
 ## Lasso in one minute
@@ -18,6 +22,8 @@ Everything is synthetic, as the rules require: the clubs, players, crests and ma
 ## A two-minute tour
 
 The app replays four matches on a loop, so something is always live. Each match takes about six and a half minutes, and they start a little over a minute apart. The one to watch is **Eastholme Rangers v Brackenford City**: a goal down in the 1st minute, down to ten men in the 5th, level in the 14th, and the winner in the 82nd.
+
+You don't have to wait for the loop. **Watch the big moments**, at the top of the match list and under every match's Gauge, lists each goal, red card and VAR check; pick one and your own private replay starts just before it. Everything works in it as live (the agents, Ask the Gaffer, VAR, the table, the vote), and nobody else's match changes.
 
 1. Open the link, pick a fan name and a club (choose **Eastholme Rangers** for the full story), then **Fan** or **Analyst**.
 2. Open a live match. The **Gaffer's Gauge** shows each side's chances. **Touchline** shows the ball moving on the pitch; switch to **Shots** for every shot of the match.
@@ -42,6 +48,7 @@ The app replays four matches on a loop, so something is always live. Each match 
 - **Instant updates to every phone,** through Azure Web PubSub. The ball's movements ride along with the once-a-second odds update, so the pitch view costs nothing extra. A push to phones can never hold up a match: it gives up after three seconds, and matches nobody is watching send nothing. *Where:* `services/api/lasso_api/realtime.py`, `matchroom.py`.
 - **A whole season, simulated live.** For each match, the rest of the season is played out 10,000 times with the Gaffer's team strengths as of that matchday, drawing the strengths from their uncertainty each time. That gives every club's title, top-four and relegation chances for each possible result of the live match. The phone blends those with the Gauge, so the season odds move every second with no extra realtime traffic, and the table re-sorts as goals go in. *Where:* `engine/lasso_engine/season.py`, `services/api/lasso_api/season.py`, `web/src/components/SeasonOutlook.tsx`.
 - **Player of the Match, measured.** Every goal, chance, save and red card is valued by the Gaffer at the instant it happens: how much it moved the team's chance of winning plus half its chance of a draw. The assist gets a quarter of the goal, and a save earns the goal it prevented (the swing a goal would have caused, times the shot's xG). The clock is moved to the moment of the action first, so time running down is never credited to anyone. *Where:* `engine/lasso_engine/impact.py`, `services/api/lasso_api/matchroom.py` (`_impact`), `web/src/components/PlayerOfMatch.tsx`.
+- **Private replays for anyone who drops in.** Watch the big moments starts a private copy of a match from any minute: the earlier minutes are caught up silently (no stories or agent runs for minutes nobody watched), then the match plays on live for that one fan, with its own calls, questions and vote. Private replays never appear in the match list or the agents' match list, end when the fan starts another, and close 15 minutes after full time. *Where:* `services/api/lasso_api/main.py` (`private_replay`), `feed.py` (`replay`, `big_moments`), `web/src/components/BigMoments.tsx`.
 - **VAR, priced both ways.** When VAR reviews a goal, the Gaffer prices both futures at once (the goal stands, or it's ruled out), opens a quick call on the decision, and settles it when the ruling arrives. A disallowed goal gets its own story with what it would have meant. The Match Feed adds the checks to the synthetic replay with realistic timing. *Where:* `services/api/lasso_api/matchroom.py` (`_var_event`), `feed.py` (`var_plan`), `web/src/components/VarCheck.tsx`.
 - **Stories you can hear.** Listen reads stories and answers aloud with Azure AI Speech neural voices, on the same Foundry account and identity (no keys). The server supplies the text, so it can't be used to read anything else, and each clip is made once and cached. Text is rewritten for the ear before it's spoken (minutes, "versus", scores, abbreviations). *Where:* `services/api/lasso_api/speech.py`, `web/src/components/Listen.tsx`.
 - **One command to deploy everything.** All the Azure resources are defined as code (Bicep) and deployed with `azd up`. Services sign in to each other with Azure identities, so there are no passwords or keys to leak. *Where:* `infra/`, [deploy guide](DEPLOY.md).

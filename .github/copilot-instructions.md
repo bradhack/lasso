@@ -54,6 +54,7 @@ Speed up local replays with `LASSO_MINUTE_SECONDS=0.5`. Point the API at the age
 12. **Accessibility is WCAG 2.2 AA.** Text colors must reach 4.5:1 contrast in both Midnight and Ivory (check new tokens in both). Sheets use `useDialog` (focus in, Tab trapped, Escape closes). Anything tappable is a `<button>` or has a role, a label and keyboard handling. Looping animations stop within 5 seconds. The page language follows the fan's (`setPageLang`). Re-run an axe-core audit after visual changes.
 13. **Stories read like a person talking.** Two short sentences: what happened, then the chance of winning ("Their chance of winning rises from 12% to 83%."). No written minute marks, stats jargon or filler endings, in templates (`narrative.py`) and in the Narrator prompt alike; the eval's `reads_naturally` check enforces it. A story is labeled as the agents' only when they wrote its headline or text.
 14. **The season outlook is simulated once per match, off the event loop.** `season.compute` runs in a worker thread at startup; after that, match code only reads the cached simulations. A `season` message goes out only when the score changes (and at kickoff or reset); the phone blends the odds with the live Gauge itself.
+15. **Private replays stay private.** A room whose id contains `~` is one fan's replay (`MatchRoom(..., source=...)`): data lookups use `source_id`, and it must never appear in `/api/matches`, lobby broadcasts or `list_live_matches`. They rely on the API's single replica (rooms live in memory).
 
 ## Style
 
