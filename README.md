@@ -12,7 +12,7 @@ Lasso is a live, multi-agent match companion for phones and broadcasts, built fo
 > - **Jump to a moment:** [the VAR check](https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io/#/replay/S5-MD07-03/6) · [the winner](https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io/#/replay/S5-MD07-03/83) (your own private replay)
 > - **[Lasso for judges](docs/JUDGING.md):** a two-minute tour, and each judging criterion mapped to the screens, files and numbers that back it up
 
-- It ingests synthetic football events in real time.
+- It ingests synthetic football events in real time: a simulated league, replayed like a live broadcast through Azure Event Hubs. For a real league, only the feed changes ([where the matches come from](docs/JUDGING.md#where-the-matches-come-from)).
 - It updates a Bayesian win-probability model, **the Gaffer**, with every chance, card and goal. The model's output is the **Gaffer's Gauge**.
 - It explains every swing, so fans know *why* it moved.
 - **Fan or analyst:** fans get the story in plain English and their club's angle; analysts get every driver in points, xG and field tilt.

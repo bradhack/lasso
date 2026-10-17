@@ -19,6 +19,16 @@ Lasso is a free companion app for watching football. While a match plays, it:
 
 Everything is synthetic, as the rules require: the clubs, players, crests and matches were all made up for this project.
 
+## Where the matches come from
+
+Lasso doesn't use real match data; the rules don't allow it. Instead:
+
+1. **A made-up league.** We simulated five seasons of a 20-club league, touch by touch: 1,900 matches and 2.2 million events (passes, shots, cards, goals). The Gaffer learned from the earlier seasons.
+2. **A live broadcast, replayed.** The Match Feed, a small service of its own, plays matches from the season the Gaffer never saw as if they were happening now, a whole match in about six and a half minutes, four matches on a loop. It sends each event to Azure Event Hubs, the way a real data provider's feed would arrive.
+3. **The app reacts as if it's live.** The app's server reads each event, moves the Gauge, writes the instant story, calls the agents and pushes it all to phones. Nothing after the feed knows the matches are replays.
+
+For a real league, only step 2 changes: a small adapter that turns a data provider's live feed into the same events. The model, the agents and the app stay as they are. *Where:* `engine/lasso_engine/league.py` (the league), `services/api/lasso_api/feed.py` (the Match Feed).
+
 ## A two-minute tour
 
 The app replays four matches on a loop, so something is always live. Each match takes about six and a half minutes, and they start a little over a minute apart. The one to watch is **Eastholme Rangers v Brackenford City**: a goal down in the 1st minute, down to ten men in the 5th, level in the 14th, and the winner in the 82nd.
