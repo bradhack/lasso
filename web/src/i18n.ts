@@ -197,7 +197,7 @@ const S = {
   tlKey: { en: "Key moments", es: "Momentos clave", pt: "Lances-chave", fr: "Temps forts" },
   tlAll: { en: "All events", es: "Todo", pt: "Tudo", fr: "Tout" },
   tabLive: { en: "Live", es: "En vivo", pt: "Ao vivo", fr: "En direct" },
-  tabPlay: { en: "Play", es: "Jugar", pt: "Jogar", fr: "Jouer" },
+  tabPlay: { en: "Ask & play", es: "Pregunta y juega", pt: "Pergunte e jogue", fr: "Questions et jeu" },
   tabTable: { en: "Standings & stats", es: "Tabla y datos", pt: "Tabela e números", fr: "Classement et stats" },
   tabsLabel: { en: "Match sections", es: "Secciones del partido", pt: "Seções do jogo", fr: "Sections du match" },
   tabNew: { en: "something to do", es: "hay algo pendiente", pt: "tem algo para fazer", fr: "quelque chose à faire" },

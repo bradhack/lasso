@@ -7,7 +7,11 @@ import { Sparkle } from "./Icons";
 import { Listen, storyText } from "./Listen";
 import { UnderTheHood } from "./UnderTheHood";
 
-export function WhyItMoved({ snap, moment, lang }: { snap: MatchSnapshot; moment: Moment; lang: Lang }) {
+export function WhyItMoved({ snap, moment, lang, onAsk }: {
+  snap: MatchSnapshot; moment: Moment; lang: Lang;
+  /** Take the fan to Ask the Gaffer (on phones it's on another tab). */
+  onAsk?: () => void;
+}) {
   const user = useStore((s) => s.user);
   const counted = useRef<string | null>(null);
   const [hood, setHood] = useState(false);
@@ -49,6 +53,9 @@ export function WhyItMoved({ snap, moment, lang }: { snap: MatchSnapshot; moment
       <div className="why-actions">
         <Listen kind="story" id={moment.moment_id} matchId={snap.match_id} lang={lang}
           text={storyText(loc(moment.headline, lang), loc(moment.story, lang))} />
+        {onAsk && snap.status !== "finished" && (
+          <button className="ask-jump" onClick={onAsk}>{t("askTitle", lang)} ›</button>
+        )}
       </div>
       {drivers.length > 0 && (
         <div className={`drivers${analyst ? "" : " plain"}`}>

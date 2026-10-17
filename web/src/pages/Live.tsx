@@ -1,3 +1,4 @@
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { AskGaffer } from "../components/AskGaffer";
 import { Crest, pct } from "../components/bits";
@@ -116,6 +117,8 @@ export function MatchPage({ id }: { id: string }) {
   const calls = useStore((s) => s.calls);
   const pick = useStore((s) => s.motmPicks[id]);
   const scoreRef = useRef<HTMLElement>(null);
+  const headRef = useRef<HTMLDivElement>(null);
+  useKeepPlace(headRef, !!snap && !wide);
   const pinned = useOffscreen(scoreRef, !wide && !!snap);
   const [barH, setBarH] = useState(64);  // the top bar's height: the mini scoreboard and tabs stick below it
   useEffect(() => { setBarH(Math.round(document.querySelector(".topbar")?.getBoundingClientRect().height ?? 64)); }, [wide]);
@@ -171,7 +174,18 @@ export function MatchPage({ id }: { id: string }) {
       <Believe snap={snap} lang={lang} />
     </>
   );
-  const why = moment && <WhyItMoved snap={snap} moment={moment} lang={lang} />;
+  // "Ask the Gaffer" from Why it moved: open the tab it's on and bring the question box into view.
+  const goAsk = () => {
+    if (wide) setSide("play");
+    else setTab("play");
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const card = document.querySelector<HTMLElement>(".card.ask");
+      card?.scrollIntoView({ behavior: reduceMotionNow() ? "auto" : "smooth", block: "start" });
+      card?.classList.add("flash");
+      window.setTimeout(() => card?.classList.remove("flash"), 1400);
+    }));
+  };
+  const why = moment && <WhyItMoved snap={snap} moment={moment} lang={lang} onAsk={goAsk} />;
   const touch = <Touchline snap={snap} lang={lang} />;
   const call = <CallIt snap={snap} lang={lang} />;
   const ask = <AskGaffer snap={snap} lang={lang} />;
@@ -182,8 +196,9 @@ export function MatchPage({ id }: { id: string }) {
   // Play gets a dot when there's something to do: a call this fan hasn't made, or a vote they haven't cast.
   const callOpen = snap.markets.some((m) => m.status === "open" && !calls[m.market_id]);
   const dots: Partial<Record<Tab, boolean>> = { play: callOpen || (!!snap.impact?.open && !pick && !finished) };
-  // Play: the game first; at full time, the result's already up top, so questions lead.
-  const play = finished ? <>{ask}{call}</> : <>{call}{ask}{motm}</>;
+  // Ask & play: questions first. Call it comes and goes as questions open and close, so anything under it would
+  // jump while a fan is reading or typing; with Ask on top, nothing above it changes size.
+  const play = finished ? <>{ask}{call}</> : <>{ask}{call}{motm}</>;
   const table = <>{season}{stats}</>;
 
   if (wide) {
@@ -216,7 +231,7 @@ export function MatchPage({ id }: { id: string }) {
     <div className="page" style={{ ["--tabs-top" as string]: `${barH + (pinned ? MINI_H + 6 : 0)}px` }}>
       <MatchBanner snap={snap} lang={lang} />
       {pinned && <MiniScore snap={snap} lang={lang} top={barH} onTop={() => scoreRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })} />}
-      {head}
+      <div ref={headRef}>{head}</div>
       <MatchTabs tabs={["live", "play", "table"]} value={tab} onChange={setTab} dots={dots} lang={lang} idp="m" sticky />
       <div className="tabpanel" role="tabpanel" id={`m-panel-${tab}`} aria-labelledby={`m-tab-${tab}`}>
         {tab === "live" && (finished ? <>{why}{motm}{story}{touch}</> : <>{why}{touch}{story}</>)}
@@ -226,6 +241,37 @@ export function MatchPage({ id }: { id: string }) {
     </div>
   );
 }
+
+/**
+ * Keep the fan's place when the score area grows or shrinks (a card on the scoreboard, the VAR check, Touch the
+ * sign). When they're reading or typing in the tabs below it, scroll by the same amount, so what they were
+ * looking at stays put. The browser's own scroll anchoring is off on this page (Safari has none, and Chrome's
+ * missed these), so there's one rule everywhere.
+ */
+function useKeepPlace(ref: React.RefObject<HTMLDivElement | null>, active: boolean) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!active || !el || typeof ResizeObserver === "undefined") return;
+    document.documentElement.classList.add("keep-place");
+    let h = el.getBoundingClientRect().height;
+    const ro = new ResizeObserver(() => {
+      const r = el.getBoundingClientRect();
+      const d = r.height - h;
+      h = r.height;
+      if (d === 0) return;
+      const typing = !!document.activeElement?.closest(".tabpanel");
+      const below = r.bottom - d < window.innerHeight * 0.45; // most of the screen was the tab, not the score
+      if (typing || below) window.scrollBy(0, d);
+    });
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      document.documentElement.classList.remove("keep-place");
+    };
+  }, [ref, active]);
+}
+
+const reduceMotionNow = () => typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
 type Tab = "live" | "play" | "table";
 const TAB_LABEL: Record<Tab, Key> = { live: "tabLive", play: "tabPlay", table: "tabTable" };

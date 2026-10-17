@@ -794,3 +794,9 @@ button.motm-row:active { transform: scale(0.99); }
 .pitch .fresh.moving .carry { animation: appear var(--run) linear both; }
 @keyframes appear { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .pitch .fresh.moving .pass, .pitch .fresh.moving .carry { animation: none; stroke-dashoffset: 0; } }
+/* Ask the Gaffer, from Why it moved */
+.ask-jump { margin-left: auto; min-height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line-3); background: transparent; color: var(--gold-2); font: inherit; font-size: 13px; font-weight: 600; }
+.card.ask.flash { box-shadow: 0 0 0 2px var(--gold); transition: box-shadow 0.3s; }
+/* Landing on Ask the Gaffer from the shortcut: stop below the pinned scoreboard and the sticky tabs */
+.page .tabpanel .card.ask { scroll-margin-top: calc(var(--tabs-top, 64px) + 64px); }
+html.keep-place, html.keep-place body { overflow-anchor: none; }
