@@ -223,10 +223,16 @@ _FIXES = {
            (r"\baté aos\b", "até os"), (r"\baté ao\b", "até o"), (r"\baté à\b", "até a"),
            (r"\b(\w+) (mantém|mantêm)-se\b", r"\1 se \2"),
            (r"\bna primeira parte\b", "no primeiro tempo"), (r"\bna segunda parte\b", "no segundo tempo"),
-           (r"\bprimeira parte\b", "primeiro tempo"), (r"\bsegunda parte\b", "segundo tempo")],
+           (r"\bprimeira parte\b", "primeiro tempo"), (r"\bsegunda parte\b", "segundo tempo"),
+           (r"\bcontrolo\b", "controle"), (r"\bhipóteses\b", "chances"), (r"\bhipótese\b", "chance"),
+           (r",? segundo os números(?: mostrados)?", "")],
     "es": [(r"\bchances\b", "opciones"), (r"\buna chance\b", "una opción"), (r"\bchance\b", "opción"),
-           (r"\bpossession\b", "posesión"), (r"\buna (\d+) ?%", r"un \1%")],
+           (r"\bpossession\b", "posesión"), (r"\buna (\d+) ?%", r"un \1%"),
+           (r",? según las cifras(?: mostradas)?", "")],
+    # "marquer le prochain" needs its noun; "selon les chiffres affichés" talks about the screen, not the match.
+    "fr": [(r"\ble prochain(?= ?[,.;!?]|$)", "le prochain but"), (r",? selon les chiffres(?: affichés)?", "")],
 }
+_EN_META = re.compile(r",? according to the (?:numbers|figures)(?: (?:shown|on screen))?", re.IGNORECASE)
 
 
 def _us(m: re.Match) -> str:
@@ -253,6 +259,7 @@ def _localize(lang: str, text: str) -> str:
     """Deterministic fixes for what models still slip on: US spelling, the leader's score first, and English
     left in translations."""
     if lang == "en":
+        text = _EN_META.sub("", text)
         return _A_AN.sub(lambda m: m.group(1) + "n ", _US_RE.sub(_us, _LEAD_SCORE.sub(_leader_first, text)))
     if fmt := _FROM_TO_LANG.get(lang):
         text = _FROM_TO.sub(lambda m: fmt.format(m.group(1), m.group(2)), text)
@@ -954,6 +961,107 @@ def _no_trailing_questions(text: str) -> str:
     return " ".join(sents)
 
 
+# The Gaffer is neutral: "we", "our" and, in Spanish, Portuguese and French, first-person plural verbs about a
+# club ("Ganamos con diez porque aguantamos").
+PARTISAN = {
+    "en": r"\b(?:we|us|our|ours)\b",
+    "es": r"\b(?:nuestr[oa]s?|nosotros|ganamos|perdimos|empatamos|aguantamos|conseguimos|marcamos|remontamos"
+          r"|resistimos|sufrimos)\b",
+    "pt": r"\b(?:noss[oa]s?|nós|ganhamos|vencemos|perdemos|empatamos|aguentamos|conseguimos|marcamos|viramos"
+          r"|sofremos|resistimos)\b",
+    "fr": r"\b(?:notre|nos|nous)\b|\bon (?:a|avait) (?:gagné|marqué|perdu|tenu|résisté|souffert)\b"
+          r"|\bon (?:gagne|mène|perd)\b",
+}
+
+
+def _neutral(text: str, lang: str) -> str:
+    """Drop a sentence that takes a side as "we" or "our", as long as a real answer is left."""
+    pat = re.compile(PARTISAN.get(lang, PARTISAN["en"]), re.IGNORECASE)
+    sents = _SENTENCE.split(text.strip())
+    keep = [s_ for s_ in sents if not pat.search(s_)]
+    if len(keep) == len(sents):
+        return text
+    log.warning("dropped a sentence that took a side: %s", text[:160])
+    kept = " ".join(keep)
+    return kept if len(kept.split()) >= 8 else ""
+
+
+# "Brackenford have more shots" when they have fewer: whose shots are meant is the club named last before it.
+_MORE_SHOTS = {"en": r"\bmore shots\b", "es": r"\bmás (?:tiros|disparos|remates)\b",
+               "pt": r"\bmais (?:chutes|finalizações|remates)\b", "fr": r"\bplus de tirs\b"}
+
+
+def _wrong_shots(text: str, room: MatchRoom, lang: str) -> str:
+    """Drop a sentence giving "more shots" to the club that has fewer (or the same), as long as a real answer is
+    left."""
+    shots = [t["shots"] for t in room.stats_public()["teams"]]
+    words = [{n.split()[0], n.split()[-1]} for n in room.names]
+    more = re.compile(_MORE_SHOTS.get(lang, _MORE_SHOTS["en"]), re.IGNORECASE)
+    sents = _SENTENCE.split(text.strip())
+    keep, last = [], None  # last: the club named last in the sentences before, for "they have more shots"
+    for sent in sents:
+        named = sorted((h.start(), i) for i in (0, 1) for w in words[i]
+                       for h in re.finditer(rf"\b{re.escape(w)}\b", sent))
+        wrong = False
+        for m in more.finditer(sent):
+            before = [i for pos, i in named if pos < m.start()]
+            k = before[-1] if before else last
+            if k is not None and shots[k] <= shots[1 - k]:
+                wrong = True
+        if named:
+            last = named[-1][1]
+        if not wrong:
+            keep.append(sent)
+    if len(keep) == len(sents):
+        return text
+    log.warning("dropped a sentence giving more shots to the club with fewer: %s", text[:160])
+    kept = " ".join(keep)
+    return kept if len(kept.split()) >= 8 else text
+
+
+# While a match is on, nothing is certain: "0%" reads "under 1%" and "100%" reads "over 99%".
+_CERTAIN = {
+    "en": [(r"\ban? 0( ?)%", r"less than a 1\1%"), (r"\ban? 100( ?)%", r"more than a 99\1%"),
+           (r"(?<![\d.,])0( ?)%", r"under 1\1%"), (r"(?<![\d.,])100( ?)%", r"over 99\1%")],
+    "es": [(r"\b(?:el |un )?(?<![\d.,])0( ?)%", r"menos del 1\1%"), (r"\b(?:el |un )?100( ?)%", r"más del 99\1%")],
+    "pt": [(r"(?<![\d.,])0( ?)%", r"menos de 1\1%"), (r"(?<![\d.,])100( ?)%", r"mais de 99\1%")],
+    "fr": [(r"(?<![\d.,])0( ?)%", r"moins de 1\1%"), (r"(?<![\d.,])100( ?)%", r"plus de 99\1%")],
+}
+
+
+def _not_certain(text: str, lang: str) -> str:
+    for pat, rep in _CERTAIN.get(lang, _CERTAIN["en"]):
+        text = re.sub(pat, rep, text)
+    return text
+
+
+# Asked about formations or positions, the Gaffer says Lasso doesn't track them; then it mustn't guess them
+# from the numbers ("so Eastholme look compact and defensive").
+_NO_TRACK = re.compile(r"\b(?:don't|do not|can't|cannot) (?:track|see|follow)\b|\bno (?:sigo|registro|acompanho)\b"
+                       r"|\bne (?:suis|vois|suit) pas\b", re.IGNORECASE)
+_GUESSED_TACTIC = re.compile(r"\b(?:compact|defensive|sit(?:ting)? deep|deep block|park(?:ing)? the bus"
+                             r"|press(?:ing)? (?:on|high)|counter[- ]?attack\w*|compact[oa]s?|defensiv[oa]s?|replegad[oa]s?"
+                             r"|recuad[oa]s?|défensi\w+|regroupé\w*|bloc bas)\b", re.IGNORECASE)
+
+
+def _no_guessed_tactics(text: str) -> str:
+    """Cut a clause that guesses a shape or a style the Gaffer just said it doesn't track."""
+    if not _NO_TRACK.search(text) or not _GUESSED_TACTIC.search(text):
+        return text
+    out = []
+    for sent in _SENTENCE.split(text.strip()):
+        parts = re.split(r"(?<=,)\s+|\s+(?=\()", sent)
+        kept = [p for p in parts if not _GUESSED_TACTIC.search(p)]
+        if len(kept) == len(parts):
+            out.append(sent)
+        elif kept:
+            s_ = " ".join(kept).rstrip(",;: ")
+            out.append(s_ if s_.endswith((".", "!", "?")) else s_ + ".")
+    log.warning("cut a guessed tactic: %s", text[:160])
+    kept = " ".join(out)
+    return kept if len(kept.split()) >= 8 else text
+
+
 _NOW_LINE = {"en": "Right now: {h} {ph}%, draw {pd}%, {a} {pa}%.", "es": "Ahora mismo: {h} {ph}%, empate {pd}%, {a} {pa}%.",
              "pt": "Agora: {h} {ph}%, empate {pd}%, {a} {pa}%.", "fr": "En ce moment : {h} {ph} %, nul {pd} %, {a} {pa} %."}
 
@@ -1112,6 +1220,11 @@ async def ask(match_id: str, body: AskIn) -> dict:
             answer = _wrong_team_pct(answer, room, lang)
             answer = _wrong_leader(answer, room, lang)
             answer = _no_trailing_questions(answer)
+            answer = _wrong_shots(answer, room, lang)
+            answer = _no_guessed_tactics(answer)
+            if room.status != "finished":
+                answer = _not_certain(answer, lang)
+            answer = _neutral(answer, lang)
             if lang == "en":
                 answer = _next_goal_consistent(answer)
             answer = _cap_words(answer, 85 if u.get("persona") == "analyst" else 55)

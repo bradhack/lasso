@@ -76,13 +76,27 @@ STOP = {
 }
 META = {
     "en": ["notes", "scout", "feed", "brief", "recorded", "listed", "the data", "tool", "i do not have",
-           "i don't have", "entries"],
-    "es": ["notas", "ojeador", "los datos", "registr", "herramienta"],
-    "pt": ["notas", "olheiro", "os dados", "registr", "ferramenta"],
-    "fr": ["notes", "recruteur", "les données", "enregistr", "outil"],
+           "i don't have", "entries", "numbers shown", "figures shown"],
+    "es": ["notas", "ojeador", "los datos", "registr", "herramienta", "cifras mostradas"],
+    "pt": ["notas", "olheiro", "os dados", "registr", "ferramenta", "números mostrados"],
+    "fr": ["notes", "recruteur", "les données", "enregistr", "outil", "chiffres affichés"],
 }
-PARTISAN = {"en": r"\b(we|us|our)\b", "es": r"\b(nuestro|nuestra|nosotros|nuestros)\b",
-            "pt": r"\b(nosso|nossa|nós|nossos)\b", "fr": r"\b(notre|nos|nous)\b"}
+# Taking a side: "we" and "our", and first-person plural verbs about a club ("Ganamos con diez").
+PARTISAN = {
+    "en": r"\b(?:we|us|our|ours)\b",
+    "es": r"\b(?:nuestr[oa]s?|nosotros|ganamos|perdimos|empatamos|aguantamos|conseguimos|marcamos|remontamos"
+          r"|resistimos|sufrimos)\b",
+    "pt": r"\b(?:noss[oa]s?|nós|ganhamos|vencemos|perdemos|empatamos|aguentamos|conseguimos|marcamos|viramos"
+          r"|sofremos|resistimos)\b",
+    "fr": r"\b(?:notre|nos|nous)\b|\bon (?:a|avait) (?:gagné|marqué|perdu|tenu|résisté|souffert)\b"
+          r"|\bon (?:gagne|mène|perd)\b",
+}
+MORE_SHOTS = {"en": r"\bmore shots\b", "es": r"\bmás (?:tiros|disparos|remates)\b",
+              "pt": r"\bmais (?:chutes|finalizações|remates)\b", "fr": r"\bplus de tirs\b"}
+# Asked about something Lasso doesn't track, the Gaffer mustn't guess it ("they look compact").
+GUESSED_TACTIC = re.compile(r"\b(?:compact|defensive|sit(?:ting)? deep|deep block|park(?:ing)? the bus"
+                            r"|press(?:ing)? (?:on|high)|counter[- ]?attack\w*|compact[oa]s?|defensiv[oa]s?"
+                            r"|replegad[oa]s?|recuad[oa]s?|défensi\w+|regroupé\w*|bloc bas)\b")
 JARGON = ["compact shape", "low block", "tracking", "transition", "game state", "driver", "win probability",
           "expected goals model"]
 CANT_REPLACE = ["can't be replaced", "cannot be replaced", "can not be replaced", "can't replace", "cannot replace",
@@ -93,7 +107,7 @@ ENGLISH_LEAK = {"es": re.compile(r"\b(chance|chances|possession|read|the|my)\b")
                 "pt": re.compile(r"\b(possession|read|the|my|swing)\b"),
                 "fr": re.compile(r"\bune \d+ ?% chance\b|\b(read|the|my)\b")}
 EUROPEAN_PT = re.compile(r"\b(golo|golos|equipa|equipas|a jogar|a correr|até aos?|primeira parte|segunda parte"
-                         r"|mantém-se|mantêm-se)\b|\b(?:est[áa]|estão|continua|segue) a \w{2,}(?:ar|er|ir)\b")
+                         r"|mantém-se|mantêm-se|controlo|hipótese|hipóteses)\b|\b(?:est[áa]|estão|continua|segue) a \w{2,}(?:ar|er|ir)\b")
 # The clubs are invented: a real club's name is a slip.
 REAL_CLUBS = re.compile(
     r"\b(Arsenal|Aston Villa|Bournemouth|Brentford|Brighton|Burnley|Chelsea|Crystal Palace|Everton|Fulham|Leeds"
@@ -290,6 +304,24 @@ def pcts_match_teams(text: str, a: dict, story: list[dict], names: dict) -> bool
     return True
 
 
+def more_shots_wrong(text: str, a: dict, names: dict, lang: str) -> bool:
+    """ "Brackenford have more shots" when they had fewer (or the same) both when it was asked and answered.
+    Whose shots: the club named last before the phrase, in this sentence or an earlier one."""
+    shots = [[t.get("shots", 0) for t in (st or {}).get("teams", [])] for st in a["stats"]]
+    words = [{names[s_].split()[0], names[s_].split()[-1]} for s_ in ("home", "away")]
+    last = None
+    for sent in re.split(r"(?<=[.!?])\s+", text):
+        named = sorted((h.start(), i) for i in (0, 1) for w in words[i] for h in re.finditer(rf"\b{re.escape(w)}\b", sent))
+        for m in re.finditer(MORE_SHOTS[lang], sent, re.IGNORECASE):
+            before = [i for pos, i in named if pos < m.start()]
+            k = before[-1] if before else last
+            if k is not None and all(len(sh) == 2 and sh[k] <= sh[1 - k] for sh in shots if sh):
+                return True
+        if named:
+            last = named[-1][1]
+    return False
+
+
 def check_answer(a: dict, f: dict, story: list[dict], names: dict) -> dict[str, bool]:
     text, low, lang = a["answer"], a["answer"].lower(), a["lang"]
     c: dict[str, bool] = {"answered": a["status"] == 200 and a["source"] == "agents" and bool(text)}
@@ -299,6 +331,10 @@ def check_answer(a: dict, f: dict, story: list[dict], names: dict) -> dict[str, 
     c["no_dashes"] = not re.search("[—–]", text)
     c["no_meta"] = not any(m in low for m in META[lang])
     c["neutral"] = not re.search(PARTISAN[lang], low)
+    if re.search(MORE_SHOTS[lang], low):
+        c["shots_right"] = not more_shots_wrong(text, a, names, lang)
+    if lang == "fr":  # "marquer le prochain" needs its noun
+        c["whole_phrases"] = not re.search(r"\ble prochain ?[,.;!?]", low)
     c["length"] = len(text.split()) <= LIMIT[a["persona"]]
     c["clean_numbers"] = not GARBLED.search(text)
     if lang in ENGLISH_LEAK:
@@ -326,6 +362,8 @@ def check_answer(a: dict, f: dict, story: list[dict], names: dict) -> dict[str, 
     c["real_minutes"] = all(any(abs(m - v) <= 1 for v in f["minutes"] | now) for m in mins)
     if a.get("finished"):  # after full time the result is settled: no "100% chance to win"
         c["no_final_chances"] = not re.search(r"\b(?:100|0) ?%", text)
+    else:  # while it's on, nothing is certain: "under 1%", not "0%"
+        c["nothing_certain"] = not re.search(r"(?<![\d.,])(?:100|0) ?%", text)
     e = a["expect"]
     if e.get("red_card"):
         r = f["reds"][0] if f["reds"] else None
@@ -347,7 +385,7 @@ def check_answer(a: dict, f: dict, story: list[dict], names: dict) -> dict[str, 
         g = [x for x in f["goals"] if x["team"] == k and x["minute"] >= after_min]
         c["fact_scorer"] = bool(g) and g[0]["player"].split()[-1].lower() in low
     if e.get("no_formations"):
-        c["fact_no_invented_tactics"] = bool(NO_TRACK.search(low))
+        c["fact_no_invented_tactics"] = bool(NO_TRACK.search(low)) and not GUESSED_TACTIC.search(low)
     if e.get("next_goal") and any(a.get("next_goal") or []):
         # "Who scores next?" is answered with the next-goal chances, not the chances of winning.
         ng = {round(100 * v) for n in a["next_goal"] if n for k, v in n.items() if k != "none"}
