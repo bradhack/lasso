@@ -25,10 +25,10 @@ jobs:
         run: |
           pip install -r services/agents/requirements.txt pytest
           cd services/agents && python -m pytest -q
-      - name: API imports
+      - name: API tests (every slip the evaluations found, replayed against the showcase match)
         run: |
-          pip install -r services/api/requirements.txt
-          cd services/api && LASSO_DATA_DIR=../../data/demo python -c "import lasso_api.main, lasso_api.feed"
+          pip install -r services/api/requirements.txt pytest
+          cd services/api && LASSO_DATA_DIR=../../data/demo python -m pytest -q tests/test_guards.py
 
   web:
     runs-on: ubuntu-latest
