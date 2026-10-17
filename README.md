@@ -185,6 +185,7 @@ Twenty fictional clubs, each with an original crest designed as one set: a disti
 | `web/` | React + TypeScript phone app (installable PWA) and broadcast overlay |
 | `infra/` | Bicep for the whole stack, deployed with `azd up`. Keyless managed identity throughout |
 | `data/demo/` | The held-out season the app replays, plus the trained model |
+| `fabric/` | Microsoft Fabric Real-Time Intelligence: the Eventhouse table and the agents dashboard's queries ([guide](docs/FABRIC.md)) |
 | `.github/` | CI, the security workflow, Copilot instructions and prompt files |
 | `.vscode/mcp.json` | GitHub Copilot Agent Mode: the Gaffer's live MCP tools and the Azure MCP Server |
 | `docs/` | [Lasso for judges](docs/JUDGING.md), [two agents or one?](docs/agent-comparison.md), [model report](docs/model-report.md), [agent evaluation](docs/agent-eval.md), [deploy guide](docs/DEPLOY.md), [security](docs/SECURITY.md) |
@@ -206,7 +207,7 @@ To run the tests (the same ones CI runs):
 ```bash
 (cd engine && pytest -q)
 (cd services/agents && python -m pytest -q)
-(cd services/api && LASSO_DATA_DIR=../../data/demo python -m pytest -q tests/test_guards.py)
+(cd services/api && LASSO_DATA_DIR=../../data/demo python -m pytest -q tests)
 ```
 
 ## Use the Gaffer's tools in GitHub Copilot

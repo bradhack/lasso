@@ -13,6 +13,7 @@ Lasso has no passwords or payment details, and fans don't create accounts. What 
 | Made-up facts | Answers are checked in code before a fan sees them: real club names, a percentage given to the wrong team, and xG for fans are removed. |
 | Reading arbitrary text aloud | Listen takes the id of a story, event or answer (or a fixed voice sample), never text, and only voices from our own list. |
 | Leaked keys | No keys in the code. Cosmos DB, Event Hubs, Web PubSub and Foundry (including Speech) have key-based sign-in turned off and are reached with a managed identity. The only secrets (the admin key and the agents key) live as Container Apps secrets. The admin key goes in an `X-Admin-Key` header, so it stays out of access logs, and it's compared in constant time. |
+| Analytics leaking fans' words | The optional Fabric insights stream carries timings, tokens, tools and check results only: never a question, an answer or a fan id. Its connection string is a Container Apps secret. |
 | Containers | They run as a non-root user, and the registry has its admin account turned off. |
 
 ## Last scan (October 16, 2026)

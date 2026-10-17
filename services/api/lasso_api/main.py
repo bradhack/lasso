@@ -28,6 +28,7 @@ from .feed import Scheduler, big_moments, consume_forever, first_seq_at, replay
 from .game import STAKES, GameService, daily_top_up, league_public, public_user
 from .matchroom import MatchRoom
 from .narrative import event_spoken
+from . import insights
 from . import season as season_mod
 from .mcp_tools import build_mcp
 from .speech import Speech
@@ -473,6 +474,7 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
     if applied:
         moment["source"] = "agents"
     await hub.to_group(f"match:{room.match_id}", {"type": "moment_update", "moment": moment})
+    insights.story(room, moment)
     challenge = pkg.get("challenge") or {}
     if challenge.get("market_id") and room.status == "live":
         cands = {c.market_id: c for c in generate_markets(room.gaffer, room.state, *room.names)}
@@ -530,6 +532,8 @@ async def lifespan(app: FastAPI):
         else:
             scheduler.start()
         _spawn(_warm_season(list(rooms)))
+        if settings.fabric_connection:
+            _spawn(insights.run(settings.fabric_connection))
         log.info("Lasso API ready: %d featured matches, agents=%s", len(rooms), bool(agents))
         yield
 
@@ -1408,8 +1412,11 @@ async def ask(match_id: str, body: AskIn, x_admin_key: str = Header("", max_leng
         _answers.popitem(last=False)
     room.fans.add(body.user_id)
     await _simple_sticker(body.user_id, "press_pass", f"{room.names[0]} v {room.names[1]}, {room.minute()}'")
+    latency_ms = int((time.time() - t0) * 1000)
+    insights.answer(room, ask_id=ask_id, lang=lang, persona=u.get("persona") or "fan", mode="solo" if solo else "team",
+                    source=source, latency_ms=latency_ms, trace=trace, minute=room.minute())
     return {"ask_id": ask_id, "question": question, "answer": answer, "followups": followups, "source": source,
-            "trace": trace, "minute": room.minute(), "latency_ms": int((time.time() - t0) * 1000)}
+            "trace": trace, "minute": room.minute(), "latency_ms": latency_ms}
 
 
 _signups: dict = {"day": "", "count": 0, "by_ip": {}}
