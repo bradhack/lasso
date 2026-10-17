@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { t } from "../i18n";
 import { useStore } from "../store";
 import type { Lang, MatchSnapshot, Touch } from "../types";
@@ -17,6 +17,15 @@ const KEY = "lasso-touchline-hidden";
 const VIEW_KEY = "lasso-touchline-view";
 const GROUND_PASS = 18; // metres: shorter passes are played along the ground and drawn nearly straight
 type View = "live" | "shots" | "goals";
+// Touches are shown one at a time, this far apart (shorter when a backlog builds).
+const MIN_PACE = 120;
+const MAX_PACE = 560;
+
+/** How long the ball runs with it (when a pass starts away from it) and how long the pass takes, within one
+ * touch's time on screen. The pass line draws over exactly the same time, so it never runs ahead of the ball. */
+function moveTiming(pace: number, run: boolean): { run: number; fly: number } {
+  return run ? { run: Math.round(pace * 0.3), fly: Math.round(pace * 0.55) } : { run: 0, fly: Math.round(pace * 0.75) };
+}
 const TRAIL = 7; // dots in the ball's comet tail
 const reduceMotion = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
@@ -38,6 +47,8 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
   const [cursor, setCursor] = useState(() => touches[touches.length - 1]?.s ?? 0);
   const latestSeq = touches[touches.length - 1]?.s ?? 0;
   const timer = useRef<number | undefined>(undefined);
+  // How long each touch has on screen: the ball and the line it draws both use it, so neither runs ahead.
+  const pace = useRef(MAX_PACE);
 
   // Step the cursor through newly arrived touches. Faster when a backlog builds; jump if it is long.
   useEffect(() => {
@@ -47,11 +58,15 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
     }
     const backlog = touches.filter((x) => x.s > cursor);
     if (reduceMotion || hidden || backlog.length > 10) {
+      pace.current = 0; // a long catch-up jumps straight there
       setCursor(latestSeq);
       return;
     }
-    const delay = Math.max(90, Math.min(320, 900 / backlog.length));
-    timer.current = window.setTimeout(() => setCursor(backlog[0].s), delay);
+    const delay = Math.max(MIN_PACE, Math.min(MAX_PACE, 1400 / backlog.length));
+    timer.current = window.setTimeout(() => {
+      pace.current = delay;
+      setCursor(backlog[0].s);
+    }, delay);
     return () => window.clearTimeout(timer.current);
   }, [latestSeq, cursor, hidden]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -134,14 +149,18 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
                   const prev = passes[i - 1];
                   const carry = prev && prev.ex !== undefined && prev.ey !== undefined && p.x !== undefined && p.y !== undefined
                     && Math.hypot(p.x - prev.ex, p.y - prev.ey) > 3;
+                  // The newest pass draws itself behind the ball, on the ball's clock.
+                  const now = p.s === last?.s && pace.current > 0;
+                  const tm = moveTiming(pace.current, !!carry);
                   return (
-                    <g key={`p-${p.s}`} className="fresh" style={{ ["--team" as string]: TEAM[p.k] }}>
+                    <g key={`p-${p.s}`} className={`fresh${now ? " moving" : ""}`}
+                      style={{ ["--team" as string]: TEAM[p.k], ["--run" as string]: `${tm.run}ms`, ["--fly" as string]: `${tm.fly}ms` }}>
                       {carry && <line x1={prev.ex} y1={prev.ey} x2={p.x} y2={p.y} className="carry" />}
-                      <path d={passCurve(p).d} className={`pass${p.o ? "" : " cut"}`} />
+                      <path d={passCurve(p).d} pathLength={p.o ? 1 : undefined} className={`pass${p.o ? "" : " cut"}`} />
                     </g>
                   );
                 })}
-                {ball && <Ball last={last} at={ball} fill={TEAM[possession ?? last?.k ?? 0]} />}
+                {ball && <Ball last={last} at={ball} fill={TEAM[possession ?? last?.k ?? 0]} pace={pace.current} />}
               </>
             )}
             {view === "goals" && goal && <Chain key={goal.s} shot={goal} />}
@@ -259,14 +278,25 @@ function passCurve(p: Touch): { c: [number, number]; d: string } {
  * The ball, with a short comet tail. When a pass starts away from where the ball is, the player ran with it
  * first: the ball glides there along the ground, then travels along the pass's own curve, slowing as it arrives.
  */
-function Ball({ last, at, fill }: { last?: Touch; at: [number, number]; fill: string }) {
+function Ball({ last, at, fill, pace }: { last?: Touch; at: [number, number]; fill: string; pace: number }) {
   const g = useRef<SVGGElement>(null);
   const tail = useRef<(SVGCircleElement | null)[]>([]);
   const pos = useRef<[number, number] | null>(null);
   const hist = useRef<[number, number][]>([]);
-  useEffect(() => {
+  // Before the first frame is painted (so the line's animation starts with these values): the newest pass line
+  // takes the ball's own timing, whether or not the ball first runs with it.
+  useLayoutEffect(() => {
     const el = g.current;
     if (!el) return;
+    const mv = el.ownerSVGElement?.querySelector<SVGGElement>(".fresh.moving") ?? null;
+    const line = mv?.querySelector<SVGPathElement>(".pass:not(.cut)") ?? null;
+    // The newest pass line is drawn by this same animation, frame by frame: it can only ever be where the ball
+    // has been. (A missed pass and a run with the ball appear on the same timing, set here.)
+    const reveal = (f: number) => line?.style.setProperty("stroke-dashoffset", String(1 - f));
+    const sync = (run: number, fly: number) => {
+      mv?.style.setProperty("--run", `${run}ms`);
+      mv?.style.setProperty("--fly", `${fly}ms`);
+    };
     const draw = (q: [number, number]) => {
       pos.current = q;
       el.setAttribute("transform", `translate(${q[0].toFixed(2)} ${q[1].toFixed(2)})`);
@@ -278,18 +308,20 @@ function Ball({ last, at, fill }: { last?: Touch; at: [number, number]; fill: st
       });
     };
     const from = pos.current;
-    if (!from || reduceMotion || (from[0] === at[0] && from[1] === at[1])) {
+    if (!from || reduceMotion || pace <= 0 || (from[0] === at[0] && from[1] === at[1])) {
       hist.current = [];
       draw(at);
       for (let i = 0; i < TRAIL * 2; i++) draw(at); // no tail at rest
+      sync(0, 0);
+      reveal(1);
       return;
     }
     const pass = last?.t === "pass" && last.ex !== undefined ? last : null;
     const c = pass ? passCurve(pass).c : null;
     const kick: [number, number] | null = pass && pass.x !== undefined && pass.y !== undefined
       && Math.hypot(pass.x - from[0], pass.y - from[1]) > 3 ? [pass.x, pass.y] : null;
-    const runMs = kick ? 220 : 0;
-    const flyMs = c ? 320 : 240;
+    const { run: runMs, fly: flyMs } = moveTiming(pace, !!kick);
+    sync(runMs, flyMs);
     const settle = 160; // the tail catches up after the ball stops
     const t0 = performance.now();
     let raf = 0;
@@ -298,11 +330,13 @@ function Ball({ last, at, fill }: { last?: Touch; at: [number, number]; fill: st
       if (kick && ms < runMs) {
         const u = ms / runMs; // a steady run with the ball
         draw([from[0] + (kick[0] - from[0]) * u, from[1] + (kick[1] - from[1]) * u]);
+        reveal(0);
       } else {
         const s0 = kick ?? from;
         const u = Math.min(1, (ms - runMs) / flyMs);
         const e = 1 - (1 - u) * (1 - u);
         const a = 1 - e;
+        reveal(e);
         draw(c
           ? [a * a * s0[0] + 2 * a * e * c[0] + e * e * at[0], a * a * s0[1] + 2 * a * e * c[1] + e * e * at[1]]
           : [s0[0] + (at[0] - s0[0]) * e, s0[1] + (at[1] - s0[1]) * e]);
