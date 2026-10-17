@@ -56,7 +56,8 @@ _MIN = re.compile(r"(?:\b(at|in|aos|à|a)\s+)?\b(\d{1,3})(?:\s*\+\s*(\d{1,2}))?[
 _VS = {"en": "versus", "es": "contra", "pt": "contra", "fr": "contre"}
 _TO = {"en": "to", "es": "a", "pt": "a", "fr": "à"}
 _PLUS = {"en": "plus", "es": "más", "pt": "mais", "fr": "plus"}
-_WORDS = {"en": (("xG", "expected goals"), ("pts", "points")), "es": (("xG", "goles esperados"), ("pts", "puntos")),
+# English says VAR as letters ("V A R"); Spain, Brazil and France say it as a word, so it stays as written there.
+_WORDS = {"en": (("xG", "expected goals"), ("pts", "points"), ("VAR", "V A R")), "es": (("xG", "goles esperados"), ("pts", "puntos")),
           "pt": (("xG", "gols esperados"), ("pts", "pontos")), "fr": (("xG", "buts attendus"), ("pts", "points"))}
 
 

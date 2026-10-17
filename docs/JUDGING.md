@@ -23,7 +23,7 @@ Everything is synthetic, as the rules require: the clubs, players, crests and ma
 
 The app replays four matches on a loop, so something is always live. Each match takes about six and a half minutes, and they start a little over a minute apart. The one to watch is **Eastholme Rangers v Brackenford City**: a goal down in the 1st minute, down to ten men in the 5th, level in the 14th, and the winner in the 82nd.
 
-You don't have to wait for the loop. **Watch the big moments**, at the top of the match list and under every match's Gauge, lists each goal, red card and VAR check; pick one and your own private replay starts just before it. Everything works in it as live (the agents, Ask the Gaffer, VAR, the table, the vote), and nobody else's match changes.
+You don't have to wait for the loop. **Watch the big moments**, at the top of the match list and under every match's Gauge, lists each goal, red card and VAR check; pick one and your own private replay starts just before it. Everything works in it as it does during a match (the agents, Ask the Gaffer, VAR, the table, the vote), and nobody else's match changes.
 
 1. Open the link, pick a fan name and a club (choose **Eastholme Rangers** for the full story), then **Fan** or **Analyst**.
 2. Open a live match. The score and the **Gaffer's Gauge** stay on top; below them, three tabs: **Live**, **Play** and **Standings & stats**. On a phone, a slim scoreboard pins to the top as you scroll. Goals and VAR decisions flash up as a banner as they happen.

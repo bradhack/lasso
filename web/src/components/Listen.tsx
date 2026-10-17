@@ -5,6 +5,18 @@ import { useStore } from "../store";
 import type { Lang } from "../types";
 import { Speaker, StopIcon } from "./Icons";
 
+/** FNV-1a over UTF-16 code units: a short fingerprint of the exact text on screen (the server computes the same).
+ * A story's instant wording and the agents' version share an id; this tells the server which one to read, and
+ * gives each version its own address so the browser never replays the other one from its cache. */
+export function fingerprint(text: string) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, "0");
+}
+
 /** A story's headline and text as one passage, with a pause between them (as the server reads it). */
 export function storyText(headline: string, story: string) {
   const h = headline.trim();
@@ -21,7 +33,7 @@ const PTS: Record<Lang, string> = { en: "points", es: "puntos", pt: "pontos", fr
 const ord = (n: number) => `${n}${n % 100 >= 10 && n % 100 <= 13 ? "th" : ({ 1: "st", 2: "nd", 3: "rd" } as Record<number, string>)[n % 10] ?? "th"}`;
 
 /** Text as a voice should read it (same rules as the server): 82' becomes "the 82nd minute", "v" becomes
- * "versus", 2-1 reads "2 to 1", and abbreviations are spelled out. */
+ * "versus", 2-1 reads "2 to 1", abbreviations are spelled out, and English VAR is read as letters. */
 export function spoken(text: string, lang: Lang) {
   return text
     .replace(/(?:\b(at|in|aos|à|a)\s+)?\b(\d{1,3})(?:\s*\+\s*(\d{1,2}))?['’′]/g, (_m, prep: string | undefined, num: string, extra: string | undefined) => {
@@ -36,6 +48,7 @@ export function spoken(text: string, lang: Lang) {
     .replace(/\b(\d{1,2})\s*-\s*(\d{1,2})\b(?!\s*%)/g, (_m, a: string, b: string) => `${a} ${TO[lang]} ${b}`)
     .replace(/\bxG\b/g, XG[lang])
     .replace(/\bpts\b/g, PTS[lang])
+    .replace(/\bVAR\b/g, lang === "en" ? "V A R" : "VAR") // English says the letters; the others say it as a word
     .replace(/→/g, ` ${TO[lang]} `);
 }
 
@@ -114,7 +127,7 @@ export function Listen({ kind, id, matchId, text, lang, compact = false, label }
     current?.stop();
     tellListened(matchId);
     if (!azure) return phoneVoice();
-    const audio = new Audio(api.speechUrl({ kind, id, lang, match_id: matchId, voice }));
+    const audio = new Audio(api.speechUrl({ kind, id, lang, match_id: matchId, voice, v: kind === "story" ? fingerprint(text) : undefined }));
     current = { key, stop: () => { audio.pause(); done(); } };
     audio.onplaying = () => mounted.current && setState("playing");
     audio.onended = done;
