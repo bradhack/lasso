@@ -51,16 +51,17 @@ WORDS_PER_SECOND = 2.9  # Azure AI Speech at the recorder's default rate
 SCENES = [
     {"id": "intro", "title": "Lasso",
      "show": "Slide: the Lasso cover, while the showcase match restarts underneath.",
-     "line": "This is Lasso. A team of AI agents watches live football with you, explains every swing, answers "
-             "your questions, and lets you call what happens next."},
+     "line": "This is Lasso. A team of AI agents watches live football with you, explains every shift in momentum, "
+             "answers your questions, and lets you call what happens next."},
     {"id": "gauge", "title": "The Gaffer's Gauge",
      "show": "The live match: Eastholme Rangers 1-1 Brackenford City in the second half, Eastholme down to ten. "
              "The score and the Gauge glow.",
-     "line": "We're backing Eastholme Rangers: 1-1 late in the second half, down to ten since an early red card, and "
-             "the Gaffer, our win probability model, doesn't fancy their chances."},
+     "line": "We're following Eastholme Rangers: 1-1 late in the second half, down to ten men since an early red "
+             "card, and our win probability model, the Gaffer, doesn't fancy their chances."},
     {"id": "why", "title": "Why it moved",
      "show": "Why it moved glows: the agents' latest story, in plain words.",
-     "line": "Why it moved explains what changed the win probability, in English, Spanish, Portuguese or French."},
+     "line": "Next, Why it moved. It explains what caused the win probability to change, in English, Spanish, "
+             "Portuguese or French."},
     {"id": "ask", "title": "Ask the Gaffer",
      "show": "Typing \"Can Eastholme still win this?\" into Ask the Gaffer; the answer arrives with its AI agents chip.",
      "line": "Ask anything, at any point in the match. One agent digs up the facts through the Model Context "
@@ -70,18 +71,19 @@ SCENES = [
      "line": "Feeling brave? Call your shot. Biscuit rewards are set by the Gaffer's calculated odds, so long shots "
              "pay big. No money, just bragging rights."},
     {"id": "var", "title": "VAR check",
-     "show": "82': Eastholme score and VAR checks it. The VAR card shows the Gauge both ways; Call it asks "
+     "show": "82': Eastholme scores and VAR checks it. The VAR card shows the Gauge both ways; Call it asks "
              "\"Will the goal stand?\" and the fan picks It stands.",
-     "line": "Eastholme score! But VAR is checking it. The Gauge shows the win probability both ways, and a quick "
-             "call opens: will it stand?"},
+     "line": "Eastholme scores! But VAR is checking it. The Gauge shows the win probability either way, and a new "
+             "call appears: will the goal stand? We say it will."},
     {"id": "goal", "title": "It stands",
      "show": "The goal stands: the Gauge jumps, both calls pay out, and the agents' story replaces the instant one.",
-     "line": "It stands! The Gauge jumps, both calls pay off, and the agents tell the story."},
+     "line": "It stands! The Gauge jumps, and both our calls win biscuits: Eastholme to score, and the goal to "
+             "stand."},
     {"id": "hood", "title": "Under the hood",
      "show": "Under the hood for the goal's story, enlarged: round one (Stats, Gaffer), round two (Narrator, "
              "Persona, Game Master), then Checked by code, each highlighted in turn.",
-     "line": "Tap AI agents to see how. Two agents pull the stats and work out what changed, three more write the "
-             "story, and our code checks every fact before you see it."},
+     "line": "How did the agents write that story? Tap AI agents to look under the hood: two agents work out what "
+             "changed, three more write the story, and our code checks every fact before you see it."},
     {"id": "fabric", "title": "Microsoft Fabric",
      "show": "Slide: the Lasso agents dashboard in Microsoft Fabric, panning down.",
      "line": "Everything streams into Microsoft Fabric: how fast the agents are, what they cost, and what they "
@@ -92,8 +94,8 @@ SCENES = [
              "single agent missed two."},
     {"id": "arch", "title": "How it's built",
      "show": "Slide: how Lasso works, seven agents and one live pipeline.",
-     "line": "Built on Microsoft Foundry and Agent Framework, over A2A and the Model Context Protocol, all on "
-             "Azure."},
+     "line": "Built on Microsoft Foundry and Agent Framework, over A2A and the Model Context Protocol, all running "
+             "on Azure."},
     {"id": "close", "title": "Close",
      "show": "Slide: the Lasso cover.",
      "line": "That's Lasso. Watch smarter, call it first, and believe your call."},
