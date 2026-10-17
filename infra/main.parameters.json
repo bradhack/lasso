@@ -12,6 +12,7 @@
     "agentsImage": { "value": "${SERVICE_AGENTS_IMAGE_NAME=}" },
     "feedImage": { "value": "${SERVICE_FEED_IMAGE_NAME=}" },
     "adminKey": { "value": "${LASSO_ADMIN_KEY=}" },
-    "agentsKey": { "value": "${LASSO_AGENTS_KEY=}" }
+    "agentsKey": { "value": "${LASSO_AGENTS_KEY=}" },
+    "fabricConnection": { "value": "${LASSO_FABRIC_CONNECTION=}" }
   }
 }

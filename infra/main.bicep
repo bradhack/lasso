@@ -32,6 +32,10 @@ param agentsKey string = ''
 // Stable across provisions: both apps must always hold the same value.
 var effectiveAgentsKey = empty(agentsKey) ? '${uniqueString(subscription().id, environmentName, 'lasso-agents')}${uniqueString(environmentName, subscription().subscriptionId, 'a2a')}' : agentsKey
 
+@secure()
+@description('Optional: the connection string of a Microsoft Fabric Eventstream custom endpoint. When set, the API sends every story, answer and agent run there for the Fabric dashboard (docs/FABRIC.md). Set with `azd env set LASSO_FABRIC_CONNECTION <value>`.')
+param fabricConnection string = ''
+
 param apiImage string = ''
 param agentsImage string = ''
 param feedImage string = ''
@@ -58,6 +62,7 @@ module resources 'resources.bicep' = {
     modelCapacity: modelCapacity
     adminKey: effectiveAdminKey
     agentsKey: effectiveAgentsKey
+    fabricConnection: fabricConnection
     apiImage: apiImage
     agentsImage: agentsImage
     feedImage: feedImage

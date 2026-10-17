@@ -11,6 +11,9 @@ param modelCapacity int
 param adminKey string
 @secure()
 param agentsKey string
+@secure()
+@description('Optional Fabric Eventstream custom endpoint connection string; empty sends nothing to Fabric.')
+param fabricConnection string = ''
 param apiImage string
 param agentsImage string
 param feedImage string
@@ -265,7 +268,8 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
     configuration: {
       ingress: { external: true, targetPort: 8000, transport: 'auto', allowInsecure: false }
       registries: [{ server: registry.properties.loginServer, identity: identity.id }]
-      secrets: [{ name: 'admin-key', value: adminKey }, { name: 'agents-key', value: agentsKey }]
+      secrets: concat([{ name: 'admin-key', value: adminKey }, { name: 'agents-key', value: agentsKey }],
+        empty(fabricConnection) ? [] : [{ name: 'fabric-connection', value: fabricConnection }])
     }
     template: {
       // Match rooms live in memory, so the API runs as a single, always-on replica.
@@ -287,7 +291,7 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
           { name: 'LASSO_SPEECH_REGION', value: foundry.location }
           { name: 'LASSO_SPEECH_RESOURCE_ID', value: foundry.id }
           { name: 'OTEL_SERVICE_NAME', value: 'lasso-api' }
-        ])
+        ], empty(fabricConnection) ? [] : [{ name: 'LASSO_FABRIC_CONNECTION', secretRef: 'fabric-connection' }])
       }]
     }
   }
