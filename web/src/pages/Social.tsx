@@ -69,7 +69,7 @@ export function Leagues() {
       <div className="tabs" style={{ flexWrap: "wrap" }}>
         {[...codes, "GLOBAL"].map((c) => (
           <button key={c} className={`tab${tab === c ? " sel" : ""}`} onClick={() => setTab(c)} style={{ flex: "1 1 30%" }}>
-            {c === "DIAMOND" ? "Diamond Dogs" : c === "GLOBAL" ? t("lgGlobal", lang) : c}
+            {c === "DIAMOND" ? "Biscuit Box" : c === "GLOBAL" ? t("lgGlobal", lang) : c}
           </button>
         ))}
       </div>

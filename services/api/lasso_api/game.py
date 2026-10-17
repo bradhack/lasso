@@ -27,6 +27,7 @@ MISSIONS = {
 }
 BOTS = [("Priya", 0.62), ("Sam", 0.58), ("Marcus", 0.52), ("Jo", 0.55), ("Aisha", 0.6), ("Tom", 0.48)]
 DEFAULT_LEAGUE = "DIAMOND"
+DEFAULT_LEAGUE_NAME = "Biscuit Box"  # every fan's first league (its code stays the same)
 
 
 def _today() -> str:
@@ -98,8 +99,10 @@ class GameService:
         self.store = store
 
     async def bootstrap(self) -> None:
-        """Seed the Diamond Dogs league with a few rival fans so leaderboards feel alive."""
-        if await self.store.get_league(DEFAULT_LEAGUE):
+        """Seed the Biscuit Box league with a few rival fans so leaderboards feel alive."""
+        if league := await self.store.get_league(DEFAULT_LEAGUE):
+            if league.get("name") != DEFAULT_LEAGUE_NAME:  # an older deployment named it differently
+                await self.store.put_league({**league, "name": DEFAULT_LEAGUE_NAME})
             return
         members = []
         rng = random.Random(7)
@@ -109,7 +112,7 @@ class GameService:
             u["xp"] = rng.randint(200, 1400)
             await self.store.put_user(u)
             members.append(u["id"])
-        await self.store.put_league({"code": DEFAULT_LEAGUE, "name": "Diamond Dogs", "owner": "system",
+        await self.store.put_league({"code": DEFAULT_LEAGUE, "name": DEFAULT_LEAGUE_NAME, "owner": "system",
                                      "members": members})
 
     # ----------------------------------------------------------------- users

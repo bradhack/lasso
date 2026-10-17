@@ -97,9 +97,9 @@ STICKERS: dict[str, dict] = {
                     "how": {"en": "Reach a streak of 10", "es": "Llega a una racha de 10", "pt": "Chegue a uma sequência de 10",
                             "fr": "Atteins une série de 10"}},
     "diamond_dog": {"tier": "gold",
-                    "name": {"en": "Diamond Dog", "es": "Diamond Dog", "pt": "Diamond Dog", "fr": "Diamond Dog"},
-                    "how": {"en": "Top the Diamond Dogs league", "es": "Lidera la liga Diamond Dogs",
-                            "pt": "Lidere a liga Diamond Dogs", "fr": "Prends la tête de la ligue Diamond Dogs"}},
+                    "name": {"en": "Top Biscuit", "es": "Galleta de oro", "pt": "Biscoito de ouro", "fr": "Biscuit d'or"},
+                    "how": {"en": "Top the Biscuit Box league", "es": "Lidera la liga Biscuit Box",
+                            "pt": "Lidere a liga Biscuit Box", "fr": "Prends la tête de la ligue Biscuit Box"}},
 }
 
 

@@ -61,5 +61,11 @@ const ICONS: Record<string, ReactElement> = {
   gaffers_eye: <path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />,
   on_the_up: <path d="M3 18l6-6 4 4 8-8M15 8h6v6" />,
   saw_it_coming: <path d="M12 3a7 7 0 1 1 0 14 7 7 0 0 1 0-14zM6.5 21h11M9 17l-1.5 4M15 17l1.5 4M9 9.5a3.5 3.5 0 0 1 3-3" />,
-  diamond_dog: <path d="M6 4h12l3.5 5L12 21 2.5 9zM2.5 9h19M9 4l-1.5 5L12 21M15 4l1.5 5L12 21" />,
+  // Top Biscuit (top of the Biscuit Box league): a crowned biscuit. The id stays so earned stickers keep it.
+  diamond_dog: (
+    <>
+      <circle cx="12" cy="15.2" r="6.3" />
+      <path d="M9.4 13.4h.01M14.6 13h.01M12 16h.01M9.8 18h.01M14.6 17.6h.01M7.5 3.2L9.6 5.2 12 2.4l2.4 2.8 2.1-2-.8 3.6H8.3z" />
+    </>
+  ),
 };
