@@ -189,7 +189,7 @@ Twenty fictional clubs, each with an original crest designed as one set: a disti
 | `fabric/` | Microsoft Fabric Real-Time Intelligence: the Eventhouse table and the agents dashboard's queries ([guide](docs/FABRIC.md)) |
 | `.github/` | CI, the security workflow, Copilot instructions and prompt files |
 | `.vscode/mcp.json` | GitHub Copilot Agent Mode: the Gaffer's live MCP tools and the Azure MCP Server |
-| `docs/` | [Lasso for judges](docs/JUDGING.md), [two agents or one?](docs/agent-comparison.md), [model report](docs/model-report.md), [agent evaluation](docs/agent-eval.md), [deploy guide](docs/DEPLOY.md), [security](docs/SECURITY.md) |
+| `docs/` | [Lasso for judges](docs/JUDGING.md), [two agents or one?](docs/agent-comparison.md), [model report](docs/model-report.md), [agent evaluation](docs/agent-eval.md), [deploy guide](docs/DEPLOY.md), [security](docs/SECURITY.md) |, [demo video script](docs/video/SCRIPT.md) and its recorder
 
 ## Quick start
 
