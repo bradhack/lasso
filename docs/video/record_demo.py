@@ -110,7 +110,7 @@ def write_script(path: Path) -> None:
            f"About {total:.0f} seconds of narration (the recording runs a little longer while the live match plays). "
            "Generated from `docs/video/record_demo.py`, which records the video to match. With `--voice` it narrates "
            "these lines itself with an Azure AI Speech voice (a natural US voice by default; `--sample-voices` says the "
-           "opening and the VAR moment in eleven voices so you can pick one, and `--style` and `--rate` change the "
+           "opening and the VAR moment in about twenty voices so you can pick one, and `--style` and `--rate` change the "
            "delivery); without it, read them over the video, using `out/narration.md` for each scene's exact start "
            "time. The video must stay under two minutes.", "",
            "| # | Scene | On screen | Say | At least |", "|---|---|---|---|---|"]
@@ -213,9 +213,16 @@ SAMPLE_VOICES = [
     ("en-US-Andrew:DragonHDLatestNeural", None),  # HD: the most expressive, in some regions only
     ("en-US-Davis:DragonHDLatestNeural", None),   # HD, deeper
     ("en-US-DavisNeural", "excited"),             # big, sporty
+    ("en-US-DavisNeural", "cheerful"),            # Davis, a notch calmer
+    ("en-US-DavisNeural", "shouting"),            # Davis, a notch louder
+    ("en-US-GuyNeural", "excited"),
     ("en-US-TonyNeural", "excited"),              # energetic
     ("en-US-JasonNeural", "excited"),
     ("en-US-GuyNeural", "newscast"),              # classic announcer
+    ("en-US-JaneNeural", "excited"),              # women's voices with the same excited style
+    ("en-US-NancyNeural", "excited"),
+    ("en-US-AriaNeural", "excited"),
+    ("en-US-SaraNeural", "excited"),
     ("en-US-ChristopherNeural", None),            # deep, steady
     ("en-US-SteffanNeural", None),
 ]
@@ -663,7 +670,7 @@ if __name__ == "__main__":
     ap.add_argument("--style", help="the voice's speaking style, for voices that have one (e.g. excited, newscast)")
     ap.add_argument("--rate", default="+8%", help="speaking rate, e.g. +10%% or -5%% (default +8%%)")
     ap.add_argument("--sample-voices", action="store_true",
-                    help="say the opening and the VAR moment in eleven voices, into docs/video/out/voices, and stop")
+                    help="say the opening and the VAR moment in about twenty voices, into docs/video/out/voices, and stop")
     ap.add_argument("--resource-group", help="where Lasso's Foundry account is (default: from azd)")
     ap.add_argument("--script-only", action="store_true", help="write docs/video/SCRIPT.md and stop")
     a = ap.parse_args()
