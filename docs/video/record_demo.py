@@ -110,7 +110,7 @@ def write_script(path: Path) -> None:
            f"About {total:.0f} seconds of narration (the recording runs a little longer while the live match plays). "
            "Generated from `docs/video/record_demo.py`, which records the video to match. With `--voice` it narrates "
            "these lines itself with an Azure AI Speech voice (a natural US voice by default; `--sample-voices` says the "
-           "opening and the VAR moment in ten voices so you can pick one, and `--style` and `--rate` change the "
+           "opening and the VAR moment in eleven voices so you can pick one, and `--style` and `--rate` change the "
            "delivery); without it, read them over the video, using `out/narration.md` for each scene's exact start "
            "time. The video must stay under two minutes.", "",
            "| # | Scene | On screen | Say | At least |", "|---|---|---|---|---|"]
@@ -208,6 +208,7 @@ SAY = [("A2A", "A to A"), ("MCP", "M C P"), ("Cosmos DB", "Cosmos D B"), ("Web P
 # Styles change the delivery; a voice without that style just reads normally.
 SAMPLE_VOICES = [
     ("en-US-AndrewMultilingualNeural", None),     # warm, natural (the default)
+    ("en-US-AndrewMultilingualNeural", "excited"),  # the same, asked for excited (read normally if it has no styles)
     ("en-US-BrianMultilingualNeural", None),      # brighter, younger
     ("en-US-Andrew:DragonHDLatestNeural", None),  # HD: the most expressive, in some regions only
     ("en-US-Davis:DragonHDLatestNeural", None),   # HD, deeper
@@ -662,7 +663,7 @@ if __name__ == "__main__":
     ap.add_argument("--style", help="the voice's speaking style, for voices that have one (e.g. excited, newscast)")
     ap.add_argument("--rate", default="+8%", help="speaking rate, e.g. +10%% or -5%% (default +8%%)")
     ap.add_argument("--sample-voices", action="store_true",
-                    help="say the opening and the VAR moment in ten voices, into docs/video/out/voices, and stop")
+                    help="say the opening and the VAR moment in eleven voices, into docs/video/out/voices, and stop")
     ap.add_argument("--resource-group", help="where Lasso's Foundry account is (default: from azd)")
     ap.add_argument("--script-only", action="store_true", help="write docs/video/SCRIPT.md and stop")
     a = ap.parse_args()
