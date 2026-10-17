@@ -137,7 +137,7 @@ const S = {
   gold: { en: "Gold", es: "Oro", pt: "Ouro", fr: "Or" },
   silver: { en: "Silver", es: "Plata", pt: "Prata", fr: "Argent" },
   bronze: { en: "Bronze", es: "Bronce", pt: "Bronze", fr: "Bronze" },
-  hopeLine: { en: "It's the hope that kills you.", es: "Lo que mata es la esperanza.", pt: "O que mata é a esperança.", fr: "C'est l'espoir qui fait mal." },
+  hopeLine: { en: "Bold call. Wrong day.", es: "Pronóstico valiente. Día equivocado.", pt: "Palpite corajoso. Dia errado.", fr: "Pronostic audacieux. Mauvais jour." },
   hopeSub: { en: "So close. The Gaffer had it at", es: "Por poco. El Gaffer lo veía al", pt: "Por pouco. O Gaffer via em", fr: "Si près. Le Gaffer le voyait à" },
   pitch: { en: "The Pitch", es: "El campo", pt: "O campo", fr: "Le terrain" },
   ball: { en: "ball", es: "con el balón", pt: "com a bola", fr: "au ballon" },
