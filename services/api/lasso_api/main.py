@@ -411,9 +411,13 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
         keep_story = True  # the draw closing in: its chance, from and to, is the number to give
     if _STIFF.search(story_en):
         keep_story = True  # "as the clock bites": the instant story reads better
-    if (moment.get("period", 1) == 1 and moment["minute"] <= 45 and _LEFT.search(story_en)
-            and not re.search(r"half", story_en, re.IGNORECASE)):
-        keep_story = True  # "one minute left" at 44' reads as the end of the match: it's to halftime
+    if moment.get("period", 1) == 1 and moment["minute"] <= 45:
+        # "One minute left" at 44' reads as the end of the match: it's to halftime.
+        if _LEFT.search(story_en) and not re.search(r"half", story_en, re.IGNORECASE):
+            keep_story = True
+        head_now = (_lang_map(pkg.get("headline")) or {}).get("en", "")
+        if _LEFT.search(head_now) and not re.search(r"half", head_now, re.IGNORECASE):
+            pkg = {**pkg, "headline": None}
     goal_minutes = {e["minute"] for e in room.feed if e.get("type") == "goal"}
     for said in _GOAL_AT.finditer(story_en):
         if int(said.group(1) or said.group(2)) not in {m + d for m in goal_minutes for d in (-1, 0, 1)}:
