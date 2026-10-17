@@ -64,8 +64,8 @@ SCENES = [
              "Portuguese or French."},
     {"id": "ask", "title": "Ask the Gaffer",
      "show": "Typing \"Can Eastholme still win this?\" into Ask the Gaffer; the answer arrives with its AI agents chip.",
-     "line": "Ask anything, at any point in the match. One agent digs up the facts through the Model Context "
-             "Protocol, and another writes your answer."},
+     "line": "Ask any question, at any time. One agent gathers the facts through the Model Context Protocol, and "
+             "another writes your answer."},
     {"id": "callit", "title": "Call your shot",
      "show": "Call it: \"Eastholme Rangers score before 89'?\" Yes, then Lasso it.",
      "line": "Feeling brave? Call your shot. Biscuit rewards are set by the Gaffer's calculated odds, so long shots "
@@ -73,8 +73,8 @@ SCENES = [
     {"id": "var", "title": "VAR check",
      "show": "82': Eastholme scores and VAR checks it. The VAR card shows the Gauge both ways; Call it asks "
              "\"Will the goal stand?\" and the fan picks It stands.",
-     "line": "Eastholme scores! But VAR is checking it. The Gauge shows the win probability either way, and a new "
-             "call appears: will the goal stand? We say it will."},
+     "line": "Eastholme scores! But VAR is checking it. The Gauge shows both outcomes, and a new call appears: "
+             "will the goal stand? We say yes."},
     {"id": "goal", "title": "It stands",
      "show": "The goal stands: the Gauge jumps, both calls pay out, and the agents' story replaces the instant one.",
      "line": "It stands! The Gauge jumps, and both our calls win biscuits: Eastholme to score, and the goal to "
@@ -86,11 +86,10 @@ SCENES = [
              "changed, three more write the story, and our code checks every fact before you see it."},
     {"id": "fabric", "title": "Microsoft Fabric",
      "show": "Slide: the Lasso agents dashboard in Microsoft Fabric, panning down.",
-     "line": "Everything streams into Microsoft Fabric: how fast the agents are, what they cost, and what they "
-             "get wrong."},
+     "line": "Everything streams into Microsoft Fabric, so we can track the agents' speed, cost and mistakes."},
     {"id": "compare", "title": "A team of agents or one",
      "show": "Slide: the Press Room team against one agent alone, on the same 27 questions.",
-     "line": "Is a team of AI agents better than one? On the same 27 questions, the team passed all 27, and a "
+     "line": "Is a team of AI agents better than one? On the same 27 questions, the team passed them all, and a "
              "single agent missed two."},
     {"id": "arch", "title": "How it's built",
      "show": "Slide: how Lasso works, seven agents and one live pipeline.",
@@ -111,7 +110,7 @@ def write_script(path: Path) -> None:
     out = ["# Lasso demo video: the script", "",
            f"About {total:.0f} seconds of narration (the recording runs a little longer while the live match plays). "
            "Generated from `docs/video/record_demo.py`, which records the video to match. With `--voice` it narrates "
-           "these lines itself with an Azure AI Speech voice (a natural US voice by default; `--sample-voices` says the "
+           "these lines itself with an Azure AI Speech voice (Jane, excited, by default; `--sample-voices` says the "
            "opening and the VAR moment in about twenty voices so you can pick one, and `--style` and `--rate` change the "
            "delivery); without it, read them over the video, using `out/narration.md` for each scene's exact start "
            "time. The video must stay under two minutes.", "",
@@ -263,7 +262,7 @@ def ssml_for(text: str, voice: str, style: str | None, rate: str) -> str:
 
 
 def synthesize(lines: list[str], voice: str, resource_id: str, region: str, folder: Path,
-               style: str | None = None, rate: str = "+8%", names: list[str] | None = None,
+               style: str | None = None, rate: str = "+14%", names: list[str] | None = None,
                skip_unknown: bool = False) -> list[Path]:
     token = _cli("az", "account", "get-access-token", "--resource", "https://cognitiveservices.azure.com",
                  "--query", "accessToken", "-o", "tsv")
@@ -445,7 +444,7 @@ def show_slide(rec: Recorder, scene: dict) -> None:
 
 def run(app: str, key: str, out: Path, pace: float, from_minute: float | None, name: str = "Brad",
         voice: str | None = None, resource_group: str | None = None, style: str | None = None,
-        rate: str = "+8%") -> None:
+        rate: str = "+14%") -> None:
     from playwright.sync_api import sync_playwright
 
     if not shutil.which("ffmpeg"):
@@ -686,11 +685,13 @@ if __name__ == "__main__":
     ap.add_argument("--from-minute", type=float, default=None,
                     help="the minute recording starts at (default: worked out so the goal follows Call your shot)")
     ap.add_argument("--name", default="Brad", help="the demo fan's name (default Brad)")
-    ap.add_argument("--voice", nargs="?", const="en-US-AndrewMultilingualNeural", default=None,
-                    help="narrate with an Azure AI Speech voice (default en-US-AndrewMultilingualNeural; hear others "
-                         "with --sample-voices)")
-    ap.add_argument("--style", help="the voice's speaking style, for voices that have one (e.g. excited, newscast)")
-    ap.add_argument("--rate", default="+8%", help="speaking rate, e.g. +10%% or -5%% (default +8%%)")
+    ap.add_argument("--voice", nargs="?", const="en-US-JaneNeural", default=None,
+                    help="narrate with an Azure AI Speech voice (default en-US-JaneNeural; hear others with "
+                         "--sample-voices)")
+    ap.add_argument("--style", default="excited",
+                    help="the voice's speaking style, for voices that have one (default excited; also newscast, "
+                         "cheerful; none for no style)")
+    ap.add_argument("--rate", default="+14%", help="speaking rate, e.g. +10%% or -5%% (default +14%%)")
     ap.add_argument("--sample-voices", action="store_true",
                     help="say the opening and the VAR moment in about twenty voices, into docs/video/out/voices, and stop")
     ap.add_argument("--preview", action="store_true",
@@ -698,6 +699,8 @@ if __name__ == "__main__":
     ap.add_argument("--resource-group", help="where Lasso's Foundry account is (default: from azd)")
     ap.add_argument("--script-only", action="store_true", help="write docs/video/SCRIPT.md and stop")
     a = ap.parse_args()
+    if a.style and a.style.lower() == "none":
+        a.style = None
     write_script(HERE / "SCRIPT.md")
     if a.script_only:
         print(f"Wrote {HERE / 'SCRIPT.md'}")
@@ -706,7 +709,7 @@ if __name__ == "__main__":
         sample_voices(Path(a.out), a.resource_group, a.rate)
         sys.exit(0)
     if a.preview:
-        preview_voice(Path(a.out), a.voice or "en-US-AndrewMultilingualNeural", a.style, a.rate, a.resource_group)
+        preview_voice(Path(a.out), a.voice or "en-US-JaneNeural", a.style, a.rate, a.resource_group)
         sys.exit(0)
     if not a.app or not a.key:
         ap.error("the app's URL and --key are needed to record")
