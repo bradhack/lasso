@@ -312,6 +312,26 @@ def sample_voices(out: Path, resource_group: str | None, rate: str) -> None:
           "  python docs/video/record_demo.py <app> --key <key> --voice en-US-DavisNeural --style excited")
 
 
+def preview_voice(out: Path, voice: str, style: str | None, rate: str, resource_group: str | None) -> None:
+    """The whole narration in one voice, scene after scene, with the pauses the video has between scenes."""
+    resource_id, region = speech_account(resource_group)
+    tag = voice.replace(":", "-") + (f"-{style}" if style else "")
+    folder = out / "preview" / tag
+    shutil.rmtree(folder, ignore_errors=True)
+    clips = synthesize([s["line"] for s in SCENES], voice, resource_id, region, folder, style, rate)
+    lst = folder / "list.txt"
+    gap = folder / "gap.mp3"
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", "anullsrc=r=48000:cl=mono", "-t", "0.6",
+                    "-b:a", "192k", str(gap)], check=True)
+    lst.write_text("".join(f"file '{c.resolve().as_posix()}'\nfile '{gap.resolve().as_posix()}'\n" for c in clips),
+                   encoding="utf-8")
+    final = out / f"narration-{tag}.mp3"
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(lst),
+                    "-c:a", "libmp3lame", "-b:a", "192k", str(final)], check=True)
+    secs = duration(final)
+    print(f"{final}  ({secs:.0f} seconds of narration; the video adds about 15 for the live match)")
+
+
 def duration(path: Path) -> float:
     r = subprocess.run([shutil.which("ffprobe") or "ffprobe", "-v", "error", "-show_entries", "format=duration",
                         "-of", "default=nw=1:nk=1", str(path)], capture_output=True, text=True, check=True)
@@ -671,6 +691,8 @@ if __name__ == "__main__":
     ap.add_argument("--rate", default="+8%", help="speaking rate, e.g. +10%% or -5%% (default +8%%)")
     ap.add_argument("--sample-voices", action="store_true",
                     help="say the opening and the VAR moment in about twenty voices, into docs/video/out/voices, and stop")
+    ap.add_argument("--preview", action="store_true",
+                    help="say the whole script in the --voice (and --style) into docs/video/out, without recording")
     ap.add_argument("--resource-group", help="where Lasso's Foundry account is (default: from azd)")
     ap.add_argument("--script-only", action="store_true", help="write docs/video/SCRIPT.md and stop")
     a = ap.parse_args()
@@ -680,6 +702,9 @@ if __name__ == "__main__":
         sys.exit(0)
     if a.sample_voices:
         sample_voices(Path(a.out), a.resource_group, a.rate)
+        sys.exit(0)
+    if a.preview:
+        preview_voice(Path(a.out), a.voice or "en-US-AndrewMultilingualNeural", a.style, a.rate, a.resource_group)
         sys.exit(0)
     if not a.app or not a.key:
         ap.error("the app's URL and --key are needed to record")
