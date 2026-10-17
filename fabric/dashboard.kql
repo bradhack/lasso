@@ -69,8 +69,8 @@ LassoEvents
 | summarize count() by lang
 
 // 11. The Gaffer's Gauge, story by story, for the latest match (Time chart)
-let latest = toscalar(LassoEvents | where event_kind == "story" | top 1 by ts desc | project match_id);
 LassoEvents
-| where ts between (_startTime .. _endTime) and event_kind == "story" and match_id == latest
+| where ts between (_startTime .. _endTime) and event_kind == "story"
+| where match_id == toscalar(LassoEvents | where event_kind == "story" | top 1 by ts desc | project match_id)
 | project ts, home_win = p_home, draw = p_draw, away_win = p_away
 | render timechart
