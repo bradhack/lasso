@@ -1074,7 +1074,7 @@ def _wrong_shots(text: str, room: MatchRoom, lang: str) -> str:
         return text
     log.warning("dropped a sentence giving more shots to the club with fewer: %s", text[:160])
     kept = " ".join(keep)
-    return kept if len(kept.split()) >= 8 else text
+    return kept if len(kept.split()) >= 8 else _complete(kept, room, lang)
 
 
 # While a match is on, nothing is certain: "0%" reads "under 1%" and "100%" reads "over 99%".
@@ -1136,7 +1136,7 @@ def _complete(kept: str, room: MatchRoom, lang: str) -> str:
 
 
 # Talk about the Gaffer's sources, not the match ("the match notes a shift", "selon l'instantané").
-_META = {"en": r"\b(?:notes?|scout|feed|brief|recorded|listed|the data|tools?|snapshot|entries|i do not have"
+_META = {"en": r"\b(?:notes?|scout|feed|brief|recorded|listed|the data|tools?|snapshot|entries|models?|i do not have"
                r"|i don't have|numbers shown|figures shown)\b",
          "es": r"\b(?:notas|ojeador|los datos|registrad\w*|herramientas?|instantánea|cifras mostradas)\b",
          "pt": r"\b(?:notas|olheiro|os dados|registrad\w*|ferramentas?|instantâneo|números mostrados)\b",
@@ -1281,6 +1281,9 @@ async def ask(match_id: str, body: AskIn) -> dict:
                  "version": u.get("persona") or "fan", "fan_of": room.names[side] if side is not None else None,
                  "status": room.status, "minute": room.minute(), "teams": list(room.names),
                  "score_text": f"{room.names[0]} {h}-{a} {room.names[1]}",
+                 # Who leads, spelled out: "Brackenford mène 2-1" slipped in twice when they trailed.
+                 "leader": (f"{room.names[0]} lead {h}-{a}" if h > a else f"{room.names[1]} lead {a}-{h}" if a > h
+                            else f"level at {h}-{a}"),
                  "chances_pct": {room.names[0]: p["home"], "draw": p["draw"], room.names[1]: p["away"]}}
         if room.status != "finished" and (ng := room.next_goal()):
             # "Who scores next?" is its own question: answered with these, never with the chances of winning.
