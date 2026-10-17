@@ -88,7 +88,7 @@ CANT_REPLACE = ["can't be replaced", "cannot be replaced", "can not be replaced"
 NO_TRACK = re.compile(r"(don't|do not|doesn't|does not|can't|cannot|not) (track|see|follow)|no (formation|position)"
                       r"|isn't tracked|aren't tracked")
 ENGLISH_LEAK = {"es": re.compile(r"\b(chance|chances|possession|read|the|my)\b"),
-                "pt": re.compile(r"\b(possession|read|the|my)\b"),
+                "pt": re.compile(r"\b(possession|read|the|my|swing)\b"),
                 "fr": re.compile(r"\bune \d+ ?% chance\b|\b(read|the|my)\b")}
 EUROPEAN_PT = re.compile(r"\b(golo|golos|equipa|equipas|a jogar|a correr|até aos?|primeira parte|segunda parte"
                          r"|mantém-se|mantêm-se)\b|\b(?:est[áa]|estão|continua|segue) a \w{2,}(?:ar|er|ir)\b")
@@ -103,10 +103,12 @@ TENS = (r"twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|veinte|treinta|c
         r"|setenta|ochenta|noventa|vinte|trinta|quarenta|cinquenta|sessenta|oitenta|vingt|trente|quarante"
         r"|cinquante|soixante")
 SPELLED_MINUTE = re.compile(rf"minut\w*\s+(?:de\s+)?(?:{TENS})|\b(?:{TENS})\w*(?:[- ]\w+){{0,3}}\s+minut", re.I)
+CARDINAL_WORDS = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine",
+                  10: "ten"}
 ORDINAL_WORDS = {1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth", 6: "sixth", 7: "seventh",
                  8: "eighth", 9: "ninth", 10: "tenth"}
 GAINING = re.compile(r"\b(favou?rs?|edge|edges|boost|boosts|lift|lifts|surge|surges|on the rise|rising|climb|"
-                     r"climbs|momentum|gaining|grows?|take charge|takes charge)\b", re.I)
+                     r"climbs|momentum|gaining|grows?|take charge|takes charge|lifeline|hope|hopes)\b", re.I)
 AHEAD = re.compile(r"\b(favou?red|favou?rites?|on top|in control|in charge|in front)\b", re.I)
 NAMES = {"home": "Eastholme Rangers", "away": "Brackenford City"}  # the showcase match
 DRAW_WORD = re.compile(r"draw|empate|nul|tie\b", re.I)
@@ -185,6 +187,7 @@ def run(base: str, key: str, minute_seconds: float) -> dict:
                 "trace": a.get("trace", []), "minute": before.get("minute"),
                 "probs": [before.get("probs"), after.get("probs")],
                 "next_goal": [before.get("next_goal"), after.get("next_goal")],
+                "score": after.get("score"),
                 "stats": [before.get("stats"), after.get("stats")]}
 
     finished_at = None
@@ -304,6 +307,9 @@ def check_answer(a: dict, f: dict, story: list[dict], names: dict) -> dict[str, 
     c["real_percentages"] = all(int(p) in ok_pcts for p in PCT.findall(text))
     c["pcts_match_teams"] = pcts_match_teams(text, a, story, names)
     c["no_real_clubs"] = not REAL_CLUBS.search(text)
+    c["no_trailing_questions"] = not text.rstrip().endswith("?")
+    if a.get("score") and LEAD_SCORE.search(text):
+        c["leader_right"] = not leads_wrong(text, a["score"], names, lang)
     mins = [int(x or y) for x, y in MINUTE.findall(text)]
     asked, answered = a["minute"] or 0, a.get("minute_after") or a["minute"] or 0
     now = set(range(asked, answered + 1))  # the minute it was asked through the minute it was answered
@@ -313,7 +319,8 @@ def check_answer(a: dict, f: dict, story: list[dict], names: dict) -> dict[str, 
     e = a["expect"]
     if e.get("red_card"):
         r = f["reds"][0] if f["reds"] else None
-        said_minute = str(r["minute"]) in text or ORDINAL_WORDS.get(r["minute"], "#") in low if r else False
+        said_minute = bool(r) and (str(r["minute"]) in text or ORDINAL_WORDS.get(r["minute"], "#") in low
+                                   or re.search(rf"\b{CARDINAL_WORDS.get(r['minute'], '#')} minutes?\b", low) is not None)
         c["fact_red_card"] = bool(r) and r["player"].split()[-1].lower() in low and said_minute
     if e.get("motm"):
         imp = (f.get("final") or {}).get("impact") or {}
@@ -349,6 +356,28 @@ STIFF = re.compile(r"\b(it matters|matters most|changed everything|win probabili
                    r"clock effect|realistic chances|clock bites)\b", re.I)
 
 
+GOAL_AT = re.compile(r"\bscor\w*\b[^.]{0,60}?\b(\d{1,3})(?:st|nd|rd|th) minute|\b(\d{1,3})(?:st|nd|rd|th) minute\b"
+                     r"[^.]{0,30}?\bscor", re.I)
+LEADS = {"en": r"leads?|are ahead|is ahead|in front", "es": r"lidera|va ganando|gana|manda|por delante",
+         "pt": r"lidera|vence|está vencendo|está ganhando|na frente", "fr": r"mène|devant|en tête"}
+LEAD_SCORE = re.compile(r"\b(?:" + "|".join(LEADS.values()) + r")\b[^.,;]{0,20}?\d+\s?-\s?\d+", re.I)
+
+
+def leads_wrong(text: str, score: list[int], names: dict, lang: str = "en") -> bool:
+    """A club said to lead, with a score, when it isn't leading ("Brackenford mène 1-2" at 2-1 down)."""
+    h, a = (score + [0, 0])[:2]
+    leader = "home" if h > a else "away" if a > h else None
+    for side in ("home", "away"):
+        words = "|".join(re.escape(w) for w in {names[side].split()[0], names[side].split()[-1]})
+        if re.search(rf"\b(?:{words})\b[^.,;]{{0,25}}?\b(?:{LEADS[lang]})\b[^.,;]{{0,20}}?\d+\s?-\s?\d+", text, re.I) \
+                and leader != side:
+            return True
+    return False
+
+
+run_goals: list[int] = []  # goal minutes of the run being checked (set in report)
+
+
 def check_story(m: dict) -> dict[str, bool]:
     side = "home" if m["focus"] == 0 else "away"
     before, after = round(100 * m["before"][side]), round(100 * m["after"][side])
@@ -382,7 +411,10 @@ def check_story(m: dict) -> dict[str, bool]:
     elif m.get("trigger") == "var_overturned" and (m.get("var") or {}).get("stands_pct") is not None:
         c["states_the_change"] = f"{after}%" in en and f"{m['var']['stands_pct']}%" in en  # now, and what it would have been
     else:
-        c["states_the_change"] = before == after or (f"{before}%" in en and f"{after}%" in en)
+        db, da = round(100 * m["before"]["draw"]), round(100 * m["after"]["draw"])
+        # The focus team's chance, or (for a story about the draw closing in) the draw's.
+        c["states_the_change"] = (before == after or (f"{before}%" in en and f"{after}%" in en)
+                                  or (bool(re.search(r"\bdraw\b", en, re.I)) and f"{db}%" in en and f"{da}%" in en))
     c["no_dashes"] = not any(re.search("[—–]", t) for t in texts)
     if m.get("trigger") != "full_time" and re.search(r"\bdraw\b|stalemate", en, re.I):
         # A story that talks about the draw gives the draw's chance.
@@ -393,9 +425,19 @@ def check_story(m: dict) -> dict[str, bool]:
         # "Nerves favor Brackenford" while Brackenford's chance fell; "still favored" is fine for the likeliest.
         top = max(m["after"].values())
         c["headline_matches_numbers"] = not any(
-            re.search(rf"\b{re.escape(n.split()[0])}\b", head)
-            and ((gaining and m["after"][s] < m["before"][s] - 0.01) or (ahead and not gaining and m["after"][s] < top))
+            any(re.search(rf"\b{re.escape(w)}\b", head) for w in {n.split()[0], n.split()[-1]})
+            and ((gaining and (m["after"][s] <= m["before"][s] + 0.005
+                               or (m.get("trigger") == "var_overturned" and m.get("focus") == (0 if s == "home" else 1))))
+                 or (ahead and not gaining and m["after"][s] < top))
             for s, n in (("home", NAMES["home"]), ("away", NAMES["away"])))
+    goals = run_goals or []
+    said = [int(x.group(1) or x.group(2)) for x in GOAL_AT.finditer(en)]
+    if said:  # "Belwell scores ... in the 29th minute" when it was the 14th
+        c["goal_minutes_right"] = all(any(abs(n - g) <= 1 for g in goals) for n in said)
+    if leads_wrong(en, m.get("score") or [0, 0], NAMES):
+        c["leader_right"] = False
+    elif LEAD_SCORE.search(en):
+        c["leader_right"] = True
     c["no_real_clubs"] = not any(REAL_CLUBS.search(t) for t in texts + list((m.get("headline") or {}).values()))
     c["minutes_as_numbers"] = not any(SPELLED_MINUTE.search(t) for t in texts)
     if m.get("trigger") in ("goal", "red_card") and m.get("player"):
@@ -424,6 +466,8 @@ def report(run_: dict, out: Path) -> str:
     answers = run_["answers"]
     for a in answers:
         a["checks"] = check_answer(a, f, story, run_["names"])
+    global run_goals
+    run_goals = [g["minute"] for g in f["goals"]]
     stories = [m for m in story if m.get("source") == "agents"]
     for m in stories:
         m["checks"] = check_story(m)

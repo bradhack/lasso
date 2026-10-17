@@ -237,7 +237,7 @@ def _us(m: re.Match) -> str:
 # "a early red card": the article before a vowel sound, for the words that come up in match stories.
 _A_AN = re.compile(r"\b([Aa]) (?=(?:early|earlier|extra|equali[sz]er|own goal|unlikely|unexpected|important|ugly|"
                    r"easy|eighth|eleventh|eighteenth|eightieth|hour|eight|11th|18th|8th|80th|81st|82nd|83rd|84th|"
-                   r"85th|86th|87th|88th|89th)\b)")
+                   r"85th|86th|87th|88th|89th)\b|(?:8\d?|11|18) ?%)")
 
 
 def _localize(lang: str, text: str) -> str:
@@ -259,9 +259,12 @@ def _localize(lang: str, text: str) -> str:
 _GERUND = {"ar": "ando", "er": "endo", "ir": "indo"}
 # Words that say a club is gaining: a headline using them about a club whose chance fell is wrong.
 _GAINING = re.compile(r"\b(favou?rs?|edge|edges|boost|boosts|lift|lifts|surge|surges|on the rise|rising|climb|"
-                      r"climbs|momentum|gaining|grows?|take charge|takes charge)\b", re.IGNORECASE)
+                      r"climbs|momentum|gaining|grows?|take charge|takes charge|lifeline|hope|hopes)\b", re.IGNORECASE)
 # ...and words that say a club is ahead right now: fine while it's still the likeliest winner.
 _AHEAD = re.compile(r"\b(favou?red|favou?rites?|on top|in control|in charge|in front)\b", re.IGNORECASE)
+# "X scores ... in the 29th minute" / "in the 29th minute, X scores": a goal and the minute it's given.
+_GOAL_AT = re.compile(r"\bscor\w*\b[^.]{0,60}?\b(\d{1,3})(?:st|nd|rd|th) minute|\b(\d{1,3})(?:st|nd|rd|th) minute\b"
+                      r"[^.]{0,30}?\bscor", re.IGNORECASE)
 _DRAW_TALK = re.compile(r"\bdraw\b|\bstalemate\b|\bshare the points\b", re.IGNORECASE)
 
 # The clubs are invented. A real club name in model text is a slip ("Brighton, pardon, Brackenford").
@@ -330,6 +333,9 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
                             for d in moment["drivers"]]
     if moment.get("player"):  # the scorer, or the player sent off
         brief["player"] = moment["player"]
+    # Every goal so far with its minute, so a story never moves one ("scores ... in the 29th minute").
+    brief["goals"] = [f"{e['minute']}' {e.get('player') or ''} ({room.names[e['team']]})" for e in room.feed
+                      if e.get("type") == "goal" and e.get("team") in (0, 1)]
     if moment.get("var"):  # a goal that survived a VAR check, or one VAR ruled out
         brief["var"] = moment["var"]
     if moment.get("season"):  # full time: what the result did to the season of the club with most at stake
@@ -368,8 +374,11 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
     if moment.get("trigger") != "full_time" and (gaining or ahead):
         after = moment["after"]
         for k, side in ((0, "home"), (1, "away")):
-            named = re.search(rf"\b{re.escape(room.names[k].split()[0])}\b", head_en)
-            fell = after[side] < moment["before"][side] - 0.01
+            words = {room.names[k].split()[0], room.names[k].split()[-1]}  # "Eastholme" or "Rangers"
+            named = any(re.search(rf"\b{re.escape(w)}\b", head_en) for w in words)
+            fell = after[side] <= moment["before"][side] + 0.005  # "Rangers get a lifeline" needs a real rise
+            # VAR ruling out a side's own goal is never good news for that side, whatever the clock did.
+            fell = fell or (moment.get("trigger") == "var_overturned" and k == moment.get("focus"))
             likeliest = after[side] >= max(after.values())
             # "Nerves favor Brackenford" while Brackenford's chance fell is wrong; "Brackenford still favored"
             # is right as long as they're the likeliest winner.
@@ -377,6 +386,15 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
                 log.warning("headline favors a club whose chance fell (%s); keeping template", head_en)
                 pkg = {**pkg, "headline": None}
                 break
+    if moment.get("trigger") == "swing_draw" and not re.search(rf"\b{draw_now}\s?%", story_en):
+        keep_story = True  # the draw closing in: its chance is the number to give
+    goal_minutes = {e["minute"] for e in room.feed if e.get("type") == "goal"}
+    for said in _GOAL_AT.finditer(story_en):
+        if int(said.group(1) or said.group(2)) not in {m + d for m in goal_minutes for d in (-1, 0, 1)}:
+            # "Belwell scores to make it 1-1 in the 29th minute" (it was the 14th): the instant story is exact.
+            keep_story = True
+    if _wrong_leader(story_en, room, "en") != story_en:
+        keep_story = True
     if any(_REAL_CLUBS.search(v) for key in ("headline", "story") for v in _lang_map(pkg.get(key)).values()):
         # A real club's name slipped in: the instant headline and story are exact, so they stay.
         log.warning("real club name in agents' story for %s; keeping template", moment["moment_id"])
@@ -837,6 +855,42 @@ VOICE_SAMPLE = {
     "fr": "À la 82e minute, but d'Adam Penke ! Eastholme Rangers mène 2-1, et ses chances de victoire passent à 83 %.",
 }
 
+# "Brackenford mène 1-2" (they trail): a club said to lead, followed by a score.
+_LEADS = {"en": r"leads?|are ahead|is ahead|in front", "es": r"lidera|va ganando|gana|manda|por delante",
+          "pt": r"lidera|vence|está vencendo|está ganhando|na frente", "fr": r"mène|devant|en tête"}
+
+
+def _wrong_leader(text: str, room: MatchRoom, lang: str) -> str:
+    """Drop a sentence that says a club leads a match it isn't leading ("Brackenford mène 1-2" at 2-1 down),
+    as long as a real answer is left."""
+    h, a = room.state.goals
+    leader = 0 if h > a else 1 if a > h else None
+    verbs = _LEADS.get(lang, _LEADS["en"])
+    out = []
+    for sent in _SENTENCE.split(text.strip()):
+        wrong = False
+        for k in (0, 1):
+            words = "|".join(re.escape(w) for w in {room.names[k].split()[0], room.names[k].split()[-1]})
+            if re.search(rf"\b(?:{words})\b[^.,;]{{0,25}}?\b(?:{verbs})\b[^.,;]{{0,20}}?\d+\s?-\s?\d+", sent,
+                         re.IGNORECASE) and leader != k:
+                wrong = True
+        if not wrong:
+            out.append(sent)
+    kept = " ".join(out)
+    if kept == text.strip():
+        return text
+    log.warning("dropped a sentence saying the wrong club leads: %s", text[:160])
+    return kept if len(kept.split()) >= 8 else text
+
+
+def _no_trailing_questions(text: str) -> str:
+    """Follow-ups belong in the suggestion chips, not at the end of an answer ("Want me to explain the red?")."""
+    sents = _SENTENCE.split(text.strip())
+    while len(sents) > 1 and sents[-1].rstrip().endswith("?") and len(" ".join(sents[:-1]).split()) >= 8:
+        sents.pop()
+    return " ".join(sents)
+
+
 _NOW_LINE = {"en": "Right now: {h} {ph}%, draw {pd}%, {a} {pa}%.", "es": "Ahora mismo: {h} {ph}%, empate {pd}%, {a} {pa}%.",
              "pt": "Agora: {h} {ph}%, empate {pd}%, {a} {pa}%.", "fr": "En ce moment : {h} {ph} %, nul {pd} %, {a} {pa} %."}
 
@@ -987,6 +1041,8 @@ async def ask(match_id: str, body: AskIn) -> dict:
             if room.status == "finished":
                 answer = _no_final_chances(answer)
             answer = _wrong_team_pct(answer, room, lang)
+            answer = _wrong_leader(answer, room, lang)
+            answer = _no_trailing_questions(answer)
             answer = _cap_words(answer, 85 if u.get("persona") == "analyst" else 55)
             followups = [_localize(lang, _clean(f))[:60] for f in (pkg.get("followups") or [])
                          if isinstance(f, str) and f.strip()][:2]
