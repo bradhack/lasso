@@ -27,6 +27,8 @@ MARKET_OPEN_FOR = 3.0  # match minutes a challenge accepts calls
 IMPACT_SHOWN = 5  # players on the Player of the Match leaderboard (and the vote)
 VAR_STANDS_RATE = 0.7  # the base rate a checked goal stands, used to price "Will the goal stand?"
 PITCH_X, PITCH_Y = 105.0, 68.0  # meters; event coordinates are in each team's attacking frame
+BIG_CHANCE_XG = 0.2  # shots this good (and every goal) carry their build-up for the Touchline
+MAX_CHAIN = 10
 TOUCH_TYPES = {"kickoff", "pass", "shot", "tackle", "interception", "save", "corner", "foul",
                "yellow_card", "red_card", "substitution"}
 PUSH_NOW = {"kickoff", "shot", "corner", "red_card", "half_time", "full_time"}
@@ -536,6 +538,8 @@ class MatchRoom:
             tc["xg"] = round(float(ev.get("xg") or 0), 2)
             tc["g"] = bool(ev.get("outcome"))
             tc["on"] = bool(ev.get("on_target"))
+            if tc["g"] or tc["xg"] >= BIG_CHANCE_XG:
+                tc["chain"] = self._build_up(t)
         # Possession: passes, shots, corners and won tackles/interceptions belong to the acting team.
         if et in ("kickoff", "pass", "shot", "corner", "tackle", "interception", "save"):
             self.possession = t
@@ -545,6 +549,21 @@ class MatchRoom:
             self.possession = 1 - t  # restart goes to the other side
         tc["pos"] = self.possession
         return tc
+
+    def _build_up(self, t: int) -> dict:
+        """How a goal or big chance was built: the run of completed passes by the shooting side just before it,
+        and how that spell on the ball began (a won tackle or interception, a corner, the kickoff)."""
+        passes: list[list] = []
+        start = None
+        for x in reversed(self.touches):
+            if x["t"] == "pass" and x["k"] == t and x.get("o") and "ex" in x and len(passes) < MAX_CHAIN:
+                passes.append([round(x["x"], 1), round(x["y"], 1), round(x["ex"], 1), round(x["ey"], 1), x["p"]])
+                continue
+            if x["k"] == t and x["t"] in ("tackle", "interception", "corner", "kickoff", "save") and "x" in x:
+                start = {"t": x["t"], "p": x["p"], "x": round(x["x"], 1), "y": round(x["y"], 1)}
+            break
+        passes.reverse()
+        return {"passes": passes, "start": start}
 
     def _update_stats(self, ev: dict, t: int | None) -> None:
         if t is None:

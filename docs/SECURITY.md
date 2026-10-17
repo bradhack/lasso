@@ -11,7 +11,7 @@ Lasso has no passwords or payment details, and fans don't create accounts. What 
 | Cost from heavy use | Agents run only for matches someone is watching, with a daily cap on stories, questions and spoken clips, a pace per fan, a cap on private replays, and a cap on sign-ups (30 per address per hour, 5,000 a day). |
 | Trick questions ("ignore your instructions") | A question is something to answer, never an order. The agent that writes answers can't take actions; the Scout can only read match data. The evaluation includes an injection test. |
 | Made-up facts | Answers are checked in code before a fan sees them: real club names, a percentage given to the wrong team, and xG for fans are removed. |
-| Reading arbitrary text aloud | Listen takes the id of a story, event or answer, never text. |
+| Reading arbitrary text aloud | Listen takes the id of a story, event or answer (or a fixed voice sample), never text, and only voices from our own list. |
 | Leaked keys | No keys in the code. Cosmos DB, Event Hubs, Web PubSub and Foundry (including Speech) have key-based sign-in turned off and are reached with a managed identity. The only secrets (the admin key and the agents key) live as Container Apps secrets. The admin key goes in an `X-Admin-Key` header, so it stays out of access logs, and it's compared in constant time. |
 | Containers | They run as a non-root user, and the registry has its admin account turned off. |
 

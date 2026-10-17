@@ -1,4 +1,11 @@
 export type Lang = "en" | "es" | "pt" | "fr";
+
+/** A Listen voice a fan can pick: an Azure neural voice id, its accent and whether it's a man or a woman. */
+export interface VoiceOption {
+  id: string;
+  accent: string;
+  gender: "m" | "f";
+}
 export type Localized = Partial<Record<Lang, string>>;
 export type Probs = { home: number; draw: number; away: number };
 
@@ -264,6 +271,8 @@ export interface Touch {
   g?: boolean; // goal
   on?: boolean; // on target
   pos: 0 | 1 | null; // possession after this action
+  /** Goals and big chances: the passes that built it ([x, y, end x, end y, passer]) and how the move began. */
+  chain?: { passes: [number, number, number, number, string][]; start: { t: string; p: string; x: number; y: number } | null };
 }
 
 export interface BelieveWin {

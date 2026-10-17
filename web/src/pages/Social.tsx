@@ -1,13 +1,40 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import { HTML_LANG, LANGS, t } from "../i18n";
+import type { Key } from "../i18n";
+import { Listen } from "../components/Listen";
 import { useStore } from "../store";
-import type { Lang, LeaderRow } from "../types";
+import type { Lang, LeaderRow, VoiceOption } from "../types";
 import { Crest } from "../components/bits";
 import { Fish, Flame } from "../components/Icons";
 import { StickerBadge, stickerText } from "../components/Stickers";
 import { currentAppearance, setAppearance } from "../theme";
 import { marketQuestion, missionLabel, optionLabel } from "../words";
+
+/** Listen's voice for the fan's language: accent and man or woman, with a sample to hear first. Shown only when
+ * the server reads aloud (the phone's own voice has no choice to offer). */
+function VoicePicker({ lang }: { lang: Lang }) {
+  const azure = useStore((s) => s.speechAzure);
+  const options = useStore((s) => s.voices[lang]) ?? [];
+  const picked = useStore((s) => s.voicePick[lang]);
+  const setVoice = useStore((s) => s.setVoice);
+  if (!azure || options.length < 2) return null;
+  const value = options.find((v) => v.id === picked)?.id ?? options[0].id;
+  const label = (v: VoiceOption) =>
+    `${t(`acc_${v.accent}` as Key, lang)} · ${t(`gen_${v.gender}` as Key, lang)}`;
+  return (
+    <div className="f voice-pick">
+      <label htmlFor="settings-voice">{t("voiceLabel", lang)}</label>
+      <div className="voice-row">
+        <select id="settings-voice" name="voice" value={value} onChange={(e) => setVoice(lang, e.target.value)}>
+          {options.map((v) => <option key={v.id} value={v.id}>{label(v)}</option>)}
+        </select>
+        <Listen kind="sample" id="1" lang={lang} text={t("voiceTry", lang)} label={t("voiceTry", lang)} />
+      </div>
+      <span className="voice-hint">{t("voiceHint", lang)}</span>
+    </div>
+  );
+}
 
 export function Leagues() {
   const user = useStore((s) => s.user);
@@ -195,6 +222,7 @@ export function Profile() {
             {LANGS.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
           </select>
         </label>
+        <VoicePicker lang={lang} />
         <div className="f" style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: "var(--muted)" }}>{t("appearance", lang)}
           <div className="seg">
             <button className={`tab${appearance === "dark" ? " sel" : ""}`} onClick={() => { setAppearance("dark"); setAppearanceState("dark"); }}>{t("dark", lang)}</button>
