@@ -228,7 +228,7 @@ _FIXES = {
            (r",? segundo os números(?: mostrados)?", "")],
     "es": [(r"\bchances\b", "opciones"), (r"\buna chance\b", "una opción"), (r"\bchance\b", "opción"),
            (r"\bpossession\b", "posesión"), (r"\buna (\d+) ?%", r"un \1%"),
-           (r",? según las cifras(?: mostradas)?", "")],
+           (r",? según las cifras(?: mostradas)?", ""), (r"\baún así\b", "aun así")],
     # "marquer le prochain" needs its noun; "selon les chiffres affichés" talks about the screen, not the match.
     "fr": [(r"\ble prochain(?= ?[,.;!?]|$)", "le prochain but"), (r",? selon les chiffres(?: affichés)?", "")],
 }
@@ -418,6 +418,9 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
         # A real club's name slipped in: the instant headline and story are exact, so they stay.
         log.warning("real club name in agents' story for %s; keeping template", moment["moment_id"])
         pkg = {**pkg, "headline": None, "story": None}
+    if (moment.get("trigger") in ("goal", "red_card", "var_overturned") and moment.get("player")
+            and not re.search(rf"\b{re.escape(moment['player'].split()[-1])}\b", story_en)):
+        keep_story = True  # the instant story names the scorer, the player sent off or whose goal VAR ruled out
     if moment.get("trigger") == "var_overturned" and (moment.get("var") or {}).get("stands_pct") is not None:
         # The instant story says what the ruled-out goal would have meant ("not the 23% it would have been");
         # keep it unless the agents' version says so too.
@@ -961,16 +964,16 @@ def _no_trailing_questions(text: str) -> str:
     return " ".join(sents)
 
 
-# The Gaffer is neutral: "we", "our" and, in Spanish, Portuguese and French, first-person plural verbs about a
-# club ("Ganamos con diez porque aguantamos").
+# The Gaffer is neutral and watched the match, it didn't play in it: no "we" or "our", no first-person plural
+# verbs about a club ("Ganamos con diez porque aguantamos"), and no "I won" ("Gané con diez").
 PARTISAN = {
-    "en": r"\b(?:we|us|our|ours)\b",
+    "en": r"\b(?:we|us|our|ours)\b|\bi (?:won|scored|held on|lost|drew)\b",
     "es": r"\b(?:nuestr[oa]s?|nosotros|ganamos|perdimos|empatamos|aguantamos|conseguimos|marcamos|remontamos"
-          r"|resistimos|sufrimos)\b",
+          r"|resistimos|sufrimos|gané|perdí|empaté|aguanté|marqué|pillé|remonté)\b",
     "pt": r"\b(?:noss[oa]s?|nós|ganhamos|vencemos|perdemos|empatamos|aguentamos|conseguimos|marcamos|viramos"
-          r"|sofremos|resistimos)\b",
+          r"|sofremos|resistimos|ganhei|venci|perdi|empatei|aguentei|marquei|virei)\b",
     "fr": r"\b(?:notre|nos|nous)\b|\bon (?:a|avait) (?:gagné|marqué|perdu|tenu|résisté|souffert)\b"
-          r"|\bon (?:gagne|mène|perd)\b",
+          r"|\bon (?:gagne|mène|perd)\b|\bj['’]ai (?:gagné|marqué|perdu|tenu)\b",
 }
 
 
@@ -987,8 +990,10 @@ def _neutral(text: str, lang: str) -> str:
 
 
 # "Brackenford have more shots" when they have fewer: whose shots are meant is the club named last before it.
-_MORE_SHOTS = {"en": r"\bmore shots\b", "es": r"\bmás (?:tiros|disparos|remates)\b",
-               "pt": r"\bmais (?:chutes|finalizações|remates)\b", "fr": r"\bplus de tirs\b"}
+_MORE_SHOTS = {"en": r"\bmore shots\b|\bleads? (?:in |on |the )?shots\b|\bout-?shoot\w*",
+               "es": r"\bmás (?:tiros|disparos|remates)\b|\bdomina (?:en |los )?(?:tiros|disparos|remates)\b",
+               "pt": r"\bmais (?:chutes|finalizações|remates)\b|\blidera (?:em |os |nos )?(?:chutes|finalizações)\b",
+               "fr": r"\bplus de (?:tirs|frappes)\b|\bmène (?:les|aux) (?:tirs|frappes)\b"}
 
 
 def _wrong_shots(text: str, room: MatchRoom, lang: str) -> str:
@@ -1102,6 +1107,25 @@ def _wrong_team_pct(text: str, room: MatchRoom, lang: str = "en") -> str:
     p = _pct(room.probs())
     return f"{kept} " + _NOW_LINE.get(lang, _NOW_LINE["en"]).format(h=room.names[0], a=room.names[1], ph=p["home"],
                                                                      pd=p["draw"], pa=p["away"])
+
+
+# "pushed Brackenford's chance up by 25 points to Brackenford's 24%": a rise can't end below its own size.
+_UP_TO = re.compile(r"\b(up by (\d{1,3})(?: percentage)? points?) to (?:[A-Z]\w+(?: [A-Z]\w+)?['’]s )?(\d{1,3}) ?%")
+
+
+def _rise_consistent(text: str) -> str:
+    """Cut a "to N%" that can't follow a rise that size (English)."""
+    return _UP_TO.sub(lambda m: m.group(1) if int(m.group(3)) < int(m.group(2)) else m.group(0), text)
+
+
+def _full_names(text: str, room: MatchRoom) -> str:
+    """A player named by first name alone ("la roja a Kofi") gets his full name."""
+    for name in {e.get("player") for e in room.feed if e.get("type") in KEY_EVENTS and e.get("player")}:
+        parts = name.split()
+        if len(parts) > 1:
+            # Followed by a capitalized word, it's already a full name (maybe another player's).
+            text = re.sub(rf"\b{re.escape(parts[0])}\b(?!\s+[A-ZÀ-Ý])", name, text)
+    return text
 
 
 def _cap_words(text: str, limit: int) -> str:
@@ -1225,8 +1249,11 @@ async def ask(match_id: str, body: AskIn) -> dict:
             if room.status != "finished":
                 answer = _not_certain(answer, lang)
             answer = _neutral(answer, lang)
+            answer = _full_names(answer, room)
             if lang == "en":
-                answer = _next_goal_consistent(answer)
+                answer = _rise_consistent(_next_goal_consistent(answer))
+                if not _SEASON_Q.search(question):  # "their season chances show Brackenford with 73% to win"
+                    answer = re.sub(r"\bseason (chances|odds)\b", r"\1", answer)
             answer = _cap_words(answer, 85 if u.get("persona") == "analyst" else 55)
             followups = [_localize(lang, _clean(f))[:60] for f in (pkg.get("followups") or [])
                          if isinstance(f, str) and f.strip()][:2]

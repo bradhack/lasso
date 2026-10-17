@@ -81,18 +81,23 @@ META = {
     "pt": ["notas", "olheiro", "os dados", "registr", "ferramenta", "números mostrados"],
     "fr": ["notes", "recruteur", "les données", "enregistr", "outil", "chiffres affichés"],
 }
-# Taking a side: "we" and "our", and first-person plural verbs about a club ("Ganamos con diez").
+# Taking a side or playing: "we" and "our", first-person plural verbs about a club ("Ganamos con diez"), and
+# "I won" ("Gané con diez"): the Gaffer watched the match.
 PARTISAN = {
-    "en": r"\b(?:we|us|our|ours)\b",
+    "en": r"\b(?:we|us|our|ours)\b|\bi (?:won|scored|held on|lost|drew)\b",
     "es": r"\b(?:nuestr[oa]s?|nosotros|ganamos|perdimos|empatamos|aguantamos|conseguimos|marcamos|remontamos"
-          r"|resistimos|sufrimos)\b",
+          r"|resistimos|sufrimos|gané|perdí|empaté|aguanté|marqué|pillé|remonté)\b",
     "pt": r"\b(?:noss[oa]s?|nós|ganhamos|vencemos|perdemos|empatamos|aguentamos|conseguimos|marcamos|viramos"
-          r"|sofremos|resistimos)\b",
+          r"|sofremos|resistimos|ganhei|venci|perdi|empatei|aguentei|marquei|virei)\b",
     "fr": r"\b(?:notre|nos|nous)\b|\bon (?:a|avait) (?:gagné|marqué|perdu|tenu|résisté|souffert)\b"
-          r"|\bon (?:gagne|mène|perd)\b",
+          r"|\bon (?:gagne|mène|perd)\b|\bj['’]ai (?:gagné|marqué|perdu|tenu)\b",
 }
-MORE_SHOTS = {"en": r"\bmore shots\b", "es": r"\bmás (?:tiros|disparos|remates)\b",
-              "pt": r"\bmais (?:chutes|finalizações|remates)\b", "fr": r"\bplus de tirs\b"}
+MORE_SHOTS = {"en": r"\bmore shots\b|\bleads? (?:in |on |the )?shots\b|\bout-?shoot\w*",
+              "es": r"\bmás (?:tiros|disparos|remates)\b|\bdomina (?:en |los )?(?:tiros|disparos|remates)\b",
+              "pt": r"\bmais (?:chutes|finalizações|remates)\b|\blidera (?:em |os |nos )?(?:chutes|finalizações)\b",
+              "fr": r"\bplus de (?:tirs|frappes)\b|\bmène (?:les|aux) (?:tirs|frappes)\b"}
+# "up by 25 points to Brackenford's 24%": a rise can't end below its own size.
+UP_TO = re.compile(r"\bup by (\d{1,3})(?: percentage)? points? to (?:[A-Z]\w+(?: [A-Z]\w+)?['’]s )?(\d{1,3}) ?%")
 # Asked about something Lasso doesn't track, the Gaffer mustn't guess it ("they look compact").
 GUESSED_TACTIC = re.compile(r"\b(?:compact|defensive|sit(?:ting)? deep|deep block|park(?:ing)? the bus"
                             r"|press(?:ing)? (?:on|high)|counter[- ]?attack\w*|compact[oa]s?|defensiv[oa]s?"
@@ -333,6 +338,15 @@ def check_answer(a: dict, f: dict, story: list[dict], names: dict) -> dict[str, 
     c["neutral"] = not re.search(PARTISAN[lang], low)
     if re.search(MORE_SHOTS[lang], low):
         c["shots_right"] = not more_shots_wrong(text, a, names, lang)
+    players = {e.get("player") for e in f["goals"] + f["reds"] if e.get("player") and " " in e["player"]}
+    # A player is named in full or by surname, never by first name alone ("la roja a Kofi").
+    c["full_names"] = not any(re.search(rf"\b{re.escape(p_.split()[0])}\b(?!\s+[A-ZÀ-Ý])", text) for p_ in players)
+    if lang == "es":
+        c["spelling"] = not re.search(r"\baún así\b", low)
+    if lang == "en":
+        c["rise_consistent"] = all(int(m.group(2)) >= int(m.group(1)) for m in UP_TO.finditer(text))
+        if not a["expect"].get("season"):  # match chances aren't "season chances"
+            c["no_season_mixup"] = not re.search(r"\bseason (?:chances|odds)\b", low)
     if lang == "fr":  # "marquer le prochain" needs its noun
         c["whole_phrases"] = not re.search(r"\ble prochain ?[,.;!?]", low)
     c["length"] = len(text.split()) <= LIMIT[a["persona"]]
@@ -499,7 +513,7 @@ def check_story(m: dict) -> dict[str, bool]:
         c["leader_right"] = True
     c["no_real_clubs"] = not any(REAL_CLUBS.search(t) for t in texts + list((m.get("headline") or {}).values()))
     c["minutes_as_numbers"] = not any(SPELLED_MINUTE.search(t) for t in texts)
-    if m.get("trigger") in ("goal", "red_card") and m.get("player"):
+    if m.get("trigger") in ("goal", "red_card", "var_overturned") and m.get("player"):
         c["names_the_player"] = m["player"].split()[-1].lower() in en.lower()
     c["neutral"] = not re.search(PARTISAN["en"], (en + " " + (m["headline"].get("en") or "")).lower())
     c["length"] = len(en.split()) <= 40 and len((m["headline"].get("en") or "").split()) <= 10

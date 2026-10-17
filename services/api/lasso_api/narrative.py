@@ -28,10 +28,10 @@ T = {
                    "fr": "But de {player} pour {team}, et la VAR le valide !"},
     "h_var_out": {"en": "No goal! VAR rules out {player}'s strike", "es": "¡No es gol! El VAR anula el tanto de {player}",
                   "pt": "Não vale! O VAR anula o gol de {player}", "fr": "Pas de but ! La VAR refuse le but de {player}"},
-    "var_story": {"en": "VAR rules it out for {reason}. {poss} chance of winning stays at {b}%, not the {s}% it would have been.",
-                  "es": "El VAR lo anula por {reason}. La probabilidad de victoria de {team} se queda en el {b}%, en vez del {s}% que habría tenido.",
-                  "pt": "O VAR anula por {reason}. A chance de vitória do {team} fica em {b}%, em vez dos {s}% que teria.",
-                  "fr": "La VAR l'annule pour {reason}. Pour {team}, les chances de victoire restent à {b} %, au lieu de {s} %."},
+    "var_story": {"en": "VAR rules out {player}'s goal for {reason}. {poss} chance of winning stays at {b}%, not the {s}% it would have been.",
+                  "es": "El VAR anula el gol de {player} por {reason}. La probabilidad de victoria de {team} se queda en el {b}%, en vez del {s}% que habría tenido.",
+                  "pt": "O VAR anula o gol de {player} por {reason}. A chance de vitória do {team} fica em {b}%, em vez dos {s}% que teria.",
+                  "fr": "La VAR refuse le but de {player} pour {reason}. Pour {team}, les chances de victoire restent à {b} %, au lieu de {s} %."},
     "r_offside": {"en": "offside", "es": "fuera de juego", "pt": "impedimento", "fr": "hors-jeu"},
     "r_handball": {"en": "handball", "es": "mano", "pt": "toque de mão", "fr": "main"},
     "r_foul": {"en": "a foul in the build-up", "es": "falta previa", "pt": "falta no lance", "fr": "faute en amont"},
@@ -215,7 +215,8 @@ def _story(lang: str, *, trigger: str, names: tuple[str, str], score: tuple[int,
                  tr("w_clock_behind" if (score[focus] < score[1 - focus]) else "w_clock_ahead", lang, team=team))
         return f"{first} {tr('d_up', lang, a=draw[0], b=draw[1])}"
     if trigger == "var_overturned" and var:
-        return tr("var_story", lang, reason=tr(f"r_{var['reason']}", lang), b=b, s=var["stands_pct"], **who)
+        return tr("var_story", lang, reason=tr(f"r_{var['reason']}", lang), b=b, s=var["stands_pct"],
+                  player=var.get("player") or team, **who)
     if trigger == "full_time":
         hs, as_ = score
         if hs == as_:

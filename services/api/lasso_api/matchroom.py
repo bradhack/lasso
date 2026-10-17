@@ -491,7 +491,7 @@ class MatchRoom:
 
         if ev.get("var_disallowed") and self.var_story and t is not None:
             story, self.var_story = self.var_story, None
-            out.extend(self._moment("var_overturned", force=True, focus=story["team"],
+            out.extend(self._moment("var_overturned", force=True, focus=story["team"], player=story["player"],
                                     var={k: story[k] for k in ("reason", "player", "stands_pct")}))
         out.extend(impact_msgs)
         now = time.time()
