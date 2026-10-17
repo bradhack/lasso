@@ -47,42 +47,43 @@ WORDS_PER_SECOND = 2.4
 SCENES = [
     {"id": "gauge", "title": "The Gaffer's Gauge",
      "show": "The live match at 77': Eastholme Rangers 1-1 Brackenford City, Eastholme down to ten. The Gauge glows.",
-     "line": "This is Lasso: watch a live match with the Gaffer, our AI, at your side. Eastholme are down to ten, "
-             "and the Gaffer's Gauge makes them long shots."},
+     "line": "Meet Lasso. Say you're an Eastholme fan. Your team's down to ten men, and the Gaffer, our AI, doesn't "
+             "fancy their chances."},
     {"id": "why", "title": "Why it moved",
      "show": "Why it moved glows: the agents' latest story, in plain words.",
-     "line": "The numbers come from a Bayesian model, and seven AI agents explain them. Why it moved says what "
-             "changed the chances, in plain words and four languages."},
+     "line": "Wondering why? AI agents explain it in plain English, Spanish, Portuguese or French, with every "
+             "number straight from the Gaffer's model."},
     {"id": "ask", "title": "Ask the Gaffer",
      "show": "Typing \"Can Eastholme still win this?\" into Ask the Gaffer; the answer arrives with its AI agents chip.",
-     "line": "Ask the Gaffer anything. A Scout agent picks the data tools over MCP; then the Gaffer, with no tools "
-             "of its own, writes the answer."},
+     "line": "Got a question? Just ask. One agent digs up the facts through MCP, and another writes your answer, "
+             "in a few seconds."},
     {"id": "callit", "title": "Call it",
      "show": "Call it: \"Eastholme Rangers score before 89'?\" Yes, then Lasso it.",
-     "line": "Then call it, priced at the Gaffer's own odds. Eastholme to score is a long shot, so it pays big. "
-             "No money, just biscuits."},
+     "line": "Feeling brave? Call it. Eastholme to score is a long shot, so it pays big. No money, just biscuits "
+             "and bragging rights."},
     {"id": "goal", "title": "Penke's winner",
      "show": "82': Penke scores, the Gauge jumps, Called it! pays out, and the agents' story replaces the instant one.",
-     "line": "Penke scores! The Gauge leaps past 80 percent, the call pays out, and the agents' story follows seconds "
-             "later."},
+     "line": "And Penke scores! The Gauge jumps, your call pays off, and a few seconds later the agents tell the "
+             "story."},
     {"id": "hood", "title": "Under the hood",
      "show": "Under the hood for the goal's story: five agents in two rounds, their tools, and Checked by code.",
-     "line": "Under the hood shows the teamwork: five agents in two rounds, the tools they called, and what our "
-             "code checks caught."},
+     "line": "Curious how? Under the hood shows five agents in two rounds, their tools, and what our checks fixed "
+             "before you saw it."},
     {"id": "fabric", "title": "Microsoft Fabric",
      "show": "Slide: the Lasso agents dashboard in Microsoft Fabric, panning down.",
-     "line": "Every story, answer and agent run streams to Microsoft Fabric: speed, cost, the slips caught, and "
-             "how the agents recover."},
+     "line": "Behind the scenes, it all streams into Microsoft Fabric: how fast the agents are, what they cost, and "
+             "what they get wrong."},
     {"id": "compare", "title": "Two agents or one",
      "show": "Slide: the Press Room against one agent alone, on the same 27 questions.",
-     "line": "Is the team worth it? On the same 27 questions, two agents passed all 27; one agent alone passed 25."},
+     "line": "Is a team really better? We tested it. Same 27 questions: the team passed all of them, and one agent "
+             "on its own missed two."},
     {"id": "arch", "title": "How it's built",
      "show": "Slide: how Lasso works, seven agents and one live pipeline.",
-     "line": "Built on Microsoft Agent Framework and Foundry, with A2A, MCP, Event Hubs, Web PubSub, Cosmos DB "
-             "and Container Apps."},
+     "line": "It's all built on Microsoft Foundry and Agent Framework, talking over A2A and MCP, and running on "
+             "Azure from end to end."},
     {"id": "close", "title": "Close",
      "show": "Slide: the Lasso cover.",
-     "line": "Lasso. Believe your call."},
+     "line": "That's Lasso. Watch smarter, call it first, and believe your call."},
 ]
 for s in SCENES:
     s["min"] = round(len(s["line"].split()) / WORDS_PER_SECOND + 1.2, 1)
