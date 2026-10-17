@@ -17,7 +17,7 @@ match makes it wait (an answer arriving, the goal, the agents' story). The scrip
 
 Needs: Python 3.10+, `pip install playwright` then `playwright install chromium`, and ffmpeg on the PATH
 (Windows: `winget install Gyan.FFmpeg`). It restarts the showcase match for anyone watching, and creates one demo
-fan named "Brad".
+fan (named "Brad" unless you pass --name).
 """
 
 from __future__ import annotations
@@ -247,7 +247,7 @@ def show_slide(rec: Recorder, scene: dict) -> None:
                       " requestAnimationFrame(() => requestAnimationFrame(() => s.classList.add('on'))); }", html)
 
 
-def run(app: str, key: str, out: Path, pace: float, from_minute: int) -> None:
+def run(app: str, key: str, out: Path, pace: float, from_minute: int, name: str = "Brad") -> None:
     from playwright.sync_api import sync_playwright
 
     if not shutil.which("ffmpeg"):
@@ -259,7 +259,7 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: int) -> None:
 
     match = http(app, "GET", f"/api/matches/{MATCH}")
     home = match["home"]
-    user = http(app, "POST", "/api/users", {"name": "Brad", "club_id": home["club_id"]})
+    user = http(app, "POST", "/api/users", {"name": name[:24], "club_id": home["club_id"]})
     http(app, "PATCH", f"/api/users/{user['id']}", {"lang": "en", "persona": "fan"})
     print(f"Demo fan {user['id']} supports {home['name']}. Restarting the showcase match from {from_minute}' "
           f"at {pace:g} seconds a minute...")
@@ -425,6 +425,7 @@ if __name__ == "__main__":
     ap.add_argument("--out", default=str(HERE / "out"), help="where to write the video (default docs/video/out)")
     ap.add_argument("--pace", type=float, default=11.0, help="seconds per match minute (default 11)")
     ap.add_argument("--from-minute", type=int, default=77, help="where the replay starts (default 77)")
+    ap.add_argument("--name", default="Brad", help="the demo fan's name (default Brad)")
     ap.add_argument("--script-only", action="store_true", help="write docs/video/SCRIPT.md and stop")
     a = ap.parse_args()
     write_script(HERE / "SCRIPT.md")
@@ -433,4 +434,4 @@ if __name__ == "__main__":
         sys.exit(0)
     if not a.app or not a.key:
         ap.error("the app's URL and --key are needed to record")
-    run(a.app.rstrip("/"), a.key, Path(a.out), a.pace, a.from_minute)
+    run(a.app.rstrip("/"), a.key, Path(a.out), a.pace, a.from_minute, a.name)
