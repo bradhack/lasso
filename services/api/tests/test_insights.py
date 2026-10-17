@@ -40,7 +40,7 @@ def test_answer_sends_a_summary_and_one_event_per_agent_run_without_the_fans_wor
     insights.answer(ROOM, ask_id="a1", lang="fr", persona="fan", mode="team", source="agents", latency_ms=27000,
                     trace=TRACE, minute=89)
     events = _drain(q)
-    assert [e["kind"] for e in events] == ["answer", "agent_run", "agent_run", "agent_run"]
+    assert [e["event_kind"] for e in events] == ["answer", "agent_run", "agent_run", "agent_run"]
     assert events[0]["score"] == "2-1" and events[0]["fix_count"] == 1
     assert all("question" not in e and "answer" not in e for e in events)
     assert events[3]["agent"] == "presser" and events[3]["hedge"] is True
@@ -54,7 +54,7 @@ def test_story_event_has_the_chances_and_the_swing():
               "agent_trace": TRACE}
     insights.story(ROOM, moment)
     ev = _drain(q)[0]
-    assert ev["kind"] == "story" and ev["p_home"] == 83.0 and ev["swing"] == 67.0
+    assert ev["event_kind"] == "story" and ev["p_home"] == 83.0 and ev["swing"] == 67.0
 
 
 def test_nothing_is_sent_when_fabric_is_not_configured():

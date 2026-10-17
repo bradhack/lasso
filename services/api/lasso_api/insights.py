@@ -1,7 +1,7 @@
 """Lasso's insights stream to Microsoft Fabric (Real-Time Intelligence).
 
 When LASSO_FABRIC_CONNECTION holds an Eventstream custom endpoint's connection string, every agent-written story,
-every Ask the Gaffer answer and every agent run inside them is sent there as one flat JSON event. Fabric stores
+every Ask the Gaffer answer and every agent run inside them is sent there as one flat JSON event, its fields named as the Eventhouse columns. Fabric stores
 them in an Eventhouse (KQL database) and the Lasso dashboard charts them: agent latency and tokens, what the code
 checks caught, how the agents recovered, and how the matches moved. See docs/FABRIC.md and fabric/.
 
@@ -64,7 +64,7 @@ def _summary(trace: list[dict]) -> dict:
 
 def _agent_runs(trace: list[dict], parent_kind: str, parent_id: str, match_id: str) -> None:
     for t in _runs(trace):
-        _put({"kind": "agent_run", "parent_kind": parent_kind, "parent_id": parent_id, "match_id": match_id,
+        _put({"event_kind": "agent_run", "parent_kind": parent_kind, "parent_id": parent_id, "match_id": match_id,
               "agent": t.get("agent"), "ms": t.get("ms") or 0, "ok": bool(t.get("ok")), "error": t.get("error") or "",
               "stage": t.get("stage") or 0, "model": t.get("model") or "",
               "tokens_in": t.get("in") or 0, "tokens_out": t.get("out") or 0, "reasoning": t.get("reasoning") or 0,
@@ -80,7 +80,7 @@ def story(room, moment: dict) -> None:
     trace = moment.get("agent_trace") or []
     after = moment.get("after") or {}
     before = moment.get("before") or {}
-    _put({"kind": "story", "match_id": room.match_id, "home": room.names[0], "away": room.names[1],
+    _put({"event_kind": "story", "match_id": room.match_id, "home": room.names[0], "away": room.names[1],
           "moment_id": moment.get("moment_id"), "trigger": moment.get("trigger"), "minute": moment.get("minute"),
           "score": "-".join(str(g) for g in moment.get("score") or []), "source": moment.get("source") or "template",
           "latency_ms": moment.get("latency_ms") or 0, "headline": (moment.get("headline") or {}).get("en", ""),
@@ -98,7 +98,7 @@ def answer(room, *, ask_id: str, lang: str, persona: str, mode: str, source: str
     the app)."""
     if not _enabled:
         return
-    _put({"kind": "answer", "match_id": room.match_id, "home": room.names[0], "away": room.names[1],
+    _put({"event_kind": "answer", "match_id": room.match_id, "home": room.names[0], "away": room.names[1],
           "ask_id": ask_id, "minute": minute, "lang": lang, "persona": persona, "mode": mode, "source": source,
           "latency_ms": latency_ms, "score": "-".join(str(g) for g in room.state.goals), **_summary(trace)})
     _agent_runs(trace, "answer", ask_id, room.match_id)
