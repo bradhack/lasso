@@ -240,6 +240,8 @@ def valid_pcts(a: dict, story: list[dict]) -> set[int]:
     for m in story:
         for side in ("before", "after"):
             vals |= {round(100 * v) for v in m[side].values()}
+    for n in a.get("next_goal") or []:  # chances of scoring next ("Brackenford 56% to score next")
+        vals |= {round(100 * v) for v in (n or {}).values()}
     for sv in a.get("season") or []:  # the season outlook's percentages (table questions)
         vals |= {int(x) for x in re.findall(r'_pct": (\d+)', json.dumps(sv or {}))}
     return {v + d for v in vals for d in (-2, -1, 0, 1, 2)}
@@ -310,6 +312,12 @@ def check_answer(a: dict, f: dict, story: list[dict], names: dict) -> dict[str, 
     c["pcts_match_teams"] = pcts_match_teams(text, a, story, names)
     c["no_real_clubs"] = not REAL_CLUBS.search(text)
     c["no_trailing_questions"] = not text.rstrip().endswith("?")
+    # No detail the match doesn't have: this match has no penalties.
+    if not any(g.get("penalty") for g in f["goals"]):
+        c["no_invented_penalty"] = not re.search(r"\bpenal(?:ty|ti|tis|ties)\b|pênalti|penálti|tiro penal", low)
+    nl = NEXT_LIKELIER.search(text)
+    if nl:
+        c["next_goal_consistent"] = int(nl.group(1)) >= int(nl.group(2))
     if a.get("score") and LEAD_SCORE.search(text):
         c["leader_right"] = not leads_wrong(text, a["score"], names, lang)
     mins = [int(x or y) for x, y in MINUTE.findall(text)]
@@ -329,7 +337,8 @@ def check_answer(a: dict, f: dict, story: list[dict], names: dict) -> dict[str, 
         win = next((p for p in imp.get("players", []) if p["id"] == imp.get("winner")), None)
         c["fact_motm"] = bool(win) and win["short"].lower() in low
     if e.get("season"):
-        c["fact_season"] = any(w in low for w in ("relegat", "top four", "top-four", "title", "table", "finish"))
+        c["fact_season"] = any(w in low for w in ("relegat", "top four", "top-four", "title", "table", "finish",
+                                                  "standings", "place", "position"))
     if e.get("cant_replace"):
         c["fact_cant_replace"] = any(x in low for x in CANT_REPLACE)
     if e.get("scorer_of"):
@@ -362,6 +371,8 @@ GOAL_AT = re.compile(r"\bscor\w*\b[^.]{0,60}?\b(\d{1,3})(?:st|nd|rd|th) minute|\
                      r"[^.]{0,30}?\bscor", re.I)
 LEADS = {"en": r"leads?|are ahead|is ahead|in front", "es": r"lidera|va ganando|gana|manda|por delante",
          "pt": r"lidera|vence|está vencendo|está ganhando|na frente", "fr": r"mène|devant|en tête"}
+NEXT_LIKELIER = re.compile(r"(?:are|is|looks?) (?:likelier|more likely) to score next, (\d{1,3}) ?% to [A-Z][\w]+(?: [A-Z][\w]+)?['’]s"
+                           r" (\d{1,3}) ?%")
 LEAD_SCORE = re.compile(r"\b(?:" + "|".join(LEADS.values()) + r")\b[^.,;]{0,20}?\d+\s?-\s?\d+", re.I)
 
 

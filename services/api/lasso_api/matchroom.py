@@ -605,8 +605,9 @@ class MatchRoom:
             if ev.get("var_disallowed"):
                 return None
             if ev.get("outcome"):
-                return {**base, "type": "goal", "xg": round(xg, 2), "speed": ev.get("ball_speed_kmh"),
-                        "text": f"GOAL! {player} ({team}), {xg:.2f} xG, {ev.get('ball_speed_kmh') or 0:.0f} km/h"}
+                pen = " (penalty)" if ev.get("is_penalty") else ""
+                return {**base, "type": "goal", "xg": round(xg, 2), "speed": ev.get("ball_speed_kmh"), "penalty": bool(pen),
+                        "text": f"GOAL! {player} ({team}){pen}, {xg:.2f} xG, {ev.get('ball_speed_kmh') or 0:.0f} km/h"}
             if xg >= 0.15 or ev.get("on_target"):
                 what = "saved" if ev.get("on_target") else "off target"
                 return {**base, "xg": round(xg, 2), "speed": ev.get("ball_speed_kmh"), "on": bool(ev.get("on_target")),

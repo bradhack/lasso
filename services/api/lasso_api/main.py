@@ -790,7 +790,11 @@ async def vote_motm(match_id: str, body: MotmVote) -> dict:
 # ------------------------------------------------------------ Ask the Gaffer
 _ask_state: dict = {"day": "", "count": 0, "users": {}}
 _answers: "OrderedDict[str, tuple[str, str]]" = OrderedDict()  # ask_id -> (lang, answer), for Listen
-KEY_EVENTS = {"goal", "red_card", "yellow_card", "substitution", "half_time"}
+KEY_EVENTS = {"goal", "red_card", "yellow_card", "substitution", "half_time", "var_decision"}
+# A question about the season or the standings gets the season outlook in the brief itself (the Scout once
+# skipped looking it up, and the answer never mentioned the season).
+_SEASON_Q = re.compile(r"season|table|standing|top.?four|top 4|title|relegat|league|finish|temporada|tabla|clasific|"
+                       r"descenso|liga|campeonato|tabela|classifica|rebaix|saison|classement|relégu|titre", re.IGNORECASE)
 _ASK_OFF_TOPIC = {
     "en": "I only talk about this match, so I'll leave that one. Right now at {m}': {score}. My numbers: {h} {ph}%, "
           "draw {pd}%, {a} {pa}%.",
@@ -926,6 +930,20 @@ def _wrong_leader(text: str, room: MatchRoom, lang: str) -> str:
         return text
     log.warning("dropped a sentence saying the wrong club leads: %s", text[:160])
     return kept if len(kept.split()) >= 8 else text
+
+
+# "Eastholme are likelier to score next, 38% to Brackenford's 53%": the name and the numbers disagree.
+_NEXT_LIKELIER = re.compile(r"\b([A-Z][\w]+(?: [A-Z][\w]+)?) (are|is|look|looks) (likelier|more likely) to score next, "
+                            r"(\d{1,3}) ?% to ([A-Z][\w]+(?: [A-Z][\w]+)?)['’]s (\d{1,3}) ?%")
+
+
+def _next_goal_consistent(text: str) -> str:
+    """Put the likelier side first when the sentence named the wrong one (English)."""
+    def fix(m: re.Match) -> str:
+        if int(m.group(4)) >= int(m.group(6)):
+            return m.group(0)
+        return f"{m.group(5)} {m.group(2)} {m.group(3)} to score next, {m.group(6)}% to {m.group(1)}'s {m.group(4)}%"
+    return _NEXT_LIKELIER.sub(fix, text)
 
 
 def _no_trailing_questions(text: str) -> str:
@@ -1076,6 +1094,8 @@ async def ask(match_id: str, body: AskIn) -> dict:
             rules.append("The match is over and the result is final: never quote a current chance of winning (no "
                          "100% or 0%). Talk about the result; quote a chance only as it was at a moment during the "
                          "match, for example before the winner.")
+        if _SEASON_Q.search(question) and (sv := room.season_tool()):
+            brief["season"] = sv["this_match"]  # each club's place, its race and its chances if it wins, draws or loses
         # This fan's last questions here, so a follow-up ("who's his sub?") knows who "he" is.
         if earlier := list(_chats.get((body.user_id, match_id), [])):
             brief["earlier_in_this_chat"] = earlier
@@ -1092,6 +1112,8 @@ async def ask(match_id: str, body: AskIn) -> dict:
             answer = _wrong_team_pct(answer, room, lang)
             answer = _wrong_leader(answer, room, lang)
             answer = _no_trailing_questions(answer)
+            if lang == "en":
+                answer = _next_goal_consistent(answer)
             answer = _cap_words(answer, 85 if u.get("persona") == "analyst" else 55)
             followups = [_localize(lang, _clean(f))[:60] for f in (pkg.get("followups") or [])
                          if isinstance(f, str) and f.strip()][:2]
