@@ -17,8 +17,8 @@ Every scene lasts at least as long as its lines take to say (about 2.4 words a s
 match makes it wait (an answer arriving, the goal, the agents' story). The script itself lives in SCENES below;
 `--script-only` writes docs/video/SCRIPT.md from it without recording.
 
-With --voice, each scene's lines are spoken by an Azure AI Speech neural voice (default en-US-AndrewMultilingualNeural,
-a natural US voice) on Lasso's own Foundry account, signed in as you through the Azure CLI. The lines are made first,
+With --voice, each scene's lines are spoken by an Azure AI Speech neural voice (default en-US-JaneNeural
+in its excited style, at +14%) on Lasso's own Foundry account, signed in as you through the Azure CLI. The lines are made first,
 each scene lasts as long as its lines, and the voice is mixed in at each scene's start. Your account needs the
 "Cognitive Services User" role on the Foundry account; if it's missing, the script prints the one command to add it.
 
