@@ -98,6 +98,15 @@ T = {
                          "fr": "Ils gardent {now} % de chances {zone}."},
     "w_goal_now": {"en": "That makes it {home} {hs}, {away} {as_}.", "es": "Con esto, {home} {hs}, {away} {as_}.",
                    "pt": "Com isso, {home} {hs} x {as_} {away}.", "fr": "Le score passe à {hs}-{as_}."},
+    # The scorer and the player sent off are named in the story, not just the headline.
+    "w_goal_by": {"en": "{player} scores, and it's {home} {hs}, {away} {as_}.",
+                  "es": "Gol de {player}: {home} {hs}, {away} {as_}.",
+                  "pt": "Gol de {player}: {home} {hs} x {as_} {away}.",
+                  "fr": "But de {player}, le score passe à {hs}-{as_}."},
+    "w_red_by": {"en": "{player} is sent off, so {team} will play the rest of the match with ten men.",
+                 "es": "{player} es expulsado y {team} jugará con diez el resto del partido.",
+                 "pt": "{player} é expulso, e o {team} vai jogar com dez até o fim.",
+                 "fr": "{player} est expulsé, et {team} va devoir finir le match à dix."},
     "w_red_now": {"en": "{team} will play the rest of the match with ten men.",
                   "es": "{team} jugará con diez el resto del partido.",
                   "pt": "O {team} vai jogar com dez até o fim.", "fr": "{team} va devoir finir le match à dix."},
@@ -204,7 +213,8 @@ def possessive(name: str) -> str:
 
 
 def _story(lang: str, *, trigger: str, names: tuple[str, str], score: tuple[int, int], focus: int, a: int, b: int,
-           drivers: list[dict], red_team: int | None, var: dict | None, draw: tuple[int, int] | None = None) -> str:
+           drivers: list[dict], red_team: int | None, var: dict | None, draw: tuple[int, int] | None = None,
+           player: str | None = None) -> str:
     """Two plain sentences: what happened (or why the chances moved), then the focus team's chance of winning
     (or, when the draw is closing in, the chance of a draw)."""
     team = names[focus]
@@ -226,9 +236,11 @@ def _story(lang: str, *, trigger: str, names: tuple[str, str], score: tuple[int,
     top = next((d for d in drivers if abs(d["delta"]) >= 1), None)
     mine, theirs = (score[0], score[1]) if focus == 0 else (score[1], score[0])
     if trigger == "goal":
-        first = tr("w_goal_now", lang, home=names[0], away=names[1], hs=score[0], as_=score[1])
+        first = tr("w_goal_by" if player else "w_goal_now", lang, player=player, home=names[0], away=names[1],
+                   hs=score[0], as_=score[1])
     elif trigger == "red_card":
-        first = tr("w_red_now", lang, team=names[red_team if red_team is not None else focus])
+        first = tr("w_red_by" if player else "w_red_now", lang, player=player,
+                   team=names[red_team if red_team is not None else focus])
     elif trigger == "kickoff":
         first = tr("w_kickoff", lang)
     elif top and top["component"] == "clock" and mine == theirs and draw and draw[1] > draw[0]:
@@ -265,7 +277,7 @@ def season_sentence(lang: str, season: dict, they: bool = False) -> str:
 def template_package(*, trigger: str, names: tuple[str, str], score: tuple[int, int], minute: int,
                      before: dict, after: dict, focus: int, drivers: list[dict], scorer: str | None,
                      red_team: int | None, stats: dict, var: dict | None = None,
-                     season: dict | None = None) -> dict:
+                     season: dict | None = None, player: str | None = None) -> dict:
     side = "home" if focus == 0 else "away"
     a, b = round(before[side] * 100), round(after[side] * 100)
     team = names[focus]
@@ -289,7 +301,8 @@ def template_package(*, trigger: str, names: tuple[str, str], score: tuple[int, 
             headline[lang] = tr("h_pulse", lang, min=minute)
     draw = (round(before["draw"] * 100), round(after["draw"] * 100))
     story = {lang: _story(lang, trigger=trigger, names=names, score=score, focus=focus, a=a, b=b,
-                          drivers=drivers, red_team=red_team, var=var, draw=draw) for lang in LANGS}
+                          drivers=drivers, red_team=red_team, var=var, draw=draw, player=scorer or player)
+             for lang in LANGS}
     if trigger == "full_time" and season:
         # "Their" when the first sentence just named the club (the winner).
         they = score[0] != score[1] and season.get("team") == (0 if score[0] > score[1] else 1)

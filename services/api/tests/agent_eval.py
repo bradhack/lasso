@@ -96,6 +96,13 @@ MORE_SHOTS = {"en": r"\bmore shots\b|\bleads? (?:in |on |the )?shots\b|\bout-?sh
               "es": r"\bmás (?:tiros|disparos|remates)\b|\bdomina (?:en |los )?(?:tiros|disparos|remates)\b",
               "pt": r"\bmais (?:chutes|finalizações|remates)\b|\blidera (?:em |os |nos )?(?:chutes|finalizações)\b",
               "fr": r"\bplus de (?:tirs|frappes)\b|\bmène (?:les|aux) (?:tirs|frappes)\b"}
+# "Eastholme son más probables para el próximo gol" when Brackenford were: likelier to score next, any language.
+LIKELIER_NEXT = {
+    "en": r"\b(?:likelier|more likely|better placed|bigger chance|better chance) to score (?:next|the next goal)\b",
+    "es": r"\bm[aá]s (?:probables?|cerca) (?:para|de) (?:marcar )?(?:el )?(?:pr[oó]ximo|siguiente)\b",
+    "pt": r"\b(?:chance maior|maior chance|mais prov[aá]ve(?:l|is)) (?:de|para) (?:marcar )?(?:o )?(?:pr[oó]ximo|a seguir)\b",
+    "fr": r"\bplus (?:susceptibles?|probables?|de chances?) (?:de|pour) marquer le prochain\b",
+}
 # "up by 25 points to Brackenford's 24%": a rise can't end below its own size.
 UP_TO = re.compile(r"\bup by (\d{1,3})(?: percentage)? points? to (?:[A-Z]\w+(?: [A-Z]\w+)?['’]s )?(\d{1,3}) ?%")
 # Asked about something Lasso doesn't track, the Gaffer mustn't guess it ("they look compact").
@@ -330,6 +337,29 @@ def more_shots_wrong(text: str, a: dict, names: dict, lang: str) -> bool:
     return False
 
 
+def next_side_wrong(text: str, a: dict, names: dict, lang: str) -> bool:
+    """A club said to be likelier to score next that wasn't, both when it was asked and when it was answered."""
+    ngs = [n for n in a.get("next_goal") or [] if n]
+    if not ngs or any(abs(n["home"] - n["away"]) < 0.02 for n in ngs):
+        return False
+    sides = {0 if n["home"] > n["away"] else 1 for n in ngs}
+    if len(sides) > 1:
+        return False
+    likelier = sides.pop()
+    words = [{names[s_].split()[0], names[s_].split()[-1]} for s_ in ("home", "away")]
+    last = None
+    for sent in re.split(r"(?<=[.!?])\s+", text):
+        named = sorted((h.start(), i) for i in (0, 1) for w in words[i] for h in re.finditer(rf"\b{re.escape(w)}\b", sent))
+        for m in re.finditer(LIKELIER_NEXT[lang], sent, re.IGNORECASE):
+            before = [i for pos, i in named if pos < m.start()]
+            k = before[-1] if before else last
+            if k is not None and k != likelier:
+                return True
+        if named:
+            last = named[-1][1]
+    return False
+
+
 def check_answer(a: dict, f: dict, story: list[dict], names: dict) -> dict[str, bool]:
     text, low, lang = a["answer"], a["answer"].lower(), a["lang"]
     c: dict[str, bool] = {"answered": a["status"] == 200 and a["source"] == "agents" and bool(text)}
@@ -368,6 +398,8 @@ def check_answer(a: dict, f: dict, story: list[dict], names: dict) -> dict[str, 
     # No detail the match doesn't have: this match has no penalties.
     if not any(g.get("penalty") for g in f["goals"]):
         c["no_invented_penalty"] = not re.search(r"\bpenal(?:ty|ti|tis|ties)\b|pênalti|penálti|tiro penal", low)
+    if not a.get("finished") and re.search(LIKELIER_NEXT[lang], text, re.I):
+        c["next_goal_side_right"] = not next_side_wrong(text, a, names, lang)
     nl = NEXT_LIKELIER.search(text)
     if nl:
         c["next_goal_consistent"] = int(nl.group(1)) >= int(nl.group(2))

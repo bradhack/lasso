@@ -763,7 +763,7 @@ class MatchRoom:
         stats = self.stats_public()
         pkg = template_package(trigger=trigger, names=self.names, score=tuple(b.goals), minute=self.minute(),
                                before=before, after=after, focus=focus, drivers=drivers, scorer=scorer,
-                               red_team=red_team, stats=stats, var=var, season=season)
+                               red_team=red_team, stats=stats, var=var, season=season, player=player)
         moment = {
             "moment_id": f"{self.match_id}-m{next(_moment_ids)}", "match_id": self.match_id,
             "trigger": trigger, "minute": self.minute(), "period": b.period, "focus": focus,

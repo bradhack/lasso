@@ -970,6 +970,45 @@ def _next_goal_consistent(text: str) -> str:
     return _NEXT_LIKELIER.sub(fix, text)
 
 
+# "Eastholme son más probables para el próximo gol con 32%" (Brackenford 47%): the club said to be likelier to
+# score next must be the one with the higher next-goal chance, in any language.
+_LIKELIER_NEXT = {
+    "en": r"\b(?:likelier|more likely|better placed|bigger chance|better chance) to score (?:next|the next goal)\b",
+    "es": r"\bm[aá]s (?:probables?|cerca) (?:para|de) (?:marcar )?(?:el )?(?:pr[oó]ximo|siguiente)\b",
+    "pt": r"\b(?:chance maior|maior chance|mais prov[aá]ve(?:l|is)) (?:de|para) (?:marcar )?(?:o )?(?:pr[oó]ximo|a seguir)\b",
+    "fr": r"\bplus (?:susceptibles?|probables?|de chances?) (?:de|pour) marquer le prochain\b",
+}
+
+
+def _next_goal_side(text: str, room: MatchRoom, lang: str) -> str:
+    """Drop a sentence that names the wrong club as likelier to score next."""
+    ng = room.next_goal() if room.status != "finished" else None
+    if not ng or abs(ng["home"] - ng["away"]) < 0.02:
+        return text
+    likelier = 0 if ng["home"] > ng["away"] else 1
+    words = [{n.split()[0], n.split()[-1]} for n in room.names]
+    pat = re.compile(_LIKELIER_NEXT.get(lang, _LIKELIER_NEXT["en"]), re.IGNORECASE)
+    sents = _SENTENCE.split(text.strip())
+    keep, last = [], None
+    for sent in sents:
+        named = sorted((h.start(), i) for i in (0, 1) for w in words[i]
+                       for h in re.finditer(rf"\b{re.escape(w)}\b", sent))
+        wrong = False
+        for m in pat.finditer(sent):
+            before = [i for pos, i in named if pos < m.start()]
+            k = before[-1] if before else last
+            wrong = wrong or (k is not None and k != likelier)
+        if named:
+            last = named[-1][1]
+        if not wrong:
+            keep.append(sent)
+    if len(keep) == len(sents):
+        return text
+    log.warning("dropped a sentence naming the wrong club likelier to score next: %s", text[:160])
+    kept = " ".join(keep)
+    return kept if len(kept.split()) >= 8 else _complete(kept, room, lang)
+
+
 def _no_trailing_questions(text: str) -> str:
     """Follow-ups belong in the suggestion chips, not at the end of an answer ("Want me to explain the red?")."""
     sents = _SENTENCE.split(text.strip())
@@ -1292,6 +1331,7 @@ async def ask(match_id: str, body: AskIn) -> dict:
             answer = _wrong_leader(answer, room, lang, complete=True)
             answer = _no_trailing_questions(answer)
             answer = _no_meta(answer, room, lang)
+            answer = _next_goal_side(answer, room, lang)
             answer = _wrong_shots(answer, room, lang)
             answer = _no_guessed_tactics(answer)
             if room.status != "finished":
