@@ -1550,9 +1550,11 @@ async def model_card() -> dict:
 
 @app.post("/api/admin/matches/{match_id}/restart")
 async def restart(match_id: str, key: str = "", from_minute: float = 0.0, minute_seconds: float | None = None,
-                  agents: bool = False, x_admin_key: str = Header("", max_length=200)):
+                  agents: bool = False, var_seconds: float | None = Query(None, ge=2, le=60),
+                  x_admin_key: str = Header("", max_length=200)):
     """Admin: replay a match now. agents=true has the agents write its stories even with no one watching
-    (the evaluation checks them over plain HTTP); it lasts until that replay's full time."""
+    (the evaluation checks them over plain HTTP); it lasts until that replay's full time. var_seconds sets how long
+    a VAR check lasts (the demo recorder matches it to its narration)."""
     # The key belongs in the X-Admin-Key header (a URL ends up in access logs); ?key= still works for old scripts.
     given = (x_admin_key or key).encode()
     if not settings.admin_key or not hmac.compare_digest(given, settings.admin_key.encode()):
@@ -1568,13 +1570,14 @@ async def restart(match_id: str, key: str = "", from_minute: float = 0.0, minute
 
         async def run_once() -> None:
             try:
-                await replay(data, match_id, on_event, minute_seconds or settings.minute_seconds, from_minute)
+                await replay(data, match_id, on_event, minute_seconds or settings.minute_seconds, from_minute,
+                             var_seconds=var_seconds)
             finally:
                 _overrides.discard(match_id)
 
         _spawn(run_once())
     else:
-        await scheduler.restart(match_id, from_minute, minute_seconds)
+        await scheduler.restart(match_id, from_minute, minute_seconds, var_seconds)
     return {"ok": True}
 
 

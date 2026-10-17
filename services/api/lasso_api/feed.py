@@ -86,10 +86,11 @@ def var_plan(match_id: str, events: list[dict]) -> dict[int, tuple[str, str]]:
 
 async def replay(data: DemoData, match_id: str, on_event: OnEvent, minute_seconds: float,
                  start_minute: float = 0.0, stop: asyncio.Event | None = None, room_id: str | None = None,
-                 quiet_before: bool = False, reset: bool = True) -> None:
+                 quiet_before: bool = False, reset: bool = True, var_seconds: float | None = None) -> None:
     """Play a match's events in real time. ``room_id`` plays them into another room (a private replay);
     ``quiet_before`` skips sending the events before ``start_minute``, and the room catches up on them
-    silently (no stories, calls or agent runs for minutes nobody watched)."""
+    silently (no stories, calls or agent runs for minutes nobody watched). ``var_seconds`` sets how long a VAR
+    check lasts (the demo recorder matches it to its narration); by default it's three match minutes."""
     events = data.events_for(match_id)
     target = room_id or match_id
     var = var_plan(match_id, events)
@@ -116,7 +117,7 @@ async def replay(data: DemoData, match_id: str, on_event: OnEvent, minute_second
             base = {"period": e["period"], "clock": e["clock"], "team_id": e.get("team_id"),
                     "player_id": e.get("player_id"), "xg": e.get("xg"), "reason": reason}
             await on_event(target, {"type": "var_check", **base})
-            await asyncio.sleep(max(VAR_MIN_SECONDS, 3 * minute_seconds))
+            await asyncio.sleep(var_seconds if var_seconds is not None else max(VAR_MIN_SECONDS, 3 * minute_seconds))
             if stop is not None and stop.is_set():
                 return
             await on_event(target, {"type": "var_decision", **base, "decision": decision})
@@ -153,7 +154,8 @@ class Scheduler:
                 log.exception("replay failed for %s", mid)
             await asyncio.sleep(self.cfg.restart_pause_seconds)
 
-    async def restart(self, mid: str, start_minute: float = 0.0, minute_seconds: float | None = None) -> None:
+    async def restart(self, mid: str, start_minute: float = 0.0, minute_seconds: float | None = None,
+                      var_seconds: float | None = None) -> None:
         """Restart one match now (used to record the demo from a chosen minute)."""
         if mid in self.tasks:
             self.tasks[mid].cancel()
@@ -162,7 +164,7 @@ class Scheduler:
 
         async def run() -> None:
             await replay(self.data, mid, self.on_event, minute_seconds or self.cfg.minute_seconds,
-                         start_minute=start_minute)
+                         start_minute=start_minute, var_seconds=var_seconds)
             await asyncio.sleep(self.cfg.restart_pause_seconds)
             await self._loop(mid, 0)
 

@@ -2,10 +2,12 @@
 
     python docs/video/record_demo.py https://<your app> --key <admin key>
 
-It replays the showcase match from the 77th minute (slowed down so each scene has time for its lines), signs in a
-demo fan of Eastholme Rangers, and drives a 1920x1080 browser through the scenes below: the Gauge, Why it moved,
-Ask the Gaffer, Call it, Penke's winner, Under the hood, then four slides (Microsoft Fabric, two agents or one, how
-it works, the close). It captures the screen as it goes and writes, in docs/video/out/:
+It opens on the Lasso cover while it restarts the showcase match late in the second half (timed so the 82nd-minute
+goal follows Call your shot, slowed down so each scene has time for its lines, with the VAR check as long as its
+lines), signs in a demo fan of Eastholme Rangers, and drives a 1920x1080 browser through the scenes below: the Gauge,
+Why it moved, Ask the Gaffer, Call your shot, the VAR check, the goal standing, Under the hood (enlarged, each round
+highlighted as it's described), then four slides (Microsoft Fabric, a team of agents or one, how it's built, the
+close). It captures the screen as it goes and writes, in docs/video/out/:
 
     lasso-demo.mp4   the video, 1080p: narrated by Azure AI Speech with --voice, otherwise silent for your own voice
     lasso-demo.srt   the narration as captions, timed to the video (read along, or upload to YouTube as captions)
@@ -39,54 +41,65 @@ import urllib.request
 from pathlib import Path
 
 MATCH = "S5-MD07-03"  # the showcase: Eastholme Rangers 2-1 Brackenford City, Penke's winner at 82'
+GOAL_CLOCK = 82.15    # when that goal goes in (and VAR checks it)
+ADDED_1H = 3.08       # the first half's added time: replays count minutes from kickoff, including it
 HERE = Path(__file__).resolve().parent
 IMG = HERE.parent / "img"
-WORDS_PER_SECOND = 2.4
+WORDS_PER_SECOND = 2.9  # Azure AI Speech at the recorder's default rate
 
 # The script: one entry per scene, in order. "line" is what you say; the scene lasts at least as long as it takes.
 SCENES = [
+    {"id": "intro", "title": "Lasso",
+     "show": "Slide: the Lasso cover, while the showcase match restarts underneath.",
+     "line": "This is Lasso. A team of AI agents watches live football with you, explains every swing, answers "
+             "your questions, and lets you call what happens next."},
     {"id": "gauge", "title": "The Gaffer's Gauge",
-     "show": "The live match at 77': Eastholme Rangers 1-1 Brackenford City, Eastholme down to ten. The Gauge glows.",
-     "line": "Meet Lasso. Say you're an Eastholme fan. At this point in the match, your team's down to ten men, and "
-             "the Gaffer, our AI, doesn't fancy their chances."},
+     "show": "The live match: Eastholme Rangers 1-1 Brackenford City in the second half, Eastholme down to ten. "
+             "The score and the Gauge glow.",
+     "line": "We're backing Eastholme Rangers: 1-1 late in the second half, down to ten since an early red card, and "
+             "the Gaffer, our win probability model, doesn't fancy their chances."},
     {"id": "why", "title": "Why it moved",
      "show": "Why it moved glows: the agents' latest story, in plain words.",
-     "line": "Wondering why? Why it moved tells you what changed the win probability, in plain English, "
-             "Spanish, Portuguese or French, with every number straight from the Gaffer's model."},
+     "line": "Why it moved explains what changed the win probability, in English, Spanish, Portuguese or French."},
     {"id": "ask", "title": "Ask the Gaffer",
      "show": "Typing \"Can Eastholme still win this?\" into Ask the Gaffer; the answer arrives with its AI agents chip.",
-     "line": "Got a question? Just ask. One agent digs up the facts through MCP, and another writes your answer, "
-             "in a few seconds."},
-    {"id": "callit", "title": "Call it",
+     "line": "Ask anything, at any point in the match. One agent digs up the facts through the Model Context "
+             "Protocol, and another writes your answer."},
+    {"id": "callit", "title": "Call your shot",
      "show": "Call it: \"Eastholme Rangers score before 89'?\" Yes, then Lasso it.",
-     "line": "Feeling brave? Call it. Biscuit rewards are set by the Gaffer's own calculated odds, so a long shot "
-             "like Eastholme scoring pays big. No money, just biscuits and bragging rights."},
-    {"id": "goal", "title": "Penke's winner",
-     "show": "82': Penke scores, the Gauge jumps, Called it! pays out, and the agents' story replaces the instant one.",
-     "line": "And Penke scores! The Gauge jumps, your call pays off, and a few seconds later the agents tell the "
-             "story."},
+     "line": "Feeling brave? Call your shot. Biscuit rewards are set by the Gaffer's calculated odds, so long shots "
+             "pay big. No money, just bragging rights."},
+    {"id": "var", "title": "VAR check",
+     "show": "82': Eastholme score and VAR checks it. The VAR card shows the Gauge both ways; Call it asks "
+             "\"Will the goal stand?\" and the fan picks It stands.",
+     "line": "Eastholme score! But VAR is checking it. The Gauge shows the win probability both ways, and a quick "
+             "call opens: will it stand?"},
+    {"id": "goal", "title": "It stands",
+     "show": "The goal stands: the Gauge jumps, both calls pay out, and the agents' story replaces the instant one.",
+     "line": "It stands! The Gauge jumps, both calls pay off, and the agents tell the story."},
     {"id": "hood", "title": "Under the hood",
-     "show": "Under the hood for the goal's story: five agents in two rounds, their tools, and Checked by code.",
-     "line": "Curious how? Under the hood shows five agents in two rounds, their tools, and what our checks fixed "
-             "before you saw it."},
+     "show": "Under the hood for the goal's story, enlarged: round one (Stats, Gaffer), round two (Narrator, "
+             "Persona, Game Master), then Checked by code, each highlighted in turn.",
+     "line": "Tap AI agents to see how. Two agents pull the stats and work out what changed, three more write the "
+             "story, and our code checks every fact before you see it."},
     {"id": "fabric", "title": "Microsoft Fabric",
      "show": "Slide: the Lasso agents dashboard in Microsoft Fabric, panning down.",
-     "line": "Behind the scenes, it all streams into Microsoft Fabric: how fast the agents are, what they cost, and "
-             "what they get wrong."},
-    {"id": "compare", "title": "Two agents or one",
-     "show": "Slide: the Press Room against one agent alone, on the same 27 questions.",
-     "line": "Is a team really better? We tested it. Same 27 questions: the team passed all of them, and one agent "
-             "on its own missed two."},
+     "line": "Everything streams into Microsoft Fabric: how fast the agents are, what they cost, and what they "
+             "get wrong."},
+    {"id": "compare", "title": "A team of agents or one",
+     "show": "Slide: the Press Room team against one agent alone, on the same 27 questions.",
+     "line": "Is a team of AI agents better than one? On the same 27 questions, the team passed all 27, and a "
+             "single agent missed two."},
     {"id": "arch", "title": "How it's built",
      "show": "Slide: how Lasso works, seven agents and one live pipeline.",
-     "line": "It's all built on Microsoft Foundry and Agent Framework, talking over A2A and MCP, and running on "
-             "Azure from end to end."},
+     "line": "Built on Microsoft Foundry and Agent Framework, over A2A and the Model Context Protocol, all on "
+             "Azure."},
     {"id": "close", "title": "Close",
      "show": "Slide: the Lasso cover.",
      "line": "That's Lasso. Watch smarter, call it first, and believe your call."},
 ]
 for s in SCENES:
-    s["min"] = round(len(s["line"].split()) / WORDS_PER_SECOND + 1.2, 1)
+    s["min"] = round(len(s["line"].split()) / WORDS_PER_SECOND + 0.7, 1)
 
 
 # ---------------------------------------------------------------- the script, as a document
@@ -96,8 +109,10 @@ def write_script(path: Path) -> None:
     out = ["# Lasso demo video: the script", "",
            f"About {total:.0f} seconds of narration (the recording runs a little longer while the live match plays). "
            "Generated from `docs/video/record_demo.py`, which records the video to match. With `--voice` it narrates "
-           "these lines itself with an Azure AI Speech voice (a natural US voice by default); without it, read them "
-           "over the video, using `out/narration.md` for each scene's exact start time.", "",
+           "these lines itself with an Azure AI Speech voice (a natural US voice by default; `--sample-voices` says the "
+           "opening and the VAR moment in ten voices so you can pick one, and `--style` and `--rate` change the "
+           "delivery); without it, read them over the video, using `out/narration.md` for each scene's exact start "
+           "time. The video must stay under two minutes.", "",
            "| # | Scene | On screen | Say | At least |", "|---|---|---|---|---|"]
     for i, s in enumerate(SCENES, 1):
         out.append(f"| {i} | {s['title']} | {s['show']} | {s['line']} | {s['min']:.0f}s |")
@@ -128,12 +143,15 @@ OVERLAY_CSS = """
 #demo-cursor.press { transform: scale(.7); }
 .demo-glow { box-shadow: 0 0 0 3px #C9A45C, 0 0 36px rgba(201,164,92,.45) !important; transition: box-shadow .5s; }
 #demo-slide { position: fixed; inset: 0; z-index: 100000; background: #0A1020; color: #F2F5FA; overflow: hidden;
-  font-family: 'DM Sans', system-ui, sans-serif; opacity: 0; transition: opacity .6s; }
+  font-family: 'DM Sans', system-ui, sans-serif; opacity: 0; transition: opacity .6s; pointer-events: none; }
 #demo-slide.on { opacity: 1; }
 #demo-slide h1 { font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 600; font-size: 68px;
   margin: 0; letter-spacing: .01em; }
 #demo-slide .eyebrow { font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 600; font-size: 28px;
   letter-spacing: .12em; color: #C9A45C; }
+.demo-big .sheet { align-items: center; }
+.demo-big .sheet-inner.uth { max-width: 700px; zoom: 1.42; max-height: calc(92dvh / 1.42); border-radius: 28px; }
+.uth .demo-glow { box-shadow: none !important; outline: 3px solid #C9A45C; outline-offset: 6px; border-radius: 18px; }
 @keyframes demo-pan { from { transform: translateY(0); } to { transform: translateY(var(--pan)); } }
 @keyframes demo-zoom { from { transform: scale(1); } to { transform: scale(1.06); } }
 """
@@ -170,6 +188,9 @@ def slide_html(scene: str, seconds: float) -> str:
                       "to win&rdquo;. Once ran out of time.", False)
                 + "</div><div style='margin-top:40px;font-size:22px;color:#8E9AB3'>One evaluation run each, on the "
                 "live app, October 17, 2026. Every answer, side by side: docs/agent-comparison.md</div></div>")
+    if scene == "intro":
+        return (f"<img src='{data_uri(IMG / 'submission-1-cover.png')}' style='position:absolute;inset:0;width:100%;"
+                f"height:100%;object-fit:cover;animation:demo-zoom {d} ease-out forwards'>")
     if scene == "arch":
         return (f"<img src='{data_uri(IMG / 'submission-2-how-it-works.png')}' style='position:absolute;inset:0;"
                 f"width:100%;height:100%;object-fit:cover;animation:demo-zoom {d} ease-out forwards'>")
@@ -181,7 +202,22 @@ def slide_html(scene: str, seconds: float) -> str:
 
 # How the voice should say what's written for readers.
 SAY = [("A2A", "A to A"), ("MCP", "M C P"), ("Cosmos DB", "Cosmos D B"), ("Web PubSub", "Web Pub Sub"),
-       ("AI ", "A I "), ("Lasso:", "Lasso."), ("27/27", "27 of 27")]
+       ("AI ", "A I "), ("Lasso:", "Lasso."), ("27/27", "27 of 27"), ("1-1", "one all"), ("VAR", "V A R")]
+
+# Voices worth hearing for the narration, with a speaking style where the voice has one (--sample-voices).
+# Styles change the delivery; a voice without that style just reads normally.
+SAMPLE_VOICES = [
+    ("en-US-AndrewMultilingualNeural", None),     # warm, natural (the default)
+    ("en-US-BrianMultilingualNeural", None),      # brighter, younger
+    ("en-US-Andrew:DragonHDLatestNeural", None),  # HD: the most expressive, in some regions only
+    ("en-US-Davis:DragonHDLatestNeural", None),   # HD, deeper
+    ("en-US-DavisNeural", "excited"),             # big, sporty
+    ("en-US-TonyNeural", "excited"),              # energetic
+    ("en-US-JasonNeural", "excited"),
+    ("en-US-GuyNeural", "newscast"),              # classic announcer
+    ("en-US-ChristopherNeural", None),            # deep, steady
+    ("en-US-SteffanNeural", None),
+]
 
 
 def _cli(*args: str) -> str:
@@ -204,18 +240,27 @@ def speech_account(resource_group: str | None) -> tuple[str, str]:
     return acct["id"], acct["location"]
 
 
-def synthesize(lines: list[str], voice: str, resource_id: str, region: str, folder: Path) -> list[Path]:
+def ssml_for(text: str, voice: str, style: str | None, rate: str) -> str:
+    for a, b in SAY:
+        text = text.replace(a, b)
+    text = text.replace("&", "and").replace("<", "").replace(">", "")
+    if rate and rate not in ("0%", "+0%"):
+        text = f"<prosody rate='{rate}'>{text}</prosody>"
+    if style:
+        text = f"<mstts:express-as style='{style}'>{text}</mstts:express-as>"
+    return (f"<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' "
+            f"xmlns:mstts='https://www.w3.org/2001/mstts' xml:lang='en-US'><voice name='{voice}'>{text}</voice></speak>")
+
+
+def synthesize(lines: list[str], voice: str, resource_id: str, region: str, folder: Path,
+               style: str | None = None, rate: str = "+8%", names: list[str] | None = None,
+               skip_unknown: bool = False) -> list[Path]:
     token = _cli("az", "account", "get-access-token", "--resource", "https://cognitiveservices.azure.com",
                  "--query", "accessToken", "-o", "tsv")
     folder.mkdir(parents=True, exist_ok=True)
     files = []
     for i, line in enumerate(lines):
-        text = line
-        for a, b in SAY:
-            text = text.replace(a, b)
-        text = text.replace("&", "and").replace("<", "").replace(">", "")
-        ssml = (f"<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'>"
-                f"<voice name='{voice}'>{text}</voice></speak>")
+        ssml = ssml_for(line, voice, style, rate)
         req = urllib.request.Request(
             f"https://{region}.tts.speech.microsoft.com/cognitiveservices/v1", data=ssml.encode("utf-8"),
             method="POST", headers={"Authorization": f"Bearer aad#{resource_id}#{token}",
@@ -232,12 +277,31 @@ def synthesize(lines: list[str], voice: str, resource_id: str, region: str, fold
                          f'  az role assignment create --assignee {me} --role "Cognitive Services User" '
                          f'--scope "{resource_id}"\n')
             if e.code == 400:
-                sys.exit(f"Azure AI Speech rejected the voice {voice!r}; pick another with --voice.")
+                if skip_unknown:
+                    return []
+                sys.exit(f"Azure AI Speech rejected the voice {voice!r} (or the style {style!r}); pick another.")
             raise
-        path = folder / f"{i + 1:02d}.mp3"
+        path = folder / (names[i] if names else f"{i + 1:02d}.mp3")
         path.write_bytes(audio)
         files.append(path)
     return files
+
+
+def sample_voices(out: Path, resource_group: str | None, rate: str) -> None:
+    """Say the opening and the VAR moment in each voice in SAMPLE_VOICES, to pick one by ear."""
+    resource_id, region = speech_account(resource_group)
+    folder = out / "voices"
+    shutil.rmtree(folder, ignore_errors=True)
+    lines = [next(s["line"] for s in SCENES if s["id"] == "intro"),
+             next(s["line"] for s in SCENES if s["id"] == "var")]
+    text = " ".join(lines)
+    print(f"Voice samples ({region}), in {folder}:")
+    for voice, style in SAMPLE_VOICES:
+        name = voice.replace(":", "-") + (f"-{style}" if style else "") + ".mp3"
+        made = synthesize([text], voice, resource_id, region, folder, style, rate, [name], skip_unknown=True)
+        print(f"  {name:48s}" + ("" if made else "  (not available in this region)"))
+    print("\nRecord with the one you like, for example:\n"
+          "  python docs/video/record_demo.py <app> --key <key> --voice en-US-DavisNeural --style excited")
 
 
 def duration(path: Path) -> float:
@@ -328,10 +392,18 @@ def cursor_to(rec: Recorder, locator, click: bool = True) -> None:
         rec.wait(0.3)
 
 
-def glow(rec: Recorder, selector: str | None) -> None:
-    rec.page.evaluate("(sel) => { document.querySelectorAll('.demo-glow').forEach(e => e.classList.remove('demo-glow'));"
-                      " if (sel) { const e = document.querySelector(sel); if (e) e.classList.add('demo-glow'); } }",
-                      selector)
+def glow(rec: Recorder, selector: str | None, index: int = 0, scroll: bool = False) -> None:
+    """Highlight one element (the index-th match of the selector), scrolling it into view if asked."""
+    rec.page.evaluate("([sel, i, scroll]) => { document.querySelectorAll('.demo-glow')"
+                      ".forEach(e => e.classList.remove('demo-glow')); if (!sel) return;"
+                      " const e = document.querySelectorAll(sel)[i]; if (!e) return; e.classList.add('demo-glow');"
+                      " if (scroll) e.scrollIntoView({ behavior: 'smooth', block: 'center' }); }",
+                      [selector, index, scroll])
+
+
+def hide_slide(rec: Recorder) -> None:
+    rec.page.evaluate("() => { const s = document.getElementById('demo-slide'); if (s) s.classList.remove('on'); }")
+    rec.wait(0.6)
 
 
 def show_slide(rec: Recorder, scene: dict) -> None:
@@ -341,8 +413,9 @@ def show_slide(rec: Recorder, scene: dict) -> None:
                       " requestAnimationFrame(() => requestAnimationFrame(() => s.classList.add('on'))); }", html)
 
 
-def run(app: str, key: str, out: Path, pace: float, from_minute: int, name: str = "Brad",
-        voice: str | None = None, resource_group: str | None = None) -> None:
+def run(app: str, key: str, out: Path, pace: float, from_minute: float | None, name: str = "Brad",
+        voice: str | None = None, resource_group: str | None = None, style: str | None = None,
+        rate: str = "+8%") -> None:
     from playwright.sync_api import sync_playwright
 
     if not shutil.which("ffmpeg"):
@@ -351,22 +424,35 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: int, name: str 
     clips: list[Path] = []
     if voice:  # the lines first: each scene then lasts as long as its voice
         resource_id, region = speech_account(resource_group)
-        print(f"Narrating with {voice} (Azure AI Speech, {region})...")
-        clips = synthesize([s["line"] for s in SCENES], voice, resource_id, region, out / "voice")
+        print(f"Narrating with {voice}{f' ({style})' if style else ''} (Azure AI Speech, {region})...")
+        clips = synthesize([s["line"] for s in SCENES], voice, resource_id, region, out / "voice", style, rate)
         for s, clip in zip(SCENES, clips):
-            s["min"] = round(duration(clip) + 0.9, 2)
+            s["min"] = round(duration(clip) + 0.6, 2)
         print(f"  {sum(s['min'] for s in SCENES):.0f} seconds of narration")
     frames_dir = out / "frames"
     shutil.rmtree(frames_dir, ignore_errors=True)
     frames_dir.mkdir()
+    sec = {s["id"]: s["min"] for s in SCENES}
+
+    # Start the match so the goal goes in just after Call your shot: the scenes before it, plus time for the
+    # Gaffer's answer and a little to spare. The intro plays over the restart.
+    lead = sec["gauge"] + sec["why"] + sec["ask"] + 4.0 + 1.0 + sec["callit"] + 2.0
+    start = from_minute if from_minute is not None else round(GOAL_CLOCK - lead / pace, 2)
+    var_seconds = round(min(60.0, max(4.0, sec["var"] + 1.0)), 1)
 
     match = http(app, "GET", f"/api/matches/{MATCH}")
     home = match["home"]
     user = http(app, "POST", "/api/users", {"name": name[:24], "club_id": home["club_id"]})
     http(app, "PATCH", f"/api/users/{user['id']}", {"lang": "en", "persona": "fan"})
-    print(f"Demo fan {user['id']} supports {home['name']}. Restarting the showcase match from {from_minute}' "
-          f"at {pace:g} seconds a minute...")
-    http(app, "POST", f"/api/admin/matches/{MATCH}/restart?from_minute={from_minute}&minute_seconds={pace}", {}, key)
+    print(f"Demo fan {user['id']} supports {home['name']}. The match restarts at {start:.1f}' (goal at "
+          f"{GOAL_CLOCK:g}'), {pace:g} seconds a minute, VAR check {var_seconds:g} seconds.")
+
+    def clock() -> float:
+        try:
+            m = http(app, "GET", f"/api/matches/{MATCH}")
+            return float(m.get("clock") or 0) if m.get("period") == 2 else 0.0
+        except Exception:  # noqa: BLE001
+            return 0.0
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
@@ -377,21 +463,27 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: int, name: str 
         page.add_style_tag(content=OVERLAY_CSS)
         page.evaluate("() => { const c = document.createElement('div'); c.id = 'demo-cursor';"
                       " document.body.appendChild(c); }")
-        page.wait_for_selector(".card.why", timeout=60000)
-
-        def minute() -> int:
-            try:
-                return int(http(app, "GET", f"/api/matches/{MATCH}").get("minute") or 0)
-            except Exception:  # noqa: BLE001
-                return 0
-
-        while minute() < from_minute:  # the restart may pause briefly before kickoff of the replay
-            page.wait_for_timeout(1000)
-        page.wait_for_timeout(1500)
+        try:
+            page.wait_for_load_state("networkidle", timeout=15000)
+        except Exception:  # noqa: BLE001
+            pass  # a live page may never go quiet; it has loaded
 
         rec = Recorder(page, ctx.new_cdp_session(page), frames_dir)
         rec.start()
         print("Recording:")
+
+        s = rec.scene("intro")  # the cover, while the match restarts underneath it
+        show_slide(rec, s)
+        rec.wait(0.8)
+        begin = start - max(0.0, s["min"] - 2.0) / pace  # so the match reaches `start` as the intro ends
+        http(app, "POST", f"/api/admin/matches/{MATCH}/restart?from_minute={begin + ADDED_1H:.2f}"
+                          f"&minute_seconds={pace}&var_seconds={var_seconds}", {}, key)
+        rec.hold(s)
+        deadline = time.monotonic() + 30
+        while not (start - 0.1 <= clock() <= start + 2.0) and time.monotonic() < deadline:
+            rec.wait(0.5)  # until the restarted match reaches the start (not the old one still playing)
+        page.wait_for_selector(".card.why", timeout=30000)
+        hide_slide(rec)
 
         s = rec.scene("gauge")
         glow(rec, ".app.wide section.card")  # the score and the Gauge
@@ -405,27 +497,27 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: int, name: str 
         glow(rec, ".card.ask")
         box = page.locator("#ask-question")
         cursor_to(rec, box)
-        box.type("Can Eastholme still win this?", delay=70)
-        rec.wait(0.4)
+        box.type("Can Eastholme still win this?", delay=60)
+        rec.wait(0.3)
         cursor_to(rec, page.locator(".card.ask button.cta"))
         try:
             page.wait_for_selector(".card.ask .bubble.gaffer:not(.thinking)", timeout=40000)
         except Exception:  # noqa: BLE001
             print("    (the answer took over 40 seconds; carrying on)")
         rec.hold(s)
-        rec.wait(1.5)  # time to read the answer
+        rec.wait(1.0)  # time to read the answer
 
         s = rec.scene("callit")
         glow(rec, "section.callit")
-        try:  # the market that matters: Eastholme to score before the 89th minute
+        try:  # the call that matters: Eastholme to score before the 85th to 89th minute
             page.wait_for_function("() => /score before 8[5-9]/.test(document.querySelector('section.callit')?.innerText"
                                    " || '') && /Eastholme/.test(document.querySelector('section.callit')?.innerText || '')",
-                                   timeout=45000)
+                                   timeout=30000)
         except Exception:  # noqa: BLE001
             print("    (no Eastholme-to-score call yet; using the one open now)")
         callit = page.locator("section.callit")
         callit.scroll_into_view_if_needed()
-        rec.wait(0.8)
+        rec.wait(0.6)
         yes = callit.locator("button.opt").first
         if yes.count():
             cursor_to(rec, yes)
@@ -434,39 +526,68 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: int, name: str 
                 cursor_to(rec, lasso)
         rec.hold(s)
 
+        try:  # the goal goes in and VAR checks it
+            page.wait_for_selector(".card.var.checking", timeout=90000)
+        except Exception:  # noqa: BLE001
+            print("    (no VAR check within 90 seconds: check the replay pace)")
+        s = rec.scene("var")
+        page.evaluate("() => { const v = document.querySelector('.card.var'); if (v) window.scrollTo({ top: "
+                      "Math.max(0, v.getBoundingClientRect().top + window.scrollY - 90), behavior: 'smooth' }); }")
+        glow(rec, ".card.var")
+        rec.wait(1.2)
+        try:  # the quick call jumps the queue: will the goal stand?
+            page.wait_for_function("() => /stand/i.test(document.querySelector('section.callit')?.innerText || '')",
+                                   timeout=5000)
+            stands = page.locator("section.callit button.opt", has_text="stands")
+            if stands.count():
+                glow(rec, "section.callit")
+                cursor_to(rec, stands.first)
+                lasso = page.locator("section.callit button.cta")
+                if lasso.count() and lasso.is_enabled():
+                    cursor_to(rec, lasso)
+        except Exception:  # noqa: BLE001
+            print("    (the VAR call didn't open in time)")
+        rec.hold(s)
+
+        try:
+            page.wait_for_function(f"() => fetch('/api/matches/{MATCH}').then(r => r.json())"
+                                   ".then(m => (m.score || [0, 0])[0] >= 2)", timeout=60000, polling=500)
+        except Exception:  # noqa: BLE001
+            print("    (the goal hadn't stood within a minute)")
         s = rec.scene("goal")
         page.evaluate("() => window.scrollTo({ top: 0, behavior: 'smooth' })")
         glow(rec, ".app.wide section.card")
-        try:
-            page.wait_for_function(f"() => fetch('/api/matches/{MATCH}').then(r => r.json())"
-                                   ".then(m => (m.score || [0, 0])[0] >= 2)", timeout=120000, polling=1000)
-        except Exception:  # noqa: BLE001
-            print("    (no goal within two minutes: check the replay pace)")
-        rec.wait(2.5)
-        glow(rec, ".card.why")
+        rec.wait(min(3.0, s["min"] / 2))
+        glow(rec, ".card.why", scroll=True)
+        rec.hold(s)
         try:  # the agents' story for the goal: Why it moved gets its "AI agents" chip
             page.wait_for_function("() => { const w = document.querySelector('.card.why');"
                                    " return w && /82'/.test(w.innerText) && w.querySelector('.chip.agents'); }",
                                    timeout=30000, polling=500)
         except Exception:  # noqa: BLE001
-            print("    (the agents' story for the goal hadn't arrived after 30 seconds)")
-        rec.hold(s)
-        rec.wait(1.0)
+            print("    (the agents' story for the goal hadn't arrived after 30 seconds; using the latest one)")
 
         s = rec.scene("hood")
         glow(rec, None)
+        page.evaluate("() => document.body.classList.add('demo-big')")
         chip = page.locator(".card.why .chip.agents")
+        if not chip.count():
+            chip = page.locator(".chip.agents")
         if chip.count():
-            cursor_to(rec, chip)
+            cursor_to(rec, chip.first)
             page.wait_for_selector(".sheet .uth", timeout=10000)
-            rec.wait(2.0)
-            sheet = page.locator(".sheet-inner.uth")
-            steps = 6
-            for i in range(1, steps + 1):  # scroll down to Checked by code
-                sheet.evaluate(f"(el) => el.scrollTo({{ top: el.scrollHeight * {i / steps}, behavior: 'smooth' }})")
-                rec.wait(max(0.6, (s["min"] - 3.5) / steps))
+            # In step with the words: round one, round two, then what the code checked.
+            for at, sel, i in ((0.22, ".uth-stage", 0), (0.50, ".uth-stage", 1), (0.74, ".uth-checks", 0)):
+                start_t = next(t for x, t in rec.starts if x is s)
+                left = start_t + s["min"] * at - rec.now()
+                if left > 0:
+                    rec.wait(left)
+                glow(rec, sel, i, scroll=True)
+        else:
+            print("    (no AI agents chip on screen)")
         rec.hold(s)
         if page.locator(".sheet").count():
+            glow(rec, None)
             cursor_to(rec, page.locator(".sheet .uth button.cta"))
 
         for scene_id in ("fabric", "compare", "arch", "close"):
@@ -487,8 +608,8 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: int, name: str 
     else:
         print(f"\nDone: {out / 'lasso-demo.mp4'} ({end:.0f} seconds), with lasso-demo.srt and narration.md.")
     if end > 119:
-        print("It's over two minutes: the live match made some scenes wait. Run it again, or trim the goal scene's "
-              "wait in a video editor.")
+        print("It's over two minutes: the live match made some scenes wait. Run it again, or trim the wait before "
+              "Under the hood in a video editor.")
 
 
 def encode(rec: Recorder, end: float, out: Path) -> None:
@@ -532,11 +653,16 @@ if __name__ == "__main__":
     ap.add_argument("--key", help="the admin key")
     ap.add_argument("--out", default=str(HERE / "out"), help="where to write the video (default docs/video/out)")
     ap.add_argument("--pace", type=float, default=11.0, help="seconds per match minute (default 11)")
-    ap.add_argument("--from-minute", type=int, default=77, help="where the replay starts (default 77)")
+    ap.add_argument("--from-minute", type=float, default=None,
+                    help="the minute recording starts at (default: worked out so the goal follows Call your shot)")
     ap.add_argument("--name", default="Brad", help="the demo fan's name (default Brad)")
     ap.add_argument("--voice", nargs="?", const="en-US-AndrewMultilingualNeural", default=None,
-                    help="narrate with an Azure AI Speech voice (default en-US-AndrewMultilingualNeural; "
-                         "others: en-US-BrianMultilingualNeural, en-US-AvaMultilingualNeural, en-US-GuyNeural)")
+                    help="narrate with an Azure AI Speech voice (default en-US-AndrewMultilingualNeural; hear others "
+                         "with --sample-voices)")
+    ap.add_argument("--style", help="the voice's speaking style, for voices that have one (e.g. excited, newscast)")
+    ap.add_argument("--rate", default="+8%", help="speaking rate, e.g. +10%% or -5%% (default +8%%)")
+    ap.add_argument("--sample-voices", action="store_true",
+                    help="say the opening and the VAR moment in ten voices, into docs/video/out/voices, and stop")
     ap.add_argument("--resource-group", help="where Lasso's Foundry account is (default: from azd)")
     ap.add_argument("--script-only", action="store_true", help="write docs/video/SCRIPT.md and stop")
     a = ap.parse_args()
@@ -544,6 +670,10 @@ if __name__ == "__main__":
     if a.script_only:
         print(f"Wrote {HERE / 'SCRIPT.md'}")
         sys.exit(0)
+    if a.sample_voices:
+        sample_voices(Path(a.out), a.resource_group, a.rate)
+        sys.exit(0)
     if not a.app or not a.key:
         ap.error("the app's URL and --key are needed to record")
-    run(a.app.rstrip("/"), a.key, Path(a.out), a.pace, a.from_minute, a.name, a.voice, a.resource_group)
+    run(a.app.rstrip("/"), a.key, Path(a.out), a.pace, a.from_minute, a.name, a.voice, a.resource_group,
+        a.style, a.rate)
