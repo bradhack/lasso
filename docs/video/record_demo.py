@@ -69,7 +69,7 @@ SCENES = [
     {"id": "callit", "title": "Call your shot",
      "show": "Call it: \"Eastholme Rangers score before 89'?\" Yes, then Lasso it.",
      "line": "Feeling brave? Call your shot. Biscuit rewards are set by the Gaffer's calculated odds, so long shots "
-             "pay big. No money, just bragging rights."},
+             "pay big."},
     {"id": "var", "title": "VAR check",
      "show": "82': Eastholme scores and VAR checks it. The VAR card shows the Gauge both ways; Call it asks "
              "\"Will the goal stand?\" and the fan picks It stands.",
@@ -450,13 +450,21 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: float | None, n
     if not shutil.which("ffmpeg"):
         sys.exit("ffmpeg isn't on the PATH. On Windows: winget install Gyan.FFmpeg (then open a new terminal).")
     out.mkdir(parents=True, exist_ok=True)
+    try:  # the short VAR check needs the API from October 17 or later
+        spec = http(app, "GET", "/openapi.json")
+        params = spec["paths"][f"/api/admin/matches/{{match_id}}/restart"]["post"].get("parameters", [])
+        if not any(prm.get("name") == "var_seconds" for prm in params):
+            sys.exit("The app's API is older than this recorder: its VAR check would hold the video for 30 seconds. "
+                     "Run `azd deploy api`, then record again.")
+    except (KeyError, urllib.error.URLError):
+        pass
     clips: list[Path] = []
     if voice:  # the lines first: each scene then lasts as long as its voice
         resource_id, region = speech_account(resource_group)
         print(f"Narrating with {voice}{f' ({style})' if style else ''} (Azure AI Speech, {region})...")
         clips = synthesize([s["line"] for s in SCENES], voice, resource_id, region, out / "voice", style, rate)
         for s, clip in zip(SCENES, clips):
-            s["min"] = round(duration(clip) + 0.6, 2)
+            s["min"] = round(duration(clip) + 0.5, 2)
         print(f"  {sum(s['min'] for s in SCENES):.0f} seconds of narration")
     frames_dir = out / "frames"
     shutil.rmtree(frames_dir, ignore_errors=True)
@@ -534,7 +542,7 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: float | None, n
         except Exception:  # noqa: BLE001
             print("    (the answer took over 40 seconds; carrying on)")
         rec.hold(s)
-        rec.wait(1.0)  # time to read the answer
+        rec.wait(0.5)  # time to read the answer
 
         s = rec.scene("callit")
         glow(rec, "section.callit")
@@ -578,11 +586,17 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: float | None, n
             print("    (the VAR call didn't open in time)")
         rec.hold(s)
 
-        try:
-            page.wait_for_function(f"() => fetch('/api/matches/{MATCH}').then(r => r.json())"
-                                   ".then(m => (m.score || [0, 0])[0] >= 2)", timeout=60000, polling=500)
-        except Exception:  # noqa: BLE001
+        deadline = time.monotonic() + 60
+        while time.monotonic() < deadline:  # until VAR's decision is in and the goal stands
+            try:
+                if (http(app, "GET", f"/api/matches/{MATCH}").get("score") or [0, 0])[0] >= 2:
+                    break
+            except Exception:  # noqa: BLE001
+                pass
+            rec.wait(0.4)
+        else:
             print("    (the goal hadn't stood within a minute)")
+        page.wait_for_timeout(300)  # the page gets the goal a moment after the API
         s = rec.scene("goal")
         page.evaluate("() => window.scrollTo({ top: 0, behavior: 'smooth' })")
         glow(rec, ".app.wide section.card")
@@ -623,7 +637,7 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: float | None, n
             s = rec.scene(scene_id)
             show_slide(rec, s)
             rec.hold(s)
-        rec.wait(1.0)
+        rec.wait(0.5)
         end = rec.now()
         rec.stop()
         browser.close()
