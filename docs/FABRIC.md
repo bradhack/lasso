@@ -36,7 +36,7 @@ You need a Fabric workspace on a Fabric capacity (the 60-day Fabric trial works)
 7. **Some data.** Run the agent evaluation (it replays the showcase match and asks 27 questions; see [DEPLOY.md](DEPLOY.md#evaluate-the-agents)), or watch a match in the app. Then check in the KQL database:
 
    ```kusto
-   LassoEvents | summarize count() by kind
+   LassoEvents | summarize count() by event_kind
    ```
 
 8. **The dashboard.** Choose **New item**, then **Real-Time Dashboard**, named `Lasso agents`.

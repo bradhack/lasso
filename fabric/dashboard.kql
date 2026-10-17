@@ -4,39 +4,39 @@
 
 // 1. Stories and answers over time (Time chart)
 LassoEvents
-| where ts between (_startTime .. _endTime) and kind in ("story", "answer")
-| summarize count() by kind, bin(ts, 1m)
+| where ts between (_startTime .. _endTime) and event_kind in ("story", "answer")
+| summarize count() by event_kind, bin(ts, 1m)
 | render timechart
 
 // 2. How fast fans get answers, in seconds (Time chart)
 LassoEvents
-| where ts between (_startTime .. _endTime) and kind == "answer" and mode == "team"
+| where ts between (_startTime .. _endTime) and event_kind == "answer" and mode == "team"
 | summarize typical = percentile(latency_ms, 50) / 1000.0, slowest_p95 = percentile(latency_ms, 95) / 1000.0
     by bin(ts, 5m)
 | render timechart
 
 // 3. Each agent's time, in seconds (Bar chart)
 LassoEvents
-| where ts between (_startTime .. _endTime) and kind == "agent_run" and ok
+| where ts between (_startTime .. _endTime) and event_kind == "agent_run" and ok
 | summarize typical = percentile(ms, 50) / 1000.0, slowest_p95 = percentile(ms, 95) / 1000.0, runs = count() by agent
 | order by typical desc
 
 // 4. Tokens per story and per answer (Table)
 LassoEvents
-| where ts between (_startTime .. _endTime) and kind in ("story", "answer")
-| summarize typical_tokens = percentile(tokens, 50), total_tokens = sum(tokens), count() by kind
+| where ts between (_startTime .. _endTime) and event_kind in ("story", "answer")
+| summarize typical_tokens = percentile(tokens, 50), total_tokens = sum(tokens), count() by event_kind
 
 // 5. What the code checks caught before fans saw it (Bar chart)
 LassoEvents
-| where ts between (_startTime .. _endTime) and kind in ("story", "answer")
+| where ts between (_startTime .. _endTime) and event_kind in ("story", "answer")
 | mv-expand fix = split(fixes, ",") to typeof(string)
 | where isnotempty(fix) and fix !in ("wording", "length")
-| summarize caught = count() by fix, kind
+| summarize caught = count() by fix, event_kind
 | order by caught desc
 
 // 6. How the agents recovered (Column chart)
 LassoEvents
-| where ts between (_startTime .. _endTime) and kind == "agent_run"
+| where ts between (_startTime .. _endTime) and event_kind == "agent_run"
 | summarize timed_out = countif(error == "TimeoutError"), second_try = countif(hedge), retried = countif(retry),
     recovered_reply = countif(recovered)
     by bin(ts, 1h)
@@ -44,7 +44,7 @@ LassoEvents
 
 // 7. Which MCP tools the agents chose (Bar chart)
 LassoEvents
-| where ts between (_startTime .. _endTime) and kind == "agent_run"
+| where ts between (_startTime .. _endTime) and event_kind == "agent_run"
 | mv-expand tool = split(tools, ",") to typeof(string)
 | where isnotempty(tool)
 | summarize calls = count() by tool, agent
@@ -52,25 +52,25 @@ LassoEvents
 
 // 8. The biggest swings, and what the agents wrote (Table)
 LassoEvents
-| where ts between (_startTime .. _endTime) and kind == "story"
+| where ts between (_startTime .. _endTime) and event_kind == "story"
 | top 10 by swing desc
 | project ts, match = strcat(home, " v ", away), minute, trigger, score, swing, headline, source
 
 // 9. Two agents or one: the Press Room against the single-agent baseline (Table)
 LassoEvents
-| where ts between (_startTime .. _endTime) and kind == "answer"
+| where ts between (_startTime .. _endTime) and event_kind == "answer"
 | summarize answers = count(), needed_a_fix = countif(fix_count > 0), typical_s = percentile(latency_ms, 50) / 1000.0,
     typical_tokens = percentile(tokens, 50), tool_calls = avg(tool_calls)
     by mode
 
 // 10. Questions by language (Pie chart)
 LassoEvents
-| where ts between (_startTime .. _endTime) and kind == "answer"
+| where ts between (_startTime .. _endTime) and event_kind == "answer"
 | summarize count() by lang
 
 // 11. The Gaffer's Gauge, story by story, for the latest match (Time chart)
-let latest = toscalar(LassoEvents | where kind == "story" | top 1 by ts desc | project match_id);
+let latest = toscalar(LassoEvents | where event_kind == "story" | top 1 by ts desc | project match_id);
 LassoEvents
-| where ts between (_startTime .. _endTime) and kind == "story" and match_id == latest
+| where ts between (_startTime .. _endTime) and event_kind == "story" and match_id == latest
 | project ts, home_win = p_home, draw = p_draw, away_win = p_away
 | render timechart
