@@ -324,17 +324,17 @@ function Ball({ last, at, fill }: { last?: Touch; at: [number, number]; fill: st
 }
 
 /** A pass as a tapered ribbon: wide where it was played, a point where it arrived, so direction reads at a glance. */
-function taperedPass(p: Touch): string {
+function taperedPass(p: Touch, w0 = 0.22): string {
   const { c } = passCurve(p);
   const x1 = p.x ?? 0, y1 = p.y ?? 0, x2 = p.ex ?? x1, y2 = p.ey ?? y1;
   const at = (u: number): [number, number] => {
     const a = 1 - u;
     return [a * a * x1 + 2 * a * u * c[0] + u * u * x2, a * a * y1 + 2 * a * u * c[1] + u * u * y2];
   };
-  const n = 12, w0 = 0.55, left: string[] = [], right: string[] = [];
+  const n = 12, left: string[] = [], right: string[] = [];
   for (let i = 0; i <= n; i++) {
     const u = i / n, [x, y] = at(u), [xa, ya] = at(Math.max(0, u - 0.01)), [xb, yb] = at(Math.min(1, u + 0.01));
-    const len = Math.hypot(xb - xa, yb - ya) || 1, nx = -(yb - ya) / len, ny = (xb - xa) / len, w = w0 * (1 - u) + 0.08;
+    const len = Math.hypot(xb - xa, yb - ya) || 1, nx = -(yb - ya) / len, ny = (xb - xa) / len, w = w0 * (1 - u) + 0.05;
     left.push(`${(x + nx * w).toFixed(2)} ${(y + ny * w).toFixed(2)}`);
     right.unshift(`${(x - nx * w).toFixed(2)} ${(y - ny * w).toFixed(2)}`);
   }
@@ -358,7 +358,7 @@ function Chain({ shot, still = false }: { shot: Touch; still?: boolean }) {
         const [nx, ny] = numberAt(p, i);
         return (
           <g key={p.s} style={{ animationDelay: still ? "0s" : `${i * 0.45}s` }} className="link">
-            <path d={taperedPass(p)} className="pass" />
+            <path d={taperedPass(p, 0.4)} className="pass" />
             {gap && <line x1={p.ex} y1={p.ey} x2={next.x} y2={next.y} className="carry" />}
             <circle cx={nx} cy={ny} r="2.1" className="num-bg" />
             <text x={nx} y={ny + 1} textAnchor="middle" className="num">{i + 1}</text>

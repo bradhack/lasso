@@ -765,12 +765,12 @@ button.motm-row:active { transform: scale(0.99); }
 .voice-hint { font-size: 12px; }
 
 /* Touchline: passes fade within seconds, carries are dotted, the ball has a comet tail */
-.pitch .fresh { animation: passfade 6s ease-in forwards; }
+.pitch .fresh { animation: passfade 5s ease-out forwards; }
 .pitch .fresh .pass { fill: var(--team); stroke: none; }
 .pitch .fresh .pass.cut { fill: none; stroke: var(--team); stroke-width: 0.5; stroke-dasharray: 1 1; }
-.pitch .carry { stroke: var(--team); stroke-width: 0.55; stroke-linecap: round; stroke-dasharray: 0.05 1.2; }
+.pitch .carry { stroke: var(--team); stroke-width: 0.45; stroke-linecap: round; stroke-dasharray: 0.05 1.2; }
 .pitch .trail circle { pointer-events: none; }
-@keyframes passfade { 0% { opacity: 0.95; } 35% { opacity: 0.7; } 100% { opacity: 0; } }
+@keyframes passfade { 0% { opacity: 0.55; } 100% { opacity: 0; } }
 /* How it was built */
 .pitch .chain .link { animation: chainin 0.4s ease-out both; }
 .pitch .chain .pass { fill: var(--team); stroke: none; opacity: 0.95; }
@@ -780,5 +780,5 @@ button.motm-row:active { transform: scale(0.99); }
 .pitch .chain .shooter { fill: var(--gold); }
 @keyframes chainin { from { opacity: 0; } to { opacity: 1; } }
 .shotpick .built { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
-@media (prefers-reduced-motion: reduce) { .pitch .fresh { animation: none; opacity: 0.7; } .pitch .chain .link { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .pitch .fresh { animation: none; opacity: 0.45; } .pitch .chain .link { animation: none; } }
 .built-cap { margin: 6px 0 0; font-size: 12.5px; line-height: 1.4; color: var(--gold-2); text-align: center; }
