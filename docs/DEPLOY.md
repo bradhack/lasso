@@ -67,8 +67,8 @@ The admin key stays the same across provisions. Pin it to a value of your choice
 
 ```powershell
 $rg = azd env get-value AZURE_RESOURCE_GROUP
-az containerapp list -g $rg --query "[?starts_with(name,'ca-api-')].name" -o tsv   # the API app's name
-az containerapp secret show -n <that name> -g $rg --secret-name admin-key --query value -o tsv
+$api = (azd env get-value LASSO_APP_URL).Split('/')[2].Split('.')[0]   # the API app's name, e.g. ca-api-abc123
+$key = az containerapp secret show -n $api -g $rg --secret-name admin-key --query value -o tsv
 ```
  During an admin restart, the API replays that match itself and ignores Event Hubs for it until the replay ends.
 
