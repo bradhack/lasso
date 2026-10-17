@@ -14,6 +14,7 @@ import { Meter } from "../components/Meter";
 import { StatsPanel } from "../components/Panels";
 import { MatchBanner } from "../components/MatchBanner";
 import { WhyItMoved } from "../components/WhyItMoved";
+import { stopListening } from "../components/Listen";
 import { t } from "../i18n";
 import { useStore } from "../store";
 import type { Key } from "../i18n";
@@ -102,7 +103,10 @@ export function MatchPage({ id }: { id: string }) {
 
   useEffect(() => {
     watch(id).catch(() => undefined);
-    return () => unwatch(id);
+    return () => {
+      unwatch(id);
+      stopListening(); // leaving this match: stop reading it aloud
+    };
   }, [id, connected, watch, unwatch]);
 
   const [moments, setMoments] = useState(false);

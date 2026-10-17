@@ -51,6 +51,11 @@ function tellListened(matchId?: string) {
 // Only one thing speaks at a time: starting a new one stops the last.
 let current: { key: string; stop: () => void } | null = null;
 
+/** Stop whatever Listen is reading (leaving the match page). */
+export function stopListening() {
+  current?.stop();
+}
+
 /**
  * Listen: reads a story, a match event or a Gaffer answer aloud. Uses Azure AI Speech neural voices when the server has it,
  * otherwise the phone's own voice. Playback starts inside the tap, which iPhones require.
@@ -68,14 +73,14 @@ export function Listen({ kind, id, matchId, text, lang, compact = false, label }
   const [state, setState] = useState<"idle" | "loading" | "playing">("idle");
   const key = `${kind}:${id}:${lang}:${voice ?? ""}`;
   const mounted = useRef(true);
-  // A new story in the same place (Why it moved shows the latest one) is a fresh button: stop what this one was
-  // reading and start idle. Without this, the button stayed stuck on "loading" and every tap after was a "stop".
+  // A new story in the same place (Why it moved shows the latest one) is a fresh, idle button. What was being
+  // read keeps going: new events arriving (a new story, a row pushed off the list) never cut it off. It stops
+  // when it ends, when the fan taps stop or starts another, or when they leave the match (stopListening).
   useEffect(() => {
     mounted.current = true;
     setState("idle");
     return () => {
       mounted.current = false;
-      if (current?.key === key) current.stop();
     };
   }, [key]);
 
