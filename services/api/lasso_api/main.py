@@ -950,7 +950,8 @@ VOICE_SAMPLE = {
 _STIFF = re.compile(r"\b(?:it matters|matters most|changed everything|win probability|the figure|game still open"
                     r"|clock effect|realistic chances|clock bites|clock biting)\b", re.IGNORECASE)
 _LEFT = re.compile(r"\b(?:\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten) minutes?"
-                   r"(?: plus stoppage(?: time)?)? (?:left|to go|remaining)\b", re.IGNORECASE)
+                   r"(?: plus stoppage(?: time)?)? (?:left|to go|remaining)\b"
+                   r"|\b(?:final|last|closing|dying) minutes?\b", re.IGNORECASE)  # "Final minute" at 44'
 # "Brackenford mène 1-2" (they trail): a club said to lead, followed by a score.
 _LEADS = {"en": r"leads?|are ahead|is ahead|in front", "es": r"lidera|va ganando|gana|manda|por delante",
           "pt": r"lidera|vence|está vencendo|está ganhando|na frente", "fr": r"mène|devant|en tête"}

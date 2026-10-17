@@ -247,3 +247,9 @@ def test_fingerprint_is_stable_and_text_sensitive():
     a = M.text_fingerprint("Adam Penke scores in the 82nd minute.")
     assert a == M.text_fingerprint("Adam Penke scores in the 82nd minute.")
     assert a != M.text_fingerprint("Adam Penke scores in the 83rd minute.")
+
+
+def test_first_half_end_of_match_words_need_halftime():
+    assert M._LEFT.search("Final minute and the draw tightens")
+    assert M._LEFT.search("One minute left and the draw looks likelier")
+    assert not M._LEFT.search("The draw is creeping into view")

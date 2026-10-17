@@ -549,7 +549,8 @@ def check_story(m: dict) -> dict[str, bool]:
             c["time_left_right"] = c["time_left_right"] and bool(re.search(r"half", en, re.I))
     head = m["headline"].get("en") or ""
     if (m["minute"] <= 45 and m.get("period", 1) == 1 and not re.search(r"half", head, re.I)
-            and re.search(r"\b(\d{1,2}|one|two|three|four|five) minutes? (?:left|to go|remaining)", head, re.I)):
+            and re.search(r"\b(\d{1,2}|one|two|three|four|five) minutes? (?:left|to go|remaining)"
+                          r"|\b(?:final|last|closing|dying) minutes?\b", head, re.I)):
         c["time_left_right"] = False  # "One minute left" as a 44th-minute headline
     if leads_wrong(en, m.get("score") or [0, 0], NAMES):
         c["leader_right"] = False
