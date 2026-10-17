@@ -68,9 +68,15 @@ export function Listen({ kind, id, matchId, text, lang, compact = false, label }
   const [state, setState] = useState<"idle" | "loading" | "playing">("idle");
   const key = `${kind}:${id}:${lang}:${voice ?? ""}`;
   const mounted = useRef(true);
-  useEffect(() => () => {
-    mounted.current = false;
-    if (current?.key === key) current.stop();
+  // A new story in the same place (Why it moved shows the latest one) is a fresh button: stop what this one was
+  // reading and start idle. Without this, the button stayed stuck on "loading" and every tap after was a "stop".
+  useEffect(() => {
+    mounted.current = true;
+    setState("idle");
+    return () => {
+      mounted.current = false;
+      if (current?.key === key) current.stop();
+    };
   }, [key]);
 
   const done = () => {
