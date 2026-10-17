@@ -571,6 +571,11 @@ button.chip { cursor: pointer; font-family: inherit; }
 .uth-total { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--gold) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--gold) 30%, transparent); font-size: 13px; color: var(--soft); }
 .uth-total b { font-size: 20px; color: var(--text); font-variant-numeric: tabular-nums; }
 .uth-note { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+/* How a run recovered (a second try, a retry, an answer from the match facts) */
+.uth-recovery { font-size: 12.5px; line-height: 1.45; color: var(--gold-2); }
+/* The code checks every answer and story passes before a fan sees it */
+.uth-checks { padding: 12px 14px; border-radius: 16px; background: var(--surface); border: 1px dashed var(--line-2); display: flex; flex-direction: column; gap: 6px; }
+.uth-checks ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-2); line-height: 1.45; }
 
 /* Accessibility */
 .sheet-inner:focus { outline: none; }

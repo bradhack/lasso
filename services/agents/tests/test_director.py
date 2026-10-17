@@ -7,8 +7,8 @@ from typing import Any
 
 from agent_framework import Agent, BaseChatClient, ChatResponse, Message
 
-from lasso_agents.director import build_director, build_press_room, parse_json
-from lasso_agents.team import GAFFER, GAME_MASTER, NARRATOR, PERSONA, PRESSER, SCOUT, STATS, Team
+from lasso_agents.director import build_director, build_press_room, build_solo, parse_json
+from lasso_agents.team import GAFFER, GAME_MASTER, NARRATOR, PERSONA, PRESSER, SCOUT, SOLO, STATS, Team
 
 SCRIPT = {
     "Stats agent for Lasso": {"facts": ["xG 1.4-0.6", "possession 58%", "fastest shot 112 km/h"],
@@ -23,6 +23,8 @@ SCRIPT = {
     "Scout for Lasso": {"facts": ["Red card for Lorford at 5'", "Chances fell from 41% to 19%"], "on_topic": True},
     "press conference": {"answer": "The red card at 5' cost us 22 points.", "followups": ["Can we still win?",
                                                                                          "Who's playing best?"]},
+    "in one go": {"off_topic": False, "answer": "Lorford's red card at 5' cost Eastholme 22 points.",
+                  "followups": ["Can they still win?", "Who's playing best?"]},
     "Game Master": {"market_id": "comeback-2-82", "copy": "Fancy a comeback? Stake your biscuits."},
 }
 
@@ -52,7 +54,8 @@ def make_team() -> Team:
     return Team(stats=Agent(c, STATS, name="stats"), gaffer=Agent(c, GAFFER, name="gaffer"),
                 narrator=Agent(c, NARRATOR, name="narrator"), persona=Agent(c, PERSONA, name="persona"),
                 game_master=Agent(c, GAME_MASTER, name="game_master"), mcp=None,
-                scout=Agent(c, SCOUT, name="scout"), presser=Agent(c, PRESSER, name="presser"))
+                scout=Agent(c, SCOUT, name="scout"), presser=Agent(c, PRESSER, name="presser"),
+                solo=Agent(c, SOLO, name="solo"))
 
 
 def test_parse_json_tolerates_prose():
@@ -84,6 +87,20 @@ def test_press_room_answers_a_question():
     assert len(pkg["followups"]) == 2
     assert [t["agent"] for t in pkg["trace"]] == ["scout", "presser"]
     assert all(t["ok"] for t in pkg["trace"])
+
+
+def test_solo_baseline_answers_alone():
+    agent = build_solo(make_team()).as_agent(name="Solo")
+    brief = {"kind": "ask", "mode": "solo", "ask_id": "s1", "match_id": "S5-MD07-03", "lang": "en",
+             "question": "Why did our chances drop early?"}
+    pkg = parse_json(asyncio.run(agent.run(json.dumps(brief))).text)
+    assert pkg["ask_id"] == "s1" and pkg["answer"].startswith("Lorford's red card")
+    assert [t["agent"] for t in pkg["trace"]] == ["solo"]
+
+
+def test_solo_has_the_same_rules_as_the_press_room():
+    assert "next_goal_pct" in SOLO and "gaffers_gauge" in SOLO and "Never end the answer with a question" in SOLO
+    assert '"off_topic"' in SOLO
 
 
 def test_tool_calls_are_traced_without_the_match_id():

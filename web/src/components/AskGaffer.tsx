@@ -6,7 +6,7 @@ import { useStore } from "../store";
 import type { AskAnswer, Lang, MatchSnapshot } from "../types";
 import { Sparkle } from "./Icons";
 import { Listen } from "./Listen";
-import { UnderTheHood } from "./UnderTheHood";
+import { UnderTheHood, agentCount } from "./UnderTheHood";
 
 const NO_ASKS: AskAnswer[] = [];
 
@@ -88,7 +88,7 @@ export function AskGaffer({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
                     <Listen kind="answer" id={i.ask_id} matchId={snap.match_id} text={i.answer} lang={lang} />
                     {i.source === "agents" && i.trace.length > 0 && (
                       <button className="by" onClick={() => setHood(i)} aria-label={t("uth", lang)}>
-                        <Sparkle size={11} /> {t("askBy", lang).replace("{n}", String(i.trace.length)).replace("{s}", (i.latency_ms / 1000).toFixed(1))} <span className="chev">›</span>
+                        <Sparkle size={11} /> {t("askBy", lang).replace("{n}", String(agentCount(i.trace))).replace("{s}", (i.latency_ms / 1000).toFixed(1))} <span className="chev">›</span>
                       </button>
                     )}
                   </span>

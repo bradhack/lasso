@@ -1,0 +1,17 @@
+{
+  // GitHub Copilot (Agent Mode) in VS Code starts these servers for this repo.
+  //   lasso: the Gaffer's eleven read-only match tools, live from the deployed app (the same tools the agents use).
+  //   azure: the Azure MCP Server, for working with the Azure resources behind Lasso (deploys, logs, Cosmos DB).
+  // To use your own deployment, change the lasso url to your app's address followed by /mcp/.
+  "servers": {
+    "lasso": {
+      "type": "http",
+      "url": "https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io/mcp/"
+    },
+    "azure": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@azure/mcp@latest", "server", "start"]
+    }
+  }
+}

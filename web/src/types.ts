@@ -145,6 +145,12 @@ export interface AgentTrace {
   out?: number;
   reasoning?: number;
   model?: string;
+  error?: string; // why a run failed: "TimeoutError", "Superseded" (a faster second try won)
+  hedge?: boolean; // the second try, started because the first was slow
+  retry?: boolean; // asked once more after an unusable reply
+  recovered?: boolean; // the answer was pulled out of a malformed reply
+  checks?: number; // agent "checks": how many code checks ran
+  fixes?: string[]; // agent "checks": what they changed
 }
 
 export interface Moment {

@@ -253,6 +253,15 @@ const S = {
   uthNoTools: { en: "No tools: writes from what it's given", es: "Sin herramientas: escribe con lo que recibe", pt: "Sem ferramentas: escreve com o que recebe", fr: "Sans outils : écrit à partir de ce qu'il reçoit" },
   uthFailed: { en: "Didn't finish in time, so the instant version stayed", es: "No terminó a tiempo; se quedó la versión instantánea", pt: "Não terminou a tempo; ficou a versão instantânea", fr: "Pas fini à temps ; la version instantanée est restée" },
   uthTotal: { en: "Total", es: "Total", pt: "Total", fr: "Total" },
+  uthChecks: { en: "Checked by code", es: "Revisado por código", pt: "Verificado por código", fr: "Vérifié par le code" },
+  uthChecksOk: {
+    en: "All {n} checks passed: nothing to fix.", es: "Pasó las {n} comprobaciones: nada que corregir.",
+    pt: "Passou nas {n} verificações: nada a corrigir.", fr: "Les {n} vérifications sont passées : rien à corriger.",
+  },
+  uthChecksFixed: {
+    en: "{n} checks ran before you saw it. What they fixed:", es: "Se hicieron {n} comprobaciones antes de mostrártelo. Qué corrigieron:",
+    pt: "{n} verificações rodaram antes de você ver. O que corrigiram:", fr: "{n} vérifications avant affichage. Ce qu'elles ont corrigé :",
+  },
   uthNote: {
     en: "The numbers come from the Gaffer's Bayesian model through MCP tools. The agents explain them; they never make up statistics.",
     es: "Los números salen del modelo bayesiano del Gaffer mediante herramientas MCP. Los agentes los explican; nunca inventan estadísticas.",

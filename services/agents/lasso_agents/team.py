@@ -196,6 +196,18 @@ Return ONLY JSON: {{"answer": "...", "followups": [two short follow-up questions
 same language, at most 7 words each]}}. {STYLE}"""
 
 
+# The single-agent baseline: one agent with the Scout's tools and the Gaffer's rules, researching and answering in
+# one go. It exists to measure what the two-agent Press Room buys (services/api/tests/agent_eval.py --solo); fans
+# never get it.
+_SCOUT_RESEARCH = SCOUT.split("\n", 1)[1].rsplit("Return ONLY JSON", 1)[0].replace(
+    "Facts must be specific", "Your facts must be specific")
+SOLO = ("You are the Gaffer, Lasso's AI, answering a fan's question about a live match in one go: first research "
+        "it with your tools, then answer.\nResearch: " + _SCOUT_RESEARCH.strip() + "\nIf the question is not "
+        "about this match or football, set off_topic to true.\nAnswer: " + PRESSER.split("\n", 1)[1].replace(
+            "research notes about the match.", "what your tools found.").replace(
+            'Return ONLY JSON: {"answer": "..."', 'Return ONLY JSON: {"off_topic": false, "answer": "..."'))
+
+
 @dataclass
 class Team:
     stats: Agent
@@ -206,6 +218,7 @@ class Team:
     mcp: MCPStreamableHTTPTool
     scout: Agent | None = None  # Ask the Gaffer: researches a fan's question over MCP
     presser: Agent | None = None  # Ask the Gaffer: answers it, with no tools of its own
+    solo: Agent | None = None  # the single-agent baseline the evaluation compares against
     models: dict[str, str] | None = None  # agent name -> model deployment, shown in the trace
 
     def model_of(self, agent: str) -> str | None:
@@ -253,5 +266,7 @@ def build_team(cfg: AgentSettings, fast_client, writer_client, options: dict | N
                     tools=[mcp], **opts),
         presser=Agent(writer_client, PRESSER, name="presser",
                       description="The Gaffer answering fans' questions, in their language", **opts),
+        solo=Agent(writer_client, SOLO, name="solo", tools=[mcp],
+                   description="Baseline: one agent that researches and answers alone", **opts),
         models=models,
     )

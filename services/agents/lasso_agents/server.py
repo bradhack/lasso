@@ -21,7 +21,7 @@ from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from .director import build_director, build_press_room, parse_json
+from .director import build_director, build_press_room, build_solo, parse_json
 from .settings import settings
 from .team import build_team, make_clients, model_options
 
@@ -64,13 +64,21 @@ def new_press_room():
         name="Press Room", description="Ask the Gaffer: answers fans' questions about a live match")
 
 
+def new_solo():
+    return build_solo(team, settings.agent_timeout).as_agent(
+        name="Solo", description="Baseline: one agent answers alone (for the evaluation only)")
+
+
 def route(context: RequestContext):
-    """One A2A endpoint, two skills: a moment brief goes to the Director, a fan's question to the Press Room."""
+    """One A2A endpoint, two skills: a moment brief goes to the Director, a fan's question to the Press Room.
+    The API sends mode "solo" only for the evaluation's single-agent baseline."""
     try:
-        kind = parse_json(context.get_user_input()).get("kind")
+        brief = parse_json(context.get_user_input())
     except Exception:  # noqa: BLE001
-        kind = None
-    return new_press_room() if kind == "ask" else new_director()
+        brief = {}
+    if brief.get("kind") == "ask":
+        return new_solo() if brief.get("mode") == "solo" and team.solo is not None else new_press_room()
+    return new_director()
 
 
 class DirectorExecutor(AgentExecutor):

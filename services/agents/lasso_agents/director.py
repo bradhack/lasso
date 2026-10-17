@@ -290,3 +290,39 @@ def build_press_room(team: Team, timeout: float = 25.0) -> Workflow:
         .add_edge(scout_step, presser_step)
         .build()
     )
+
+
+def build_solo(team: Team, timeout: float = 25.0) -> Workflow:
+    """The single-agent baseline, for measurement only: one agent with the Scout's tools and the Gaffer's rules
+    researches and answers in one go, with the Press Room's whole time budget (both of its steps).
+
+        question ─> Solo (MCP tools, then the answer) ─> answer
+    """
+
+    @executor(id="question")
+    async def question(messages: list[Message], ctx: WorkflowContext[dict]) -> None:
+        text = messages[-1].text if messages else "{}"
+        await ctx.send_message({"brief": parse_json(text)})
+
+    @executor(id="solo_step")
+    async def solo_step(msg: dict, ctx: WorkflowContext[None, str]) -> None:
+        b = msg["brief"]
+        lang = b.get("lang") or "en"
+        out, tr = await run_agent(team.solo, f"Brief: {json.dumps(b)}\nMatch id: {b.get('match_id')}", 2 * timeout,
+                                  1, team.model_of("presser"), keep_raw=True)
+        if out.get("off_topic") is True:
+            pkg = {"ask_id": b.get("ask_id"), "answer": "", "off_topic": True, "followups": [], "facts": [],
+                   "trace": [tr]}
+        else:
+            answer, followups, recovered = answer_of(out, lang)
+            if answer and recovered:
+                tr["recovered"] = True
+            pkg = {"ask_id": b.get("ask_id"), "answer": answer, "followups": followups, "facts": [], "trace": [tr]}
+        await ctx.yield_output(json.dumps(pkg, ensure_ascii=False))
+
+    return (
+        WorkflowBuilder(name="solo", description="Baseline: one agent answers a fan's question alone",
+                        start_executor=question)
+        .add_edge(question, solo_step)
+        .build()
+    )

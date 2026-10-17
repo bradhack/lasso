@@ -371,6 +371,7 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
     # The story is only labeled as the agents' when they wrote its words (a narrator timeout leaves the
     # template text, even if the persona's analyst view and club lines arrived).
     applied = False
+    fixes: list[str] = []  # what the code checks caught, shown in Under the hood
     # Full time: the instant story is exact (the result, and what it did to the season), so it stays; the
     # agents still write the headline.
     keep_story = moment.get("trigger") == "full_time"
@@ -381,6 +382,7 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
         st = _lang_map(pkg.get("story"))
         if any(_RED_FILLER[k].search(v) for k, v in st.items() if k in _RED_FILLER):
             keep_story = True
+            fixes.append("story_red_filler")
     story_en = (_lang_map(pkg.get("story")) or {}).get("en", "")
     draw_now = round(100 * moment["after"]["draw"])
     if (moment.get("trigger") != "full_time" and _DRAW_TALK.search(story_en)
@@ -388,6 +390,7 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
         # "A draw is getting likelier" followed by a team's rising chance reads as a contradiction: a story
         # that talks about the draw gives the draw's chance, or the exact instant story stays.
         keep_story = True
+        fixes.append("story_draw")
     head_en = (_lang_map(pkg.get("headline")) or {}).get("en", "")
     gaining, ahead = _GAINING.search(head_en), _AHEAD.search(head_en)
     if moment.get("trigger") != "full_time" and (gaining or ahead):
@@ -404,38 +407,49 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
             if named and ((gaining and fell) or (ahead and not gaining and not likeliest)):
                 log.warning("headline favors a club whose chance fell (%s); keeping template", head_en)
                 pkg = {**pkg, "headline": None}
+                fixes.append("headline_favors")
                 break
     draw_was = round(100 * moment["before"]["draw"])
     if moment.get("trigger") == "swing_draw" and not (re.search(rf"\b{draw_now}\s?%", story_en)
                                                       and re.search(rf"\b{draw_was}\s?%", story_en)):
         keep_story = True  # the draw closing in: its chance, from and to, is the number to give
+        fixes.append("story_draw")
     if _STIFF.search(story_en):
         keep_story = True  # "as the clock bites": the instant story reads better
+        fixes.append("story_stiff")
     if moment.get("period", 1) == 1 and moment["minute"] <= 45:
         # "One minute left" at 44' reads as the end of the match: it's to halftime.
         if _LEFT.search(story_en) and not re.search(r"half", story_en, re.IGNORECASE):
             keep_story = True
+            fixes.append("story_time")
         head_now = (_lang_map(pkg.get("headline")) or {}).get("en", "")
         if _LEFT.search(head_now) and not re.search(r"half", head_now, re.IGNORECASE):
             pkg = {**pkg, "headline": None}
+            fixes.append("headline_time")
     goal_minutes = {e["minute"] for e in room.feed if e.get("type") == "goal"}
     for said in _GOAL_AT.finditer(story_en):
         if int(said.group(1) or said.group(2)) not in {m + d for m in goal_minutes for d in (-1, 0, 1)}:
             # "Belwell scores to make it 1-1 in the 29th minute" (it was the 14th): the instant story is exact.
             keep_story = True
+            fixes.append("story_goal_minute")
     if _wrong_leader(story_en, room, "en") != story_en:
         keep_story = True
+        fixes.append("story_leader")
     if any(_REAL_CLUBS.search(v) for key in ("headline", "story") for v in _lang_map(pkg.get(key)).values()):
         # A real club's name slipped in: the instant headline and story are exact, so they stay.
         log.warning("real club name in agents' story for %s; keeping template", moment["moment_id"])
         pkg = {**pkg, "headline": None, "story": None}
+        fixes.append("real_clubs")
     if (moment.get("trigger") in ("goal", "red_card", "var_overturned") and moment.get("player")
             and not re.search(rf"\b{re.escape(moment['player'].split()[-1])}\b", story_en)):
         keep_story = True  # the instant story names the scorer, the player sent off or whose goal VAR ruled out
+        fixes.append("story_player")
     if moment.get("trigger") == "var_overturned" and (moment.get("var") or {}).get("stands_pct") is not None:
         # The instant story says what the ruled-out goal would have meant ("not the 23% it would have been");
         # keep it unless the agents' version says so too.
-        keep_story = keep_story or f"{moment['var']['stands_pct']}%" not in story_en
+        if f"{moment['var']['stands_pct']}%" not in story_en:
+            keep_story = True
+            fixes.append("story_var")
     # Keep the instant wording: a fan may have tapped Listen on it just before this version replaced it.
     _story_versions[moment["moment_id"]] = {"headline": dict(moment.get("headline") or {}),
                                             "story": dict(moment.get("story") or {})}
@@ -453,7 +467,8 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
     for s_ in ("home", "away"):
         if vals := _lang_map(lines.get(s_)):
             moment.setdefault("club_lines", {})[s_] = {**moment.get("club_lines", {}).get(s_, {}), **vals}
-    moment["agent_trace"] = pkg.get("trace", [])
+    moment["agent_trace"] = pkg.get("trace", []) + [{"agent": "checks", "ok": True, "stage": 0, "checks": 12,
+                                                     "fixes": list(dict.fromkeys(fixes))}]
     moment["latency_ms"] = int((time.time() - t0) * 1000)
     if applied:
         moment["source"] = "agents"
@@ -548,6 +563,8 @@ class AskIn(BaseModel):
     user_id: str = Field(..., max_length=40)
     question: str = Field(..., min_length=3, max_length=200)
     lang: str | None = Field(None, pattern="^(en|es|pt|fr)$")
+    # "solo": the single-agent baseline, for the evaluation only (needs the admin key).
+    mode: str | None = Field(None, pattern="^(team|solo)$")
 
 
 class BelieveIn(BaseModel):
@@ -1261,7 +1278,7 @@ def _ask_fallback(room: MatchRoom, lang: str, templates: dict | None = None) -> 
 
 
 @app.post("/api/matches/{match_id}/ask")
-async def ask(match_id: str, body: AskIn) -> dict:
+async def ask(match_id: str, body: AskIn, x_admin_key: str = Header("", max_length=200)) -> dict:
     """Ask the Gaffer: a fan's question goes over A2A to the Press Room (the Scout researches it with the
     Gaffer's MCP tools, the Gaffer answers in the fan's language). Only the asker sees the answer."""
     room = rooms.get(match_id)
@@ -1272,6 +1289,9 @@ async def ask(match_id: str, body: AskIn) -> dict:
         raise HTTPException(404, "user not found")
     if err := _ask_allowed(body.user_id):
         raise HTTPException(429, err)
+    solo = body.mode == "solo"
+    if solo and not (settings.admin_key and hmac.compare_digest(x_admin_key.encode(), settings.admin_key.encode())):
+        raise HTTPException(403, "the single-agent baseline is for the evaluation only")
     lang = body.lang or u.get("lang") or "en"
     question = _clean(body.question)[:200]
     ask_id = uuid.uuid4().hex[:12]
@@ -1326,33 +1346,52 @@ async def ask(match_id: str, body: AskIn) -> dict:
             brief["earlier_in_this_chat"] = earlier
         if rules:
             brief["rules"] = " ".join(rules)
+        if solo:
+            brief["mode"] = "solo"
         pkg = await agents.produce(brief)
         # A real answer echoes our id and carries the agents' trace; anything else is an error reply.
         if pkg and pkg.get("ask_id") == ask_id and pkg.get("trace") and isinstance(pkg.get("answer"), str):
-            answer = _no_real_clubs(_localize(lang, _clean(pkg["answer"], lang)))
+            # Every answer passes the same code checks before the fan sees it; the ones that changed it are
+            # recorded, so Under the hood (and the evaluation) can show what was caught.
+            t_checks = time.perf_counter()
+            answer, fixes, checks = _clean(pkg["answer"], lang), [], 0
+
+            def check(code: str, new: str) -> None:
+                nonlocal answer, checks
+                checks += 1
+                if new != answer:
+                    fixes.append(code)
+                answer = new
+
+            check("wording", _localize(lang, answer))
+            check("real_clubs", _no_real_clubs(answer))
             if u.get("persona") != "analyst":
-                answer = _plain_for_fans(answer)
+                check("xg_for_fans", _plain_for_fans(answer))
             if room.status == "finished":
-                answer = _no_final_chances(answer)
-            answer = _wrong_team_pct(answer, room, lang)
-            answer = _wrong_leader(answer, room, lang, complete=True)
-            answer = _no_trailing_questions(answer)
-            answer = _no_meta(answer, room, lang)
-            answer = _next_goal_side(answer, room, lang)
-            answer = _wrong_shots(answer, room, lang)
-            answer = _no_guessed_tactics(answer)
+                check("final_chances", _no_final_chances(answer))
+            check("wrong_team_pct", _wrong_team_pct(answer, room, lang))
+            check("wrong_leader", _wrong_leader(answer, room, lang, complete=True))
+            check("trailing_question", _no_trailing_questions(answer))
+            check("sources", _no_meta(answer, room, lang))
+            check("next_goal_side", _next_goal_side(answer, room, lang))
+            check("shots", _wrong_shots(answer, room, lang))
+            check("guessed_tactic", _no_guessed_tactics(answer))
             if room.status != "finished":
-                answer = _not_certain(answer, lang)
-            answer = _neutral(answer, lang)
-            answer = _full_names(answer, room)
+                check("certainty", _not_certain(answer, lang))
+            check("neutral", _neutral(answer, lang))
+            check("full_names", _full_names(answer, room))
             if lang == "en":
-                answer = _rise_consistent(_next_goal_consistent(answer))
+                check("next_goal_order", _next_goal_consistent(answer))
+                check("rise", _rise_consistent(answer))
                 if not _SEASON_Q.search(question):  # "their season chances show Brackenford with 73% to win"
-                    answer = re.sub(r"\bseason (chances|odds)\b", r"\1", answer)
-            answer = _cap_words(answer, 85 if u.get("persona") == "analyst" else 55)
+                    check("season_words", re.sub(r"\bseason (chances|odds)\b", r"\1", answer))
+            check("length", _cap_words(answer, 85 if u.get("persona") == "analyst" else 55))
             followups = [_localize(lang, _clean(f))[:60] for f in (pkg.get("followups") or [])
                          if isinstance(f, str) and f.strip()][:2]
-            trace = pkg["trace"]
+            trace = pkg["trace"] + [{"agent": "checks", "ok": True, "stage": 0, "checks": checks, "fixes": fixes,
+                                     "ms": int((time.perf_counter() - t_checks) * 1000)}]
+            if fixes:
+                log.info("ask %s checks fixed: %s", ask_id, ", ".join(fixes))
             source = "agents" if answer else "gaffer"
             if pkg.get("off_topic"):  # the Scout ruled it off topic: a kind fixed reply, with the match situation
                 answer, source = _ask_fallback(room, lang, _ASK_OFF_TOPIC), "agents"
