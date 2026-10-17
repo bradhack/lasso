@@ -7,13 +7,18 @@ demo fan of Eastholme Rangers, and drives a 1920x1080 browser through the scenes
 Ask the Gaffer, Call it, Penke's winner, Under the hood, then four slides (Microsoft Fabric, two agents or one, how
 it works, the close). It captures the screen as it goes and writes, in docs/video/out/:
 
-    lasso-demo.mp4   the video, 1080p, no sound: record your narration over it
+    lasso-demo.mp4   the video, 1080p: narrated by Azure AI Speech with --voice, otherwise silent for your own voice
     lasso-demo.srt   the narration as captions, timed to the video (read along, or upload to YouTube as captions)
     narration.md     each scene's start time and lines, to read from while you record
 
 Every scene lasts at least as long as its lines take to say (about 2.4 words a second), and longer when the live
 match makes it wait (an answer arriving, the goal, the agents' story). The script itself lives in SCENES below;
 `--script-only` writes docs/video/SCRIPT.md from it without recording.
+
+With --voice, each scene's lines are spoken by an Azure AI Speech neural voice (default en-US-AndrewMultilingualNeural,
+a natural US voice) on Lasso's own Foundry account, signed in as you through the Azure CLI. The lines are made first,
+each scene lasts as long as its lines, and the voice is mixed in at each scene's start. Your account needs the
+"Cognitive Services User" role on the Foundry account; if it's missing, the script prints the one command to add it.
 
 Needs: Python 3.10+, `pip install playwright` then `playwright install chromium`, and ffmpeg on the PATH
 (Windows: `winget install Gyan.FFmpeg`). It restarts the showcase match for anyone watching, and creates one demo
@@ -29,6 +34,7 @@ import shutil
 import subprocess
 import sys
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -88,8 +94,9 @@ def write_script(path: Path) -> None:
     total = sum(s["min"] for s in SCENES)
     out = ["# Lasso demo video: the script", "",
            f"About {total:.0f} seconds of narration (the recording runs a little longer while the live match plays). "
-           "Generated from `docs/video/record_demo.py`, which records the video to match: run it, then read these "
-           "lines over the video, using `out/narration.md` for each scene's exact start time.", "",
+           "Generated from `docs/video/record_demo.py`, which records the video to match. With `--voice` it narrates "
+           "these lines itself with an Azure AI Speech voice (a natural US voice by default); without it, read them "
+           "over the video, using `out/narration.md` for each scene's exact start time.", "",
            "| # | Scene | On screen | Say | At least |", "|---|---|---|---|---|"]
     for i, s in enumerate(SCENES, 1):
         out.append(f"| {i} | {s['title']} | {s['show']} | {s['line']} | {s['min']:.0f}s |")
@@ -167,6 +174,92 @@ def slide_html(scene: str, seconds: float) -> str:
                 f"width:100%;height:100%;object-fit:cover;animation:demo-zoom {d} ease-out forwards'>")
     return (f"<img src='{data_uri(IMG / 'submission-1-cover.png')}' style='position:absolute;inset:0;width:100%;"
             f"height:100%;object-fit:cover;animation:demo-zoom {d} ease-out forwards'>")
+
+
+# ---------------------------------------------------------------- the narration voice (Azure AI Speech)
+
+# How the voice should say what's written for readers.
+SAY = [("A2A", "A to A"), ("MCP", "M C P"), ("Cosmos DB", "Cosmos D B"), ("Web PubSub", "Web Pub Sub"),
+       ("AI ", "A I "), ("Lasso:", "Lasso."), ("27/27", "27 of 27")]
+
+
+def _cli(*args: str) -> str:
+    exe = shutil.which(args[0])
+    if not exe:
+        sys.exit(f"{args[0]} isn't on the PATH; it's needed for --voice (sign in with `az login`).")
+    r = subprocess.run([exe, *args[1:]], capture_output=True, text=True)
+    if r.returncode != 0:
+        sys.exit(f"`{' '.join(args)}` failed: {r.stderr.strip()[:400]}")
+    return r.stdout.strip()
+
+
+def speech_account(resource_group: str | None) -> tuple[str, str]:
+    """Lasso's Foundry account (it hosts Azure AI Speech): its resource id and region."""
+    rg = resource_group or _cli("azd", "env", "get-value", "AZURE_RESOURCE_GROUP")
+    acct = json.loads(_cli("az", "cognitiveservices", "account", "list", "-g", rg,
+                           "--query", "[?kind=='AIServices'] | [0].{id:id, location:location}", "-o", "json") or "null")
+    if not acct:
+        sys.exit(f"No Foundry (AIServices) account found in resource group {rg}; pass --resource-group.")
+    return acct["id"], acct["location"]
+
+
+def synthesize(lines: list[str], voice: str, resource_id: str, region: str, folder: Path) -> list[Path]:
+    token = _cli("az", "account", "get-access-token", "--resource", "https://cognitiveservices.azure.com",
+                 "--query", "accessToken", "-o", "tsv")
+    folder.mkdir(parents=True, exist_ok=True)
+    files = []
+    for i, line in enumerate(lines):
+        text = line
+        for a, b in SAY:
+            text = text.replace(a, b)
+        text = text.replace("&", "and").replace("<", "").replace(">", "")
+        ssml = (f"<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'>"
+                f"<voice name='{voice}'>{text}</voice></speak>")
+        req = urllib.request.Request(
+            f"https://{region}.tts.speech.microsoft.com/cognitiveservices/v1", data=ssml.encode("utf-8"),
+            method="POST", headers={"Authorization": f"Bearer aad#{resource_id}#{token}",
+                                    "Content-Type": "application/ssml+xml", "User-Agent": "lasso-demo",
+                                    "X-Microsoft-OutputFormat": "audio-48khz-192kbitrate-mono-mp3"})
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                audio = r.read()
+        except urllib.error.HTTPError as e:
+            if e.code in (401, 403):
+                me = _cli("az", "ad", "signed-in-user", "show", "--query", "id", "-o", "tsv")
+                sys.exit("Azure AI Speech refused your sign-in. Give your account the Cognitive Services User role on "
+                         "the Foundry account, wait a few minutes, then run this again:\n\n"
+                         f'  az role assignment create --assignee {me} --role "Cognitive Services User" '
+                         f'--scope "{resource_id}"\n')
+            if e.code == 400:
+                sys.exit(f"Azure AI Speech rejected the voice {voice!r}; pick another with --voice.")
+            raise
+        path = folder / f"{i + 1:02d}.mp3"
+        path.write_bytes(audio)
+        files.append(path)
+    return files
+
+
+def duration(path: Path) -> float:
+    r = subprocess.run([shutil.which("ffprobe") or "ffprobe", "-v", "error", "-show_entries", "format=duration",
+                        "-of", "default=nw=1:nk=1", str(path)], capture_output=True, text=True, check=True)
+    return float(r.stdout.strip())
+
+
+def mix_voice(rec: "Recorder", out: Path, clips: list[Path]) -> None:
+    """Lay each scene's clip in at its start (a beat after the cut), under the silent video."""
+    silent = out / "lasso-demo-silent.mp4"
+    (out / "lasso-demo.mp4").replace(silent)
+    args = ["ffmpeg", "-y", "-loglevel", "error", "-i", str(silent)]
+    chains, labels = [], []
+    for i, ((scene, start), clip) in enumerate(zip(rec.starts, clips)):
+        args += ["-i", str(clip)]
+        ms = int((start + 0.35) * 1000)
+        chains.append(f"[{i + 1}:a]adelay={ms}:all=1,aresample=48000[a{i}]")
+        labels.append(f"[a{i}]")
+    graph = ";".join(chains) + f";{''.join(labels)}amix=inputs={len(labels)}:normalize=0,alimiter=limit=0.95,apad[voice]"
+    args += ["-filter_complex", graph, "-map", "0:v", "-map", "[voice]", "-c:v", "copy", "-c:a", "aac",
+             "-b:a", "192k", "-shortest", "-movflags", "+faststart", str(out / "lasso-demo.mp4")]
+    subprocess.run(args, check=True)
 
 
 # ---------------------------------------------------------------- the recorder
@@ -247,12 +340,21 @@ def show_slide(rec: Recorder, scene: dict) -> None:
                       " requestAnimationFrame(() => requestAnimationFrame(() => s.classList.add('on'))); }", html)
 
 
-def run(app: str, key: str, out: Path, pace: float, from_minute: int, name: str = "Brad") -> None:
+def run(app: str, key: str, out: Path, pace: float, from_minute: int, name: str = "Brad",
+        voice: str | None = None, resource_group: str | None = None) -> None:
     from playwright.sync_api import sync_playwright
 
     if not shutil.which("ffmpeg"):
         sys.exit("ffmpeg isn't on the PATH. On Windows: winget install Gyan.FFmpeg (then open a new terminal).")
     out.mkdir(parents=True, exist_ok=True)
+    clips: list[Path] = []
+    if voice:  # the lines first: each scene then lasts as long as its voice
+        resource_id, region = speech_account(resource_group)
+        print(f"Narrating with {voice} (Azure AI Speech, {region})...")
+        clips = synthesize([s["line"] for s in SCENES], voice, resource_id, region, out / "voice")
+        for s, clip in zip(SCENES, clips):
+            s["min"] = round(duration(clip) + 0.9, 2)
+        print(f"  {sum(s['min'] for s in SCENES):.0f} seconds of narration")
     frames_dir = out / "frames"
     shutil.rmtree(frames_dir, ignore_errors=True)
     frames_dir.mkdir()
@@ -377,7 +479,12 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: int, name: str 
 
     encode(rec, end, out)
     write_captions(rec, end, out)
-    print(f"\nDone: {out / 'lasso-demo.mp4'} ({end:.0f} seconds), with lasso-demo.srt and narration.md.")
+    if clips:
+        mix_voice(rec, out, clips)
+        print(f"\nDone: {out / 'lasso-demo.mp4'} ({end:.0f} seconds, narrated), lasso-demo-silent.mp4, "
+              "lasso-demo.srt and narration.md.")
+    else:
+        print(f"\nDone: {out / 'lasso-demo.mp4'} ({end:.0f} seconds), with lasso-demo.srt and narration.md.")
     if end > 119:
         print("It's over two minutes: the live match made some scenes wait. Run it again, or trim the goal scene's "
               "wait in a video editor.")
@@ -426,6 +533,10 @@ if __name__ == "__main__":
     ap.add_argument("--pace", type=float, default=11.0, help="seconds per match minute (default 11)")
     ap.add_argument("--from-minute", type=int, default=77, help="where the replay starts (default 77)")
     ap.add_argument("--name", default="Brad", help="the demo fan's name (default Brad)")
+    ap.add_argument("--voice", nargs="?", const="en-US-AndrewMultilingualNeural", default=None,
+                    help="narrate with an Azure AI Speech voice (default en-US-AndrewMultilingualNeural; "
+                         "others: en-US-BrianMultilingualNeural, en-US-AvaMultilingualNeural, en-US-GuyNeural)")
+    ap.add_argument("--resource-group", help="where Lasso's Foundry account is (default: from azd)")
     ap.add_argument("--script-only", action="store_true", help="write docs/video/SCRIPT.md and stop")
     a = ap.parse_args()
     write_script(HERE / "SCRIPT.md")
@@ -434,4 +545,4 @@ if __name__ == "__main__":
         sys.exit(0)
     if not a.app or not a.key:
         ap.error("the app's URL and --key are needed to record")
-    run(a.app.rstrip("/"), a.key, Path(a.out), a.pace, a.from_minute, a.name)
+    run(a.app.rstrip("/"), a.key, Path(a.out), a.pace, a.from_minute, a.name, a.voice, a.resource_group)

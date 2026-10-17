@@ -1,6 +1,6 @@
 # Lasso demo video: the script
 
-About 98 seconds of narration (the recording runs a little longer while the live match plays). Generated from `docs/video/record_demo.py`, which records the video to match: run it, then read these lines over the video, using `out/narration.md` for each scene's exact start time.
+About 98 seconds of narration (the recording runs a little longer while the live match plays). Generated from `docs/video/record_demo.py`, which records the video to match. With `--voice` it narrates these lines itself with an Azure AI Speech voice (a natural US voice by default); without it, read them over the video, using `out/narration.md` for each scene's exact start time.
 
 | # | Scene | On screen | Say | At least |
 |---|---|---|---|---|
