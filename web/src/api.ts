@@ -33,7 +33,7 @@ export const api = {
   believe: (id: string, body: { user_id: string; side: number }) =>
     req<{ side: number; spell: number; count: number; new: boolean }>(`/api/matches/${id}/believe`, { method: "POST", body: JSON.stringify(body) }),
   speechStatus: () => req<{ azure: boolean; voices?: Partial<Record<Lang, VoiceOption[]>> }>("/api/speech"),
-  speechUrl: (q: { kind: "story" | "answer" | "event" | "sample"; id: string; lang: string; match_id?: string; voice?: string }) =>
+  speechUrl: (q: { kind: "story" | "answer" | "event" | "sample"; id: string; lang: string; match_id?: string; voice?: string; v?: string }) =>
     `${API_BASE}/api/speech/audio?${new URLSearchParams(Object.entries(q).filter(([, v]) => v) as [string, string][])}`,
   story: (id: string) => req<Moment[]>(`/api/matches/${id}/story`),
   ask: (id: string, body: { user_id: string; question: string; lang: string }) =>

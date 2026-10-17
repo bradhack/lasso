@@ -403,6 +403,11 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
         # The instant story says what the ruled-out goal would have meant ("not the 23% it would have been");
         # keep it unless the agents' version says so too.
         keep_story = keep_story or f"{moment['var']['stands_pct']}%" not in story_en
+    # Keep the instant wording: a fan may have tapped Listen on it just before this version replaced it.
+    _story_versions[moment["moment_id"]] = {"headline": dict(moment.get("headline") or {}),
+                                            "story": dict(moment.get("story") or {})}
+    while len(_story_versions) > 2000:
+        _story_versions.popitem(last=False)
     for key in ("headline", "story", "analyst"):
         if key == "story" and keep_story:
             continue
@@ -517,11 +522,33 @@ class BelieveIn(BaseModel):
     side: int = Field(..., ge=0, le=1)
 
 
+def story_text(m: dict, lang: str) -> str:
+    """A story's headline and text as one passage, with a pause between them (the app builds the same)."""
+    head = ((m.get("headline") or {}).get(lang) or "").strip()
+    if head and head[-1] not in ".!?":
+        head += "."
+    return f"{head} {(m.get('story') or {}).get(lang) or ''}".strip()
+
+
+def text_fingerprint(text: str) -> str:
+    """FNV-1a over UTF-16 code units, as the app computes it (web/src/components/Listen.tsx)."""
+    h = 0x811C9DC5
+    b = text.encode("utf-16-le")
+    for i in range(0, len(b), 2):
+        h ^= b[i] | (b[i + 1] << 8)
+        h = (h * 0x01000193) & 0xFFFFFFFF
+    return f"{h:08x}"
+
+
+_story_versions: OrderedDict[str, dict] = OrderedDict()  # moment id -> its instant wording, once replaced
+
+
 class SpeechIn(BaseModel):
     kind: str = Field(..., pattern="^(story|answer|event|sample)$")
     id: str = Field(..., max_length=80)
     lang: str = Field("en", pattern="^(en|es|pt|fr)$")
     match_id: str | None = Field(None, max_length=40)
+    v: str | None = Field(None, pattern="^[0-9a-f]{8}$")  # fingerprint of the story text on the fan's screen
 
 
 class LeagueIn(BaseModel):
@@ -671,20 +698,23 @@ async def speech_status() -> dict:
 async def listen(kind: str = Query(..., pattern="^(story|answer|event|sample)$"), id: str = Query(..., max_length=80),
                  lang: str = Query("en", pattern="^(en|es|pt|fr)$"),
                  match_id: str | None = Query(None, max_length=40),
-                 voice: str | None = Query(None, max_length=40, pattern=r"^[A-Za-z]{2}-[A-Za-z]{2}-[A-Za-z]+$")) -> Response:
+                 voice: str | None = Query(None, max_length=40, pattern=r"^[A-Za-z]{2}-[A-Za-z]{2}-[A-Za-z]+$"),
+                 v: str | None = Query(None, pattern="^[0-9a-f]{8}$")) -> Response:
     """Listen: a story, a match event or a Gaffer answer read aloud in the fan's language (MP3). The text comes from the server,
     never from the request, so this can't be used to read arbitrary text. It's a plain GET so a phone can start
     playing it inside the tap (iPhones block audio started later)."""
-    body = SpeechIn(kind=kind, id=id, lang=lang, match_id=match_id)
+    body = SpeechIn(kind=kind, id=id, lang=lang, match_id=match_id, v=v)
     if body.kind == "story":
         room = rooms.get(body.match_id or "")
         m = next((x for x in (room.moments if room else []) if x["moment_id"] == body.id), None)
         if m is None:
             raise HTTPException(404, "story not found")
-        head = ((m.get("headline") or {}).get(body.lang) or "").strip()
-        if head and head[-1] not in ".!?":
-            head += "."  # a pause between the headline and the story
-        text = f"{head} {(m.get('story') or {}).get(body.lang) or ''}".strip()
+        # Read exactly what the fan sees: the instant wording and the agents' version share an id, so the app
+        # sends a fingerprint of the text on its screen and we read the version that matches.
+        versions = [story_text(m, body.lang)]
+        if old := _story_versions.get(body.id):
+            versions.append(story_text(old, body.lang))
+        text = next((v for v in versions if body.v and text_fingerprint(v) == body.v), versions[0])
         lang = body.lang
     elif body.kind == "sample":  # a fixed line, so a fan can hear a voice before picking it
         text, lang = VOICE_SAMPLE[body.lang], body.lang

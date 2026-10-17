@@ -5,6 +5,18 @@ import { useStore } from "../store";
 import type { Lang } from "../types";
 import { Speaker, StopIcon } from "./Icons";
 
+/** FNV-1a over UTF-16 code units: a short fingerprint of the exact text on screen (the server computes the same).
+ * A story's instant wording and the agents' version share an id; this tells the server which one to read, and
+ * gives each version its own address so the browser never replays the other one from its cache. */
+export function fingerprint(text: string) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, "0");
+}
+
 /** A story's headline and text as one passage, with a pause between them (as the server reads it). */
 export function storyText(headline: string, story: string) {
   const h = headline.trim();
@@ -114,7 +126,7 @@ export function Listen({ kind, id, matchId, text, lang, compact = false, label }
     current?.stop();
     tellListened(matchId);
     if (!azure) return phoneVoice();
-    const audio = new Audio(api.speechUrl({ kind, id, lang, match_id: matchId, voice }));
+    const audio = new Audio(api.speechUrl({ kind, id, lang, match_id: matchId, voice, v: kind === "story" ? fingerprint(text) : undefined }));
     current = { key, stop: () => { audio.pause(); done(); } };
     audio.onplaying = () => mounted.current && setState("playing");
     audio.onended = done;
