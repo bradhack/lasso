@@ -16,7 +16,7 @@ const TEAM = ["var(--home)", "var(--away)"];
 const KEY = "lasso-touchline-hidden";
 const VIEW_KEY = "lasso-touchline-view";
 const GROUND_PASS = 18; // metres: shorter passes are played along the ground and drawn nearly straight
-const CHAIN_MS = 7000; // how long a goal's build-up stays on the pitch
+type View = "live" | "shots" | "goals";
 const TRAIL = 7; // dots in the ball's comet tail
 const reduceMotion = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
@@ -78,35 +78,25 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
 
   const persona = useStore((s) => s.user?.persona);
   // A saved choice wins; otherwise analysts open on the shot map and fans on the live ball.
-  const [view, setView] = useState<"live" | "shots">(() => {
+  const [view, setView] = useState<View>(() => {
     const saved = readPref(VIEW_KEY);
-    return saved === "shots" || saved === "live" ? saved : persona === "analyst" ? "shots" : "live";
+    return saved === "shots" || saved === "live" || saved === "goals" ? saved : persona === "analyst" ? "shots" : "live";
   });
   const [picked, setPicked] = useState<number | null>(null);
   const recentShot = [...shown.slice(-8)].reverse().find((x) => x.t === "shot");
   const selected = shots.find((x) => x.s === picked) ?? shots[shots.length - 1];
 
-  // How it was built: after a goal or big chance arrives live, its passing move stays on the pitch for a few
-  // seconds (on the shot map, the picked shot's move shows for as long as it's picked).
-  const [replayed, setReplayed] = useState<Touch | null>(null);
-  const seenChain = useRef(recentShot?.s ?? 0);
-  useEffect(() => {
-    const x = recentShot;
-    if (!x || !x.chain?.passes.length || x.s <= seenChain.current) return;
-    seenChain.current = x.s;
-    if (touches.slice(-8).every((y) => y.s !== x.s)) return; // caught up from earlier: no replay
-    setReplayed(x);
-    const tm = window.setTimeout(() => setReplayed(null), CHAIN_MS);
-    return () => window.clearTimeout(tm);
-  }, [recentShot?.s]); // eslint-disable-line react-hooks/exhaustive-deps
-  const chainShot = view === "shots" ? (selected?.chain?.passes.length ? selected : null) : replayed;
+  // Goals: every goal so far, each with how it was built. Its own view, so the live pitch stays live.
+  const goals = shots.filter((x) => x.g);
+  const [pickedGoal, setPickedGoal] = useState<number | null>(null);
+  const goal = goals.find((x) => x.s === pickedGoal) ?? goals[goals.length - 1];
 
   const toggle = () => {
     const next = !hidden;
     setHidden(next);
     writePref(KEY, next ? "1" : "0");
   };
-  const choose = (v: "live" | "shots") => {
+  const choose = (v: View) => {
     setView(v);
     writePref(VIEW_KEY, v);
   };
@@ -120,6 +110,7 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
             <div className="seg mini" role="tablist">
               <button role="tab" aria-selected={view === "live"} className={`tab${view === "live" ? " sel" : ""}`} onClick={() => choose("live")}>{t("live", lang)}</button>
               <button role="tab" aria-selected={view === "shots"} className={`tab${view === "shots" ? " sel" : ""}`} onClick={() => choose("shots")}>{t("vShots", lang)}</button>
+              <button role="tab" aria-selected={view === "goals"} className={`tab${view === "goals" ? " sel" : ""}`} onClick={() => choose("goals")}>{t("vGoals", lang)}</button>
             </div>
           )}
           <button className="linkbtn" onClick={toggle} aria-expanded={!hidden}>
@@ -130,7 +121,7 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
       {!hidden && (
         <>
           <svg className="pitch" viewBox={`-3 -3 ${W + 6} ${H + 6}`} role="group"
-            aria-label={view === "live" ? (last ? describe(last, snap, lang) : t("touchline", lang)) : t("vShots", lang)}>
+            aria-label={view === "live" ? (last ? describe(last, snap, lang) : t("touchline", lang)) : view === "shots" ? t("vShots", lang) : t("vGoals", lang)}>
             <PitchMarkings />
             {view === "live" && (
               <>
@@ -138,7 +129,7 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
                 {markers.map((m, i) => (
                   <Marker key={`m-${m.s}`} m={m} age={markers.length - 1 - i} />
                 ))}
-                {!chainShot && passes.map((p, i) => {
+                {passes.map((p, i) => {
                   // A gap between where the last pass arrived and where this one starts is a run with the ball.
                   const prev = passes[i - 1];
                   const carry = prev && prev.ex !== undefined && prev.ey !== undefined && p.x !== undefined && p.y !== undefined
@@ -150,11 +141,10 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
                     </g>
                   );
                 })}
-                {chainShot && <Chain shot={chainShot} />}
                 {ball && <Ball last={last} at={ball} fill={TEAM[possession ?? last?.k ?? 0]} />}
               </>
             )}
-            {view === "shots" && chainShot && <Chain shot={chainShot} still />}
+            {view === "goals" && goal && <Chain key={goal.s} shot={goal} />}
             {view === "shots" && shots.map((x) => (
               <g key={`shot-${x.s}`} className="shot-hit" onClick={() => setPicked(x.s)} role="button" tabIndex={0}
                 aria-label={`${x.m}' ${describe(x, snap, lang)}`} aria-pressed={x.s === selected?.s}
@@ -163,14 +153,33 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
                 <circle cx={x.x} cy={x.y} r="4.5" className="hit" />
               </g>
             ))}
-            {flash && (
+            {flash && view === "live" && (
               <g key={`goal-${flash.s}`} className="goalflash">
                 <circle cx={flash.k === 0 ? W : 0} cy={H / 2} r="6" />
                 <text x={W / 2} y={H / 2 + 4} textAnchor="middle">{t("tGoal", lang)}</text>
               </g>
             )}
           </svg>
-          {view === "live" ? (
+          {view === "goals" ? (
+            <div className="goalsfoot">
+              {goals.length === 0 ? (
+                <p className="muted">{t("noGoalsYet", lang)}</p>
+              ) : (
+                <>
+                  <div className="goal-picks" role="group" aria-label={t("vGoals", lang)}>
+                    {goals.map((x) => (
+                      <button key={x.s} className={`goal-pick${x.s === goal?.s ? " sel" : ""}`} aria-pressed={x.s === goal?.s}
+                        onClick={() => setPickedGoal(x.s)}>
+                        <i style={{ background: TEAM[x.k] }} aria-hidden="true" />
+                        {x.m}' {x.p.split(" ").slice(-1)[0]}
+                      </button>
+                    ))}
+                  </div>
+                  {goal && <p className="built-cap" aria-live="polite">{builtText(goal, lang)}</p>}
+                </>
+              )}
+            </div>
+          ) : view === "live" ? (
             <>
             <div className="pitch-foot">
               <span className="dir"><Crest club={snap.home} size="sm" />{snap.home.short} <b>→</b></span>
@@ -180,7 +189,6 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
               </span>
               <span className="dir right"><b>←</b> {snap.away.short}<Crest club={snap.away} size="sm" /></span>
             </div>
-            {chainShot && <p className="built-cap" aria-live="polite">{builtText(chainShot, lang)}</p>}
             {/* What the marks on the pitch are: tackles drawn as a cross read as missed shots without a key. */}
             <div className="mk-key" aria-hidden="true">
               <span><svg viewBox="-3 -3 6 6"><circle r="2" className="kball" /></svg>{t("kBall", lang)}</span>
@@ -215,7 +223,6 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
                 <div className="shotpick" aria-live="polite">
                   <i style={{ background: TEAM[selected.k] }} />
                   {selected.m}' {describe(selected, snap, lang)}
-                  {selected.chain?.passes.length ? <span className="built">{builtText(selected, lang)}</span> : null}
                 </div>
               )}
             </div>
@@ -377,7 +384,8 @@ function builtText(shot: Touch, lang: Lang): string {
       : c.start.t === "kickoff" ? t("chainKickoff", lang)
         : t("chainWon", lang).replace("{p}", c.start.p.split(" ").slice(-1)[0])
     : "";
-  const count = c.passes.length === 1 ? t("chainOne", lang) : t("chainN", lang).replace("{n}", String(c.passes.length));
+  const count = c.passes.length === 0 ? (from ? "" : t("chainSolo", lang))
+    : c.passes.length === 1 ? t("chainOne", lang) : t("chainN", lang).replace("{n}", String(c.passes.length));
   return `${t("chainTitle", lang)}: ${[from, count].filter(Boolean).join(", ")} · ${names.join(" → ")}`;
 }
 

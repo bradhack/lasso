@@ -782,3 +782,9 @@ button.motm-row:active { transform: scale(0.99); }
 .shotpick .built { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
 @media (prefers-reduced-motion: reduce) { .pitch .fresh { animation: none; opacity: 0.45; } .pitch .chain .link { animation: none; } }
 .built-cap { margin: 6px 0 0; font-size: 12.5px; line-height: 1.4; color: var(--gold-2); text-align: center; }
+.goalsfoot { padding-top: 6px; }
+.goalsfoot .muted { margin: 0; font-size: 13px; }
+.goal-picks { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.goal-pick { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line-3); background: transparent; color: var(--text-2); font: inherit; font-size: 13px; }
+.goal-pick i { width: 8px; height: 8px; border-radius: 50%; }
+.goal-pick.sel { border-color: var(--gold); color: var(--text); background: color-mix(in srgb, var(--gold) 14%, transparent); }
