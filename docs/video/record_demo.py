@@ -47,8 +47,8 @@ WORDS_PER_SECOND = 2.4
 SCENES = [
     {"id": "gauge", "title": "The Gaffer's Gauge",
      "show": "The live match at 77': Eastholme Rangers 1-1 Brackenford City, Eastholme down to ten. The Gauge glows.",
-     "line": "Meet Lasso. Say you're an Eastholme fan. Your team's down to ten men, and the Gaffer, our AI, doesn't "
-             "fancy their chances."},
+     "line": "Meet Lasso. Say you're an Eastholme fan. At this point in the match, your team's down to ten men, and "
+             "the Gaffer, our AI, doesn't fancy their chances."},
     {"id": "why", "title": "Why it moved",
      "show": "Why it moved glows: the agents' latest story, in plain words.",
      "line": "Wondering why? AI agents explain it in plain English, Spanish, Portuguese or French, with every "
