@@ -7,7 +7,7 @@ import { useDialog } from "../useDialog";
 /** Each agent's name and job, in the fan's language. */
 const AGENTS: Record<string, Record<Lang, [string, string]>> = {
   stats: { en: ["Stats agent", "Pulls the numbers that matter"], es: ["Agente de estadísticas", "Saca los números que importan"], pt: ["Agente de estatísticas", "Busca os números que importam"], fr: ["Agent stats", "Sort les chiffres qui comptent"] },
-  gaffer: { en: ["Gaffer agent", "Explains why the chances moved"], es: ["Agente Gaffer", "Explica por qué cambiaron las opciones"], pt: ["Agente Gaffer", "Explica por que as chances mudaram"], fr: ["Agent Gaffer", "Explique pourquoi les chances ont bougé"] },
+  gaffer: { en: ["Gaffer agent", "Explains what changed the win probability"], es: ["Agente Gaffer", "Explica qué cambió la probabilidad de victoria"], pt: ["Agente Gaffer", "Explica o que mudou a probabilidade de vitória"], fr: ["Agent Gaffer", "Explique ce qui a changé la probabilité de victoire"] },
   narrator: { en: ["Narrator", "Writes the story in four languages"], es: ["Narrador", "Escribe la historia en cuatro idiomas"], pt: ["Narrador", "Escreve a história em quatro idiomas"], fr: ["Narrateur", "Écrit le récit en quatre langues"] },
   persona: { en: ["Persona", "Writes the fan and analyst angles"], es: ["Persona", "Escribe los enfoques para aficionados y analistas"], pt: ["Persona", "Escreve os ângulos para torcedores e analistas"], fr: ["Persona", "Écrit les angles supporter et analyste"] },
   game_master: { en: ["Game Master", "Picks the next Call It challenge"], es: ["Game Master", "Elige el próximo reto"], pt: ["Game Master", "Escolhe o próximo desafio"], fr: ["Game Master", "Choisit le prochain défi"] },

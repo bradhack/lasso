@@ -185,7 +185,7 @@ const S = {
   askPlaceholder: { en: "Type your question", es: "Escribe tu pregunta", pt: "Digite sua pergunta", fr: "Écris ta question" },
   askSend: { en: "Ask", es: "Preguntar", pt: "Perguntar", fr: "Demander" },
   askThinking: { en: "The Gaffer is thinking", es: "El Gaffer está pensando", pt: "O Gaffer está pensando", fr: "Le Gaffer réfléchit" },
-  askS1: { en: "Why did the chances change?", es: "¿Por qué cambiaron las opciones?", pt: "Por que as chances mudaram?", fr: "Pourquoi les chances ont bougé ?" },
+  askS1: { en: "What changed the win probability?", es: "¿Qué cambió la probabilidad de victoria?", pt: "O que mudou a probabilidade de vitória?", fr: "Qu'est-ce qui a changé la probabilité de victoire ?" },
   askS2: { en: "Who's playing best?", es: "¿Quién está jugando mejor?", pt: "Quem está jogando melhor?", fr: "Qui joue le mieux ?" },
   askS3: { en: "Who's likely to score next?", es: "¿Quién marcará el próximo gol?", pt: "Quem deve marcar o próximo gol?", fr: "Qui va marquer le prochain but ?" },
   askSlow: { en: "One at a time. Give the Gaffer a few seconds.", es: "De una en una. Dale unos segundos al Gaffer.", pt: "Uma de cada vez. Dê alguns segundos ao Gaffer.", fr: "Une à la fois. Laisse quelques secondes au Gaffer." },

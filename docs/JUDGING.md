@@ -71,7 +71,7 @@ They're built with **Microsoft Agent Framework** and run on models in **Microsof
 | Round | Agent | Its job | Data it looks up |
 |---|---|---|---|
 | 1, at the same time | Stats | Finds the numbers that matter | `match_stats`, `recent_events` |
-| 1, at the same time | Gaffer | Works out why the chances moved | `why_it_moved`, `gaffers_gauge` |
+| 1, at the same time | Gaffer | Works out what changed the win probability | `why_it_moved`, `gaffers_gauge` |
 | 2, at the same time | Narrator | Writes the story in English, Spanish, Portuguese and French | none |
 | 2, at the same time | Persona | Writes the fan and analyst versions, a line for each club's supporters, and a halftime team talk | none |
 | 2, at the same time | Game Master | Picks the next prediction challenge | `candidate_challenges` |
