@@ -14,3 +14,4 @@ engine/build/
 docs/charts/*.html
 /.vscode/settings.json
 docs/agent-eval-run.json
+docs/agent-eval-solo-run.json

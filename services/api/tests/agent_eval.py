@@ -170,7 +170,7 @@ def http(base: str, method: str, path: str, body: dict | None = None, timeout: f
 
 
 # ---------------------------------------------------------------- run
-def run(base: str, key: str, minute_seconds: float) -> dict:
+def run(base: str, key: str, minute_seconds: float, solo: bool = False) -> dict:
     match = http(base, "GET", f"/api/matches/{MATCH}")[1]
     clubs = {"home": match["home"]["club_id"], "away": match["away"]["club_id"], None: None}
     names = {"home": match["home"]["name"], "away": match["away"]["name"]}
@@ -204,8 +204,11 @@ def run(base: str, key: str, minute_seconds: float) -> dict:
         before = http(base, "GET", f"/api/matches/{MATCH}")[1]
         season_before = http(base, "GET", f"/api/matches/{MATCH}/season")[1]
         t0 = time.time()
-        status, a = http(base, "POST", f"/api/matches/{MATCH}/ask",
-                         {"user_id": fan["id"], "question": question, "lang": fan["lang"]})
+        body = {"user_id": fan["id"], "question": question, "lang": fan["lang"]}
+        if solo:  # the single-agent baseline: same question, same checks, one agent instead of the Press Room
+            body["mode"] = "solo"
+        status, a = http(base, "POST", f"/api/matches/{MATCH}/ask", body,
+                         headers={"X-Admin-Key": key} if solo else None)
         after = http(base, "GET", f"/api/matches/{MATCH}")[1]
         season_after = http(base, "GET", f"/api/matches/{MATCH}/season")[1]
         return {"season": [season_before, season_after], "finished": before.get("status") == "finished",
@@ -574,7 +577,16 @@ def check_story(m: dict) -> dict[str, bool]:
     return c
 
 
-def report(run_: dict, out: Path) -> str:
+# What the code checks changed in an answer, not counting tidying (spelling, decimal commas) or trimming.
+TIDY = {"wording", "length"}
+
+
+def code_fixes(a: dict) -> list[str]:
+    return [f for t in a.get("trace") or [] if t.get("agent") == "checks" for f in t.get("fixes") or []
+            if f not in TIDY]
+
+
+def report(run_: dict, out: Path, name: str = "agent-eval") -> str:
     f = facts(run_)
     story = run_["story"]
     answers = run_["answers"]
@@ -610,8 +622,13 @@ def report(run_: dict, out: Path) -> str:
     p95 = lambda xs: xs[min(len(xs) - 1, int(0.95 * len(xs)))] if xs else 0  # noqa: E731
     an, at = rate(answers)
     sn, st = rate(stories)
+    fixed = [a for a in answers if code_fixes(a)]
+    caught: dict[str, int] = {}
+    for a in fixed:
+        for f_ in code_fixes(a):
+            caught[f_] = caught.get(f_, 0) + 1
     lines = [
-        "# Agent evaluation",
+        "# Agent evaluation" + (" (one agent alone, the baseline)" if name.endswith("solo") else ""),
         "",
         f"Run on {time.strftime('%Y-%m-%d %H:%M')} against the live app: the showcase match replayed, "
         f"{len(answers)} questions asked by five test fans (four languages, fan and analyst), and every story "
@@ -629,6 +646,10 @@ def report(run_: dict, out: Path) -> str:
         "",
         f"Tokens per answer: {int(statistics.median(toks)) if toks else 0:,} (median). "
         f"Tools the Scout chose: {', '.join(f'`{k}` ×{v}' for k, v in sorted(tools.items(), key=lambda x: -x[1]))}.",
+        "",
+        f"Code checks: {len(fixed)} of {at} answers needed a fix before a fan saw them"
+        + (f" ({', '.join(f'{k.replace(chr(95), chr(32))} ×{v}' for k, v in sorted(caught.items(), key=lambda x: -x[1]))})."
+           if caught else "."),
         "",
         "## Checks",
         "",
@@ -657,9 +678,72 @@ def report(run_: dict, out: Path) -> str:
         lines.append("None.")
     md = "\n".join(lines) + "\n"
     out.mkdir(parents=True, exist_ok=True)
-    (out / "agent-eval.md").write_text(md, encoding="utf-8")
-    (out / "agent-eval.json").write_text(json.dumps({"answers": answers, "stories": stories}, indent=1,
-                                                    ensure_ascii=False), encoding="utf-8")
+    (out / f"{name}.md").write_text(md, encoding="utf-8")
+    (out / f"{name}.json").write_text(json.dumps({"answers": answers, "stories": stories}, indent=1,
+                                                 ensure_ascii=False), encoding="utf-8")
+    return md
+
+
+def compare(out: Path) -> str:
+    """The Press Room (Scout, then the Gaffer) against one agent doing both jobs: the same 27 questions at the
+    same minutes, scored by the same checks. Writes docs/agent-comparison.md."""
+    runs = {"Press Room (2 agents)": json.loads((out / "agent-eval.json").read_text(encoding="utf-8"))["answers"],
+            "One agent alone": json.loads((out / "agent-eval-solo.json").read_text(encoding="utf-8"))["answers"]}
+    med = lambda xs: sorted(xs)[len(xs) // 2] if xs else 0  # noqa: E731
+    p95 = lambda xs: sorted(xs)[min(len(xs) - 1, int(0.95 * len(xs)))] if xs else 0  # noqa: E731
+
+    def stats(ans: list[dict]) -> dict:
+        done = [a for a in ans if a["checks"].get("answered")]
+        lat = [a["latency_ms"] for a in done]
+        toks = [sum((t.get("in") or 0) + (t.get("out") or 0) for t in a["trace"]) for a in done]
+        tools = [sum(len(t.get("tools") or []) for t in a["trace"]) for a in done]
+        return {"n": len(ans), "answered": len(done), "passed": sum(all(a["checks"].values()) for a in ans),
+                "fixed": sum(bool(code_fixes(a)) for a in done), "fixes": sum(len(code_fixes(a)) for a in done),
+                "lat": med(lat), "p95": p95(lat), "toks": med(toks), "tools": med(tools)}
+
+    st = {k: stats(v) for k, v in runs.items()}
+    a, b = st.values()
+    rows = [("Answered by the agents", "answered", "{} of {}"), ("Passed every check", "passed", "{} of {}"),
+            ("Needed a fix from the code checks", "fixed", "{} of {}")]
+    lines = ["# Two agents or one?", "",
+             f"Run on {time.strftime('%Y-%m-%d')} against the live app. The same {a['n']} questions, at the same "
+             "minutes of the showcase match, from the same five test fans, scored by the same checks "
+             "(`services/api/tests/agent_eval.py`). The **Press Room** is Lasso's design: the Scout researches "
+             "the question with the Gaffer's MCP tools, then the Gaffer, who has no tools, writes the answer. "
+             "**One agent alone** gets the Scout's tools and the Gaffer's rules in one set of instructions, and "
+             "the time both had together. The code checks run on both, so \"needed a fix\" counts the slips "
+             "they caught before a fan would have seen them.", "",
+             "| | " + " | ".join(runs) + " |", "|---|---|---|"]
+    for label, key, fmt in rows:
+        lines.append(f"| {label} | " + " | ".join(fmt.format(s_[key], s_["n"]) for s_ in st.values()) + " |")
+    lines += [f"| Slips the code checks caught | {a['fixes']} | {b['fixes']} |",
+              f"| Typical time | {a['lat'] / 1000:.1f}s | {b['lat'] / 1000:.1f}s |",
+              f"| Slowest (p95) | {a['p95'] / 1000:.1f}s | {b['p95'] / 1000:.1f}s |",
+              f"| Tokens per answer | {a['toks']:,} | {b['toks']:,} |",
+              f"| Tool calls per answer | {a['tools']} | {b['tools']} |", ""]
+    names = sorted({k for v in runs.values() for x in v for k in x["checks"]})
+    diff = []
+    for k in names:
+        cells = []
+        for v in runs.values():
+            has = [x for x in v if k in x["checks"]]
+            cells.append(f"{sum(x['checks'][k] for x in has)}/{len(has)}" if has else "")
+        if cells[0] != cells[1]:
+            diff.append(f"| {k.replace('_', ' ')} | {cells[0]} | {cells[1]} |")
+    if diff:
+        lines += ["## Where they differ", "", "| Check | " + " | ".join(runs) + " |", "|---|---|---|", *diff, ""]
+    lines += ["## Every answer, side by side", ""]
+    solo = {x["id"]: x for x in runs["One agent alone"]}
+    for x in runs["Press Room (2 agents)"]:
+        y = solo.get(x["id"])
+        mark = lambda r: "✅" if all(r["checks"].values()) else "❌ " + ", ".join(k for k, v in r["checks"].items() if not v)  # noqa: E731
+        lines += [f"**{x['minute']}' · {x['lang']} {x['persona']} · {x['question']}**", "",
+                  f"- Press Room {mark(x)}: {x['answer']}"]
+        if y:
+            lines.append(f"- One agent {mark(y)}: {y['answer']}")
+        lines.append("")
+    md = "\n".join(lines)
+    (out / "agent-comparison.md").write_text(md, encoding="utf-8")
     return md
 
 
@@ -670,15 +754,21 @@ if __name__ == "__main__":
     ap.add_argument("--minute-seconds", type=float, default=4.0, help="replay pace (default 4)")
     ap.add_argument("--out", default="docs", help="where to write agent-eval.md and .json")
     ap.add_argument("--rescore", help="re-check a saved agent-eval-run.json without replaying the match")
+    ap.add_argument("--solo", action="store_true",
+                    help="ask the single-agent baseline instead of the Press Room; writes agent-eval-solo.md/.json "
+                         "and then agent-comparison.md")
     args = ap.parse_args()
     out = Path(args.out)
+    name = "agent-eval-solo" if args.solo else "agent-eval"
     if args.rescore:
         r = json.loads(Path(args.rescore).read_text(encoding="utf-8"))
     else:
-        r = run(args.base.rstrip("/"), args.key, args.minute_seconds)
+        r = run(args.base.rstrip("/"), args.key, args.minute_seconds, solo=args.solo)
         out.mkdir(parents=True, exist_ok=True)
-        (out / "agent-eval-run.json").write_text(json.dumps(r, ensure_ascii=False), encoding="utf-8")
+        (out / f"{name}-run.json").write_text(json.dumps(r, ensure_ascii=False), encoding="utf-8")
     if not args.rescore and not any(m.get("source") == "agents" for m in r["story"]):
         sys.exit("No stories were written by the agents in this replay, so this run is incomplete and was not "
                  "saved as the report. If you just deployed, wait a minute and run it again.")
-    print(report(r, out))
+    print(report(r, out, name))
+    if args.solo and (out / "agent-eval.json").exists():
+        print(compare(out))
