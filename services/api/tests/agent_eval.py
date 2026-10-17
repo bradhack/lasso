@@ -68,18 +68,18 @@ STOP = {
     "en": {"the", "and", "is", "of", "to", "with", "have", "but", "their", "they", "chance", "after", "was", "win",
            "biggest"},
     "es": {"el", "los", "las", "y", "del", "pero", "tiene", "está", "con", "su", "fue", "para", "más", "victoria",
-           "probabilidad", "clave", "gol"},
+           "probabilidad", "clave", "gol", "tienen", "ahora", "ganar", "opciones"},
     "pt": {"o", "os", "e", "do", "da", "não", "mas", "tem", "está", "com", "seu", "foi", "para", "mais", "vitória",
-           "fator", "jogo", "gols", "você"},
+           "fator", "jogo", "gols", "você", "têm", "aos", "agora", "vencer", "ganhar", "também"},
     "fr": {"le", "les", "et", "du", "des", "est", "mais", "pas", "avec", "leur", "à", "pour", "plus", "été",
-           "victoire", "facteur", "clé", "buts"},
+           "victoire", "facteur", "clé", "buts", "ont", "désormais", "gagner"},
 }
 META = {
     "en": ["notes", "scout", "feed", "brief", "recorded", "listed", "the data", "tool", "i do not have",
-           "i don't have", "entries", "numbers shown", "figures shown"],
-    "es": ["notas", "ojeador", "los datos", "registr", "herramienta", "cifras mostradas"],
-    "pt": ["notas", "olheiro", "os dados", "registr", "ferramenta", "números mostrados"],
-    "fr": ["notes", "recruteur", "les données", "enregistr", "outil", "chiffres affichés"],
+           "i don't have", "entries", "numbers shown", "figures shown", "snapshot", "the match notes"],
+    "es": ["notas", "ojeador", "los datos", "registr", "herramienta", "cifras mostradas", "instantánea"],
+    "pt": ["notas", "olheiro", "os dados", "registr", "ferramenta", "números mostrados", "instantâneo"],
+    "fr": ["notes", "recruteur", "les données", "enregistr", "outil", "chiffres affichés", "instantané"],
 }
 # Taking a side or playing: "we" and "our", first-person plural verbs about a club ("Ganamos con diez"), and
 # "I won" ("Gané con diez"): the Gaffer watched the match.
@@ -112,7 +112,7 @@ ENGLISH_LEAK = {"es": re.compile(r"\b(chance|chances|possession|read|the|my)\b")
                 "pt": re.compile(r"\b(possession|read|the|my|swing)\b"),
                 "fr": re.compile(r"\bune \d+ ?% chance\b|\b(read|the|my)\b")}
 EUROPEAN_PT = re.compile(r"\b(golo|golos|equipa|equipas|a jogar|a correr|até aos?|primeira parte|segunda parte"
-                         r"|mantém-se|mantêm-se|controlo|hipótese|hipóteses)\b|\b(?:est[áa]|estão|continua|segue) a \w{2,}(?:ar|er|ir)\b")
+                         r"|mantém-se|mantêm-se|controlo|hipótese|hipóteses|ao minuto)\b|\b(?:est[áa]|estão|continua|segue) a \w{2,}(?:ar|er|ir)\b")
 # The clubs are invented: a real club's name is a slip.
 REAL_CLUBS = re.compile(
     r"\b(Arsenal|Aston Villa|Bournemouth|Brentford|Brighton|Burnley|Chelsea|Crystal Palace|Everton|Fulham|Leeds"
@@ -304,6 +304,9 @@ def pcts_match_teams(text: str, a: dict, story: list[dict], names: dict) -> bool
             if (other in between or DRAW_WORD.search(between) or re.search(r"[.;!?]", between)
                     or other in after or DRAW_WORD.search(after[:20])):  # "65% de possession pour Brackenford"
                 continue
+            # "limited Brackenford to six shots despite 35% possession": the percentage is the subject's.
+            if re.search(r"\b(?:despite|with only|on only|on just|pese a|apesar de|malgré)\s*$", between, re.I):
+                continue
             if int(pm.group(1)) not in ok:
                 return False
     return True
@@ -416,7 +419,7 @@ def check_answer(a: dict, f: dict, story: list[dict], names: dict) -> dict[str, 
 
 
 STIFF = re.compile(r"\b(it matters|matters most|changed everything|win probability|the figure|game still open|"
-                   r"clock effect|realistic chances|clock bites)\b", re.I)
+                   r"clock effect|realistic chances|clock bites|clock biting)\b", re.I)
 
 
 GOAL_AT = re.compile(r"\bscor\w*\b[^.]{0,60}?\b(\d{1,3})(?:st|nd|rd|th) minute|\b(\d{1,3})(?:st|nd|rd|th) minute\b"
@@ -507,6 +510,8 @@ def check_story(m: dict) -> dict[str, bool]:
         words = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}
         n = int(left.group(1)) if left.group(1).isdigit() else words[left.group(1).lower()]
         c["time_left_right"] = abs(n - max(0, (90 if m["minute"] > 45 else 45) - m["minute"])) <= 2
+        if m["minute"] <= 45 and m.get("period", 1) == 1:  # first half: time to halftime, said as such
+            c["time_left_right"] = c["time_left_right"] and bool(re.search(r"half", en, re.I))
     if leads_wrong(en, m.get("score") or [0, 0], NAMES):
         c["leader_right"] = False
     elif LEAD_SCORE.search(en):

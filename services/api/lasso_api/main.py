@@ -224,7 +224,7 @@ _FIXES = {
            (r"\b(\w+) (mantém|mantêm)-se\b", r"\1 se \2"),
            (r"\bna primeira parte\b", "no primeiro tempo"), (r"\bna segunda parte\b", "no segundo tempo"),
            (r"\bprimeira parte\b", "primeiro tempo"), (r"\bsegunda parte\b", "segundo tempo"),
-           (r"\bcontrolo\b", "controle"), (r"\bhipóteses\b", "chances"), (r"\bhipótese\b", "chance"),
+           (r"\bao minuto (\d+)", r"aos \1 minutos"), (r"\bcontrolo\b", "controle"), (r"\bhipóteses\b", "chances"), (r"\bhipótese\b", "chance"),
            (r",? segundo os números(?: mostrados)?", "")],
     "es": [(r"\bchances\b", "opciones"), (r"\buna chance\b", "una opción"), (r"\bchance\b", "opción"),
            (r"\bpossession\b", "posesión"), (r"\buna (\d+) ?%", r"un \1%"),
@@ -405,8 +405,15 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
                 log.warning("headline favors a club whose chance fell (%s); keeping template", head_en)
                 pkg = {**pkg, "headline": None}
                 break
-    if moment.get("trigger") == "swing_draw" and not re.search(rf"\b{draw_now}\s?%", story_en):
-        keep_story = True  # the draw closing in: its chance is the number to give
+    draw_was = round(100 * moment["before"]["draw"])
+    if moment.get("trigger") == "swing_draw" and not (re.search(rf"\b{draw_now}\s?%", story_en)
+                                                      and re.search(rf"\b{draw_was}\s?%", story_en)):
+        keep_story = True  # the draw closing in: its chance, from and to, is the number to give
+    if _STIFF.search(story_en):
+        keep_story = True  # "as the clock bites": the instant story reads better
+    if (moment.get("period", 1) == 1 and moment["minute"] <= 45 and _LEFT.search(story_en)
+            and not re.search(r"half", story_en, re.IGNORECASE)):
+        keep_story = True  # "one minute left" at 44' reads as the end of the match: it's to halftime
     goal_minutes = {e["minute"] for e in room.feed if e.get("type") == "goal"}
     for said in _GOAL_AT.finditer(story_en):
         if int(said.group(1) or said.group(2)) not in {m + d for m in goal_minutes for d in (-1, 0, 1)}:
@@ -914,14 +921,19 @@ VOICE_SAMPLE = {
     "fr": "À la 82e minute, but d'Adam Penke ! Eastholme Rangers mène 2-1, et ses chances de victoire passent à 83 %.",
 }
 
+# Phrases that read stiff or forced in a story.
+_STIFF = re.compile(r"\b(?:it matters|matters most|changed everything|win probability|the figure|game still open"
+                    r"|clock effect|realistic chances|clock bites|clock biting)\b", re.IGNORECASE)
+_LEFT = re.compile(r"\b(?:\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten) minutes?"
+                   r"(?: plus stoppage(?: time)?)? (?:left|to go|remaining)\b", re.IGNORECASE)
 # "Brackenford mène 1-2" (they trail): a club said to lead, followed by a score.
 _LEADS = {"en": r"leads?|are ahead|is ahead|in front", "es": r"lidera|va ganando|gana|manda|por delante",
           "pt": r"lidera|vence|está vencendo|está ganhando|na frente", "fr": r"mène|devant|en tête"}
 
 
-def _wrong_leader(text: str, room: MatchRoom, lang: str) -> str:
+def _wrong_leader(text: str, room: MatchRoom, lang: str, complete: bool = False) -> str:
     """Drop a sentence that says a club leads a match it isn't leading ("Brackenford mène 1-2" at 2-1 down),
-    as long as a real answer is left."""
+    as long as a real answer is left. With complete (answers), a stub that's left gets the chances right now."""
     h, a = room.state.goals
     leader = 0 if h > a else 1 if a > h else None
     verbs = _LEADS.get(lang, _LEADS["en"])
@@ -939,7 +951,9 @@ def _wrong_leader(text: str, room: MatchRoom, lang: str) -> str:
     if kept == text.strip():
         return text
     log.warning("dropped a sentence saying the wrong club leads: %s", text[:160])
-    return kept if len(kept.split()) >= 8 else text
+    if len(kept.split()) >= 8:
+        return kept
+    return _complete(kept, room, lang) if complete else text
 
 
 # "Eastholme are likelier to score next, 38% to Brackenford's 53%": the name and the numbers disagree.
@@ -1067,8 +1081,39 @@ def _no_guessed_tactics(text: str) -> str:
     return kept if len(kept.split()) >= 8 else text
 
 
+_DESPITE = re.compile(r"\b(?:despite|with only|on only|on just|pese a|apesar de|malgré)\s*$", re.IGNORECASE)
 _NOW_LINE = {"en": "Right now: {h} {ph}%, draw {pd}%, {a} {pa}%.", "es": "Ahora mismo: {h} {ph}%, empate {pd}%, {a} {pa}%.",
              "pt": "Agora: {h} {ph}%, empate {pd}%, {a} {pa}%.", "fr": "En ce moment : {h} {ph} %, nul {pd} %, {a} {pa} %."}
+
+
+def _complete(kept: str, room: MatchRoom, lang: str) -> str:
+    """What's left of an answer after a wrong sentence went: during the match, the exact chances right now
+    complete it; after full time (or with nothing left) the Gaffer's fixed reply takes over."""
+    if room.status == "finished" or not kept:
+        return ""
+    p = _pct(room.probs())
+    return f"{kept} " + _NOW_LINE.get(lang, _NOW_LINE["en"]).format(h=room.names[0], a=room.names[1], ph=p["home"],
+                                                                     pd=p["draw"], pa=p["away"])
+
+
+# Talk about the Gaffer's sources, not the match ("the match notes a shift", "selon l'instantané").
+_META = {"en": r"\b(?:notes?|scout|feed|brief|recorded|listed|the data|tools?|snapshot|entries|i do not have"
+               r"|i don't have|numbers shown|figures shown)\b",
+         "es": r"\b(?:notas|ojeador|los datos|registrad\w*|herramientas?|instantánea|cifras mostradas)\b",
+         "pt": r"\b(?:notas|olheiro|os dados|registrad\w*|ferramentas?|instantâneo|números mostrados)\b",
+         "fr": r"\b(?:notes|recruteur|les données|enregistr\w*|outils?|instantané|chiffres affichés)\b"}
+
+
+def _no_meta(text: str, room: MatchRoom, lang: str) -> str:
+    """Drop a sentence that talks about notes, tools or data instead of the match."""
+    pat = re.compile(_META.get(lang, _META["en"]), re.IGNORECASE)
+    sents = _SENTENCE.split(text.strip())
+    keep = [s_ for s_ in sents if not pat.search(s_)]
+    if len(keep) == len(sents):
+        return text
+    log.warning("dropped a sentence about the Gaffer's sources: %s", text[:160])
+    kept = " ".join(keep)
+    return kept if len(kept.split()) >= 8 else _complete(kept, room, lang)
 
 
 def _wrong_team_pct(text: str, room: MatchRoom, lang: str = "en") -> str:
@@ -1089,6 +1134,8 @@ def _wrong_team_pct(text: str, room: MatchRoom, lang: str = "en") -> str:
                     continue
                 between, after = rest[:pm.start()], sent[mt.end() + pm.end():mt.end() + pm.end() + 40]
                 if other in between or _DRAW_WORD.search(between) or other in after or _DRAW_WORD.search(after[:20]):
+                    continue
+                if _DESPITE.search(between):  # "limited Brackenford to six shots despite 35% possession": the subject's
                     continue
                 if int(pm.group(1)) not in ok[k]:
                     return True
@@ -1242,8 +1289,9 @@ async def ask(match_id: str, body: AskIn) -> dict:
             if room.status == "finished":
                 answer = _no_final_chances(answer)
             answer = _wrong_team_pct(answer, room, lang)
-            answer = _wrong_leader(answer, room, lang)
+            answer = _wrong_leader(answer, room, lang, complete=True)
             answer = _no_trailing_questions(answer)
+            answer = _no_meta(answer, room, lang)
             answer = _wrong_shots(answer, room, lang)
             answer = _no_guessed_tactics(answer)
             if room.status != "finished":
