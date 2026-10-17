@@ -69,7 +69,7 @@ SCENES = [
     {"id": "callit", "title": "Call your shot",
      "show": "Call it: \"Eastholme Rangers score before 89'?\" Yes, then Lasso it.",
      "line": "Feeling brave? Call your shot. Biscuit rewards are set by the Gaffer's calculated odds, so long shots "
-             "pay big."},
+             "pay big. No money, just bragging rights."},
     {"id": "var", "title": "VAR check",
      "show": "82': Eastholme scores and VAR checks it. The VAR card shows the Gauge both ways; Call it asks "
              "\"Will the goal stand?\" and the fan picks It stands.",
