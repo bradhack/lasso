@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
-import { HTML_LANG, t } from "../i18n";
+import { t } from "../i18n";
 import { useStore } from "../store";
 import type { Lang } from "../types";
 import { Speaker, StopIcon } from "./Icons";
@@ -11,6 +11,8 @@ export function storyText(headline: string, story: string) {
   return `${h && !/[.!?]$/.test(h) ? `${h}.` : h} ${story}`.trim();
 }
 
+// Without a server voice list, the phone reads English with a British accent too.
+const DEFAULT_LOCALE: Record<Lang, string> = { en: "en-GB", es: "es-ES", pt: "pt-BR", fr: "fr-FR" };
 const VS: Record<Lang, string> = { en: "versus", es: "contra", pt: "contra", fr: "contre" };
 const TO: Record<Lang, string> = { en: "to", es: "a", pt: "a", fr: "à" };
 const PLUS: Record<Lang, string> = { en: "plus", es: "más", pt: "mais", fr: "plus" };
@@ -54,13 +56,17 @@ let current: { key: string; stop: () => void } | null = null;
  * otherwise the phone's own voice. Playback starts inside the tap, which iPhones require.
  */
 export function Listen({ kind, id, matchId, text, lang, compact = false, label }: {
-  kind: "story" | "answer" | "event"; id: string; matchId?: string; text: string; lang: Lang; compact?: boolean;
+  kind: "story" | "answer" | "event" | "sample"; id: string; matchId?: string; text: string; lang: Lang; compact?: boolean;
   /** What this button reads, for screen readers when many Listen buttons sit in one list. */
   label?: string;
 }) {
   const azure = useStore((s) => s.speechAzure);
+  const options = useStore((s) => s.voices[lang]);
+  const picked = useStore((s) => s.voicePick[lang]);
+  // The fan's voice for this language if it's still offered; otherwise the default (British for English).
+  const voice = options?.find((v) => v.id === picked)?.id ?? options?.[0]?.id;
   const [state, setState] = useState<"idle" | "loading" | "playing">("idle");
-  const key = `${kind}:${id}:${lang}`;
+  const key = `${kind}:${id}:${lang}:${voice ?? ""}`;
   const mounted = useRef(true);
   useEffect(() => () => {
     mounted.current = false;
@@ -75,7 +81,11 @@ export function Listen({ kind, id, matchId, text, lang, compact = false, label }
   const phoneVoice = () => {
     if (!("speechSynthesis" in window)) return done();
     const u = new SpeechSynthesisUtterance(spoken(text, lang));
-    u.lang = HTML_LANG[lang];
+    // The phone's own voices: one with the chosen accent if it has one ("en-GB-RyanNeural" -> en-GB).
+    const locale = voice ? voice.split("-").slice(0, 2).join("-") : DEFAULT_LOCALE[lang];
+    u.lang = locale;
+    const local = speechSynthesis.getVoices().find((v) => v.lang.replace("_", "-") === locale);
+    if (local) u.voice = local;
     u.rate = 0.98;
     u.onend = done;
     u.onerror = done;
@@ -93,7 +103,7 @@ export function Listen({ kind, id, matchId, text, lang, compact = false, label }
     current?.stop();
     tellListened(matchId);
     if (!azure) return phoneVoice();
-    const audio = new Audio(api.speechUrl({ kind, id, lang, match_id: matchId }));
+    const audio = new Audio(api.speechUrl({ kind, id, lang, match_id: matchId, voice }));
     current = { key, stop: () => { audio.pause(); done(); } };
     audio.onplaying = () => mounted.current && setState("playing");
     audio.onended = done;

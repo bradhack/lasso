@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { api } from "./api";
 import { Realtime } from "./realtime";
-import type { AskAnswer, Call, ClubRef, Lang, Market, MatchSnapshot, MatchSummary, Moment, Sticker, Touch, User } from "./types";
+import type { AskAnswer, Call, ClubRef, Lang, Market, MatchSnapshot, MatchSummary, Moment, Sticker, Touch, User, VoiceOption } from "./types";
 
 export interface Flash {
   match_id: string;
@@ -49,7 +49,11 @@ interface State {
   motmPicks: Record<string, string>; // Player of the Match: this fan's pick, by match_id
   /** Goal and VAR banners: the latest big moment that arrived live (never from a page load or catch-up). */
   flash: Flash | null;
-  speechAzure: boolean; // Listen: Azure AI Speech is on (otherwise the phone's own voice) // Touch the sign: `${match}:${side}:${spell}` this fan touched // Ask the Gaffer, by match_id (only the asker sees these)
+  speechAzure: boolean;
+  /** Listen voices offered per language (the first is the default), and this fan's pick on this device. */
+  voices: Partial<Record<Lang, VoiceOption[]>>;
+  voicePick: Partial<Record<Lang, string>>;
+  setVoice: (lang: Lang, id: string) => void; // Listen: Azure AI Speech is on (otherwise the phone's own voice) // Touch the sign: `${match}:${side}:${spell}` this fan touched // Ask the Gaffer, by match_id (only the asker sees these)
   toasts: Toast[];
   connected: boolean;
   rt: Realtime | null;
@@ -71,6 +75,16 @@ interface State {
 const KEY = "lasso.user";
 const MAX_MOMENTS = 60;
 let toastId = 1;
+
+const VOICE_KEY = "lasso-voice";
+
+function readVoices(): Partial<Record<Lang, string>> {
+  try {
+    return JSON.parse(localStorage.getItem(VOICE_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
 
 function readId(): string | null {
   try {
@@ -98,6 +112,17 @@ export const useStore = create<State>((set, get) => ({
   motmPicks: {},
   flash: null,
   speechAzure: false,
+  voices: {},
+  voicePick: readVoices(),
+  setVoice: (lang, id) => {
+    const voicePick = { ...get().voicePick, [lang]: id };
+    set({ voicePick });
+    try {
+      localStorage.setItem(VOICE_KEY, JSON.stringify(voicePick));
+    } catch {
+      /* kept for this visit only */
+    }
+  },
   toasts: [],
   connected: false,
   rt: null,
@@ -105,7 +130,7 @@ export const useStore = create<State>((set, get) => ({
 
   init: async () => {
     const [clubs, matches] = await Promise.all([api.clubs(), api.matches()]);
-    api.speechStatus().then((r) => set({ speechAzure: r.azure })).catch(() => undefined);
+    api.speechStatus().then((r) => set({ speechAzure: r.azure, voices: r.voices ?? {} })).catch(() => undefined);
     set({ clubs: Object.fromEntries(clubs.map((c) => [c.club_id, c])), matches });
     const id = readId();
     if (id) {

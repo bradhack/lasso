@@ -500,7 +500,7 @@ class BelieveIn(BaseModel):
 
 
 class SpeechIn(BaseModel):
-    kind: str = Field(..., pattern="^(story|answer|event)$")
+    kind: str = Field(..., pattern="^(story|answer|event|sample)$")
     id: str = Field(..., max_length=80)
     lang: str = Field("en", pattern="^(en|es|pt|fr)$")
     match_id: str | None = Field(None, max_length=40)
@@ -644,14 +644,16 @@ async def match_story(match_id: str) -> list[dict]:
 
 @app.get("/api/speech")
 async def speech_status() -> dict:
-    """Whether the server reads aloud with Azure AI Speech; if not, the app uses the phone's voice."""
-    return {"azure": speech.enabled}
+    """Whether the server reads aloud with Azure AI Speech (if not, the app uses the phone's voice), and the
+    voices a fan can pick in each language (the first is the default)."""
+    return {"azure": speech.enabled, "voices": await speech.voices()}
 
 
 @app.get("/api/speech/audio")
-async def listen(kind: str = Query(..., pattern="^(story|answer|event)$"), id: str = Query(..., max_length=80),
+async def listen(kind: str = Query(..., pattern="^(story|answer|event|sample)$"), id: str = Query(..., max_length=80),
                  lang: str = Query("en", pattern="^(en|es|pt|fr)$"),
-                 match_id: str | None = Query(None, max_length=40)) -> Response:
+                 match_id: str | None = Query(None, max_length=40),
+                 voice: str | None = Query(None, max_length=40, pattern=r"^[A-Za-z]{2}-[A-Za-z]{2}-[A-Za-z]+$")) -> Response:
     """Listen: a story, a match event or a Gaffer answer read aloud in the fan's language (MP3). The text comes from the server,
     never from the request, so this can't be used to read arbitrary text. It's a plain GET so a phone can start
     playing it inside the tap (iPhones block audio started later)."""
@@ -666,6 +668,8 @@ async def listen(kind: str = Query(..., pattern="^(story|answer|event)$"), id: s
             head += "."  # a pause between the headline and the story
         text = f"{head} {(m.get('story') or {}).get(body.lang) or ''}".strip()
         lang = body.lang
+    elif body.kind == "sample":  # a fixed line, so a fan can hear a voice before picking it
+        text, lang = VOICE_SAMPLE[body.lang], body.lang
     elif body.kind == "event":  # one row of the timeline: a chance, a card, a substitution, a VAR check
         room = rooms.get(body.match_id or "")
         item = next((x for x in (room.feed if room else []) if str(x.get("seq")) == body.id), None)
@@ -677,7 +681,7 @@ async def listen(kind: str = Query(..., pattern="^(story|answer|event)$"), id: s
         if body.id not in _answers:
             raise HTTPException(404, "answer not found")
         lang, text = _answers[body.id]
-    audio = await speech.synthesize(text, lang)
+    audio = await speech.synthesize(text, lang, voice)  # only one of our listed voices; anything else is the default
     if audio is None:
         raise HTTPException(503, "speech unavailable")
     return Response(audio, media_type="audio/mpeg", headers={"Cache-Control": "private, max-age=86400"})
@@ -825,6 +829,13 @@ def _side_pcts(room: MatchRoom, k: int) -> set[int]:
         vals.add(round(100 * ng[side]))
     return {v + d for v in vals for d in (-2, -1, 0, 1, 2)}
 
+
+VOICE_SAMPLE = {
+    "en": "In the 82nd minute, Adam Penke scores! Eastholme Rangers lead 2-1, and their chance of winning jumps to 83%.",
+    "es": "Minuto 82: ¡gol de Adam Penke! El Eastholme Rangers gana 2-1 y su probabilidad de victoria sube al 83%.",
+    "pt": "Aos 82 minutos, gol de Adam Penke! O Eastholme Rangers vence por 2-1, e a chance de vitória sobe para 83%.",
+    "fr": "À la 82e minute, but d'Adam Penke ! Eastholme Rangers mène 2-1, et ses chances de victoire passent à 83 %.",
+}
 
 _NOW_LINE = {"en": "Right now: {h} {ph}%, draw {pd}%, {a} {pa}%.", "es": "Ahora mismo: {h} {ph}%, empate {pd}%, {a} {pa}%.",
              "pt": "Agora: {h} {ph}%, empate {pd}%, {a} {pa}%.", "fr": "En ce moment : {h} {ph} %, nul {pd} %, {a} {pa} %."}

@@ -22,8 +22,28 @@ import httpx
 log = logging.getLogger("lasso.speech")
 
 # One warm neural voice per language: US English, Spain Spanish, Brazilian Portuguese, French.
-VOICES = {"en": ("en-US", "en-US-AndrewNeural"), "es": ("es-ES", "es-ES-AlvaroNeural"),
-          "pt": ("pt-BR", "pt-BR-AntonioNeural"), "fr": ("fr-FR", "fr-FR-HenriNeural")}
+# The voices a fan can pick, per language: (voice, locale, accent, man or woman). The first is the default:
+# football in English sounds British. Only these names are ever sent to Speech.
+VOICE_OPTIONS: dict[str, list[tuple[str, str, str, str]]] = {
+    "en": [("en-GB-RyanNeural", "en-GB", "gb", "m"), ("en-GB-SoniaNeural", "en-GB", "gb", "f"),
+           ("en-US-AndrewNeural", "en-US", "us", "m"), ("en-US-AvaNeural", "en-US", "us", "f"),
+           ("en-IE-ConnorNeural", "en-IE", "ie", "m"), ("en-AU-WilliamNeural", "en-AU", "au", "m")],
+    "es": [("es-ES-AlvaroNeural", "es-ES", "es", "m"), ("es-ES-ElviraNeural", "es-ES", "es", "f"),
+           ("es-MX-JorgeNeural", "es-MX", "mx", "m"), ("es-MX-DaliaNeural", "es-MX", "mx", "f")],
+    "pt": [("pt-BR-AntonioNeural", "pt-BR", "br", "m"), ("pt-BR-FranciscaNeural", "pt-BR", "br", "f"),
+           ("pt-PT-DuarteNeural", "pt-PT", "pt", "m"), ("pt-PT-RaquelNeural", "pt-PT", "pt", "f")],
+    "fr": [("fr-FR-HenriNeural", "fr-FR", "fr", "m"), ("fr-FR-DeniseNeural", "fr-FR", "fr", "f"),
+           ("fr-CA-JeanNeural", "fr-CA", "ca", "m"), ("fr-CA-SylvieNeural", "fr-CA", "ca", "f")],
+}
+VOICES = {lang: (opts[0][1], opts[0][0]) for lang, opts in VOICE_OPTIONS.items()}  # the defaults
+
+
+def pick_voice(lang: str, voice: str | None) -> tuple[str, str]:
+    """(locale, voice) for a fan's choice, or the language's default if it isn't one of ours."""
+    for name, locale, _accent, _gender in VOICE_OPTIONS.get(lang, VOICE_OPTIONS["en"]):
+        if name == voice:
+            return locale, name
+    return VOICES.get(lang, VOICES["en"])
 SCOPE = "https://cognitiveservices.azure.com/.default"
 CACHE_ITEMS = 300
 
@@ -73,6 +93,7 @@ class Speech:
         self._cred = None
         self._http: httpx.AsyncClient | None = None
         self._day, self._count = "", 0
+        self._voice_names: tuple[float, set[str]] | None = None
 
     @property
     def enabled(self) -> bool:
@@ -99,19 +120,52 @@ class Speech:
         self._count += 1
         return True
 
-    async def synthesize(self, text: str, lang: str) -> bytes | None:
-        """MP3 audio for the text in the fan's language, or None if Speech is off, capped or failing."""
+    async def voices(self) -> dict[str, list[dict]]:
+        """The voices fans can pick, minus any this Speech region doesn't offer (checked once a day)."""
+        names = await self._available()
+        return {lang: [{"id": v, "accent": a, "gender": g} for v, _loc, a, g in opts if names is None or v in names]
+                for lang, opts in VOICE_OPTIONS.items()}
+
+    async def _available(self) -> set[str] | None:
+        if not self.enabled:
+            return None
+        if self._voice_names and time.time() - self._voice_names[0] < 86400:
+            return self._voice_names[1]
+        try:
+            if self._http is None:
+                self._http = httpx.AsyncClient(timeout=15)
+            r = await self._http.get(f"https://{self.region}.tts.speech.microsoft.com/cognitiveservices/voices/list",
+                                     headers={"Authorization": f"Bearer {await self._bearer()}", "User-Agent": "lasso"})
+            r.raise_for_status()
+            names = {v.get("ShortName") for v in r.json()}
+        except Exception as e:  # noqa: BLE001
+            log.warning("couldn't list Speech voices: %r", e)
+            return None  # offer them all; a missing one falls back to the default when it's used
+        self._voice_names = (time.time(), names)
+        return names
+
+    async def synthesize(self, text: str, lang: str, voice_choice: str | None = None) -> bytes | None:
+        """MP3 audio for the text in the fan's language and chosen voice, or None if Speech is off, capped or
+        failing. A chosen voice that fails falls back to the language's default once."""
         if not self.enabled or not text.strip():
             return None
-        xml_lang, voice = VOICES.get(lang, VOICES["en"])
+        xml_lang, voice = pick_voice(lang, voice_choice)
+        audio, bad_voice = await self._synth(text, lang, xml_lang, voice)
+        default = VOICES.get(lang, VOICES["en"])
+        if audio is None and bad_voice and voice != default[1]:
+            audio, _ = await self._synth(text, lang, *default)
+        return audio
+
+    async def _synth(self, text: str, lang: str, xml_lang: str, voice: str) -> tuple[bytes | None, bool]:
+        """(audio, whether Speech rejected the request itself, most often a voice this region lacks)."""
         text = spoken(text, lang)
         key = hashlib.sha1(f"{voice}|{text}".encode(), usedforsecurity=False).hexdigest()  # a cache key only
         if key in self._cache:
             self._cache.move_to_end(key)
-            return self._cache[key]
+            return self._cache[key], False
         if not self._allowed():
             log.warning("speech daily limit reached")
-            return None
+            return None, False
         ssml = (f"<speak version='1.0' xml:lang='{xml_lang}'><voice name='{voice}'>"
                 f"<prosody rate='-4%'>{escape(text)}</prosody></voice></speak>")
         try:
@@ -123,11 +177,14 @@ class Speech:
                 headers={"Authorization": f"Bearer {await self._bearer()}",
                          "Content-Type": "application/ssml+xml",
                          "X-Microsoft-OutputFormat": "audio-24khz-48kbitrate-mono-mp3", "User-Agent": "lasso"})
+            if r.status_code == 400:
+                log.warning("speech rejected voice %s", voice)
+                return None, True
             r.raise_for_status()
         except Exception as e:  # noqa: BLE001
-            log.warning("speech synthesis failed: %r", e)
-            return None
+            log.warning("speech synthesis failed (%s): %r", voice, e)
+            return None, False
         self._cache[key] = r.content
         while len(self._cache) > CACHE_ITEMS:
             self._cache.popitem(last=False)
-        return r.content
+        return r.content, False
