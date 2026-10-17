@@ -766,14 +766,14 @@ button.motm-row:active { transform: scale(0.99); }
 
 /* Touchline: passes fade within seconds, carries are dotted, the ball has a comet tail */
 .pitch .fresh { animation: passfade 5s ease-out forwards; }
-.pitch .fresh .pass { fill: var(--team); stroke: none; }
-.pitch .fresh .pass.cut { fill: none; stroke: var(--team); stroke-width: 0.5; stroke-dasharray: 1 1; }
+.pitch .fresh .pass { fill: none; stroke: var(--team); stroke-width: 0.45; stroke-linecap: round; }
+.pitch .fresh .pass.cut { stroke-dasharray: 1 1; }
 .pitch .carry { stroke: var(--team); stroke-width: 0.45; stroke-linecap: round; stroke-dasharray: 0.05 1.2; }
 .pitch .trail circle { pointer-events: none; }
-@keyframes passfade { 0% { opacity: 0.55; } 100% { opacity: 0; } }
+@keyframes passfade { 0% { opacity: 0.85; } 100% { opacity: 0; } }
 /* How it was built */
 .pitch .chain .link { animation: chainin 0.4s ease-out both; }
-.pitch .chain .pass { fill: var(--team); stroke: none; opacity: 0.95; }
+.pitch .chain .pass { fill: none; stroke: var(--team); stroke-width: 0.65; stroke-linecap: round; }
 .pitch .chain .num-bg { fill: var(--surface); stroke: var(--team); stroke-width: 0.45; }
 .pitch .chain .num { font-family: var(--num); font-size: 2.9px; font-weight: 700; fill: var(--text); }
 .pitch .chain .shotline { stroke: var(--gold); stroke-width: 0.6; stroke-dasharray: 1.4 0.9; }
