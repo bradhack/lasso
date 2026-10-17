@@ -106,12 +106,12 @@ a { color: var(--silver); }
 .meter-nums.big .v { font-size: 44px; line-height: 1; }
 .meter-nums.big .l { font-size: 13px; margin-top: 4px; color: var(--soft); }
 .key { display: none; }
-/* Touchline */
-.touchline .poss { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--text-2); }
-.touchline .poss i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+/* The Pitch */
+.pitch-card .poss { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--text-2); }
+.pitch-card .poss i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 .seg.mini { display: inline-flex; gap: 2px; padding: 2px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); }
 .seg.mini .tab { height: 34px; min-width: 0; padding: 0 12px; font-size: 12px; border: 0; border-radius: 999px; }
-.touchline .possdot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: 0.05em; }
+.pitch-card .possdot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: 0.05em; }
 .pitch .shot-hit { cursor: pointer; }
 .pitch .hit { fill: transparent; }
 .pitch .shot-ring { fill: none; stroke: var(--text); stroke-width: 0.45; stroke-dasharray: 1 0.8; }
@@ -752,7 +752,7 @@ button.motm-row:active { transform: scale(0.99); }
 .match-banner.var_out { border-color: var(--live); }
 @media (prefers-reduced-motion: reduce) { .match-banner { animation: none; } }
 
-/* Touchline: a key for the marks in Live view */
+/* The Pitch: a key for the marks in Live view */
 .mk-key { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; font-size: 11px; color: var(--soft); }
 .mk-key span { display: inline-flex; align-items: center; gap: 5px; }
 .mk-key svg { width: 12px; height: 12px; fill: none; stroke: var(--soft); stroke-width: 0.9; stroke-linejoin: round; }
@@ -764,7 +764,7 @@ button.motm-row:active { transform: scale(0.99); }
 .voice-row select { flex: 1; min-width: 0; }
 .voice-hint { font-size: 12px; }
 
-/* Touchline: passes fade within seconds, carries are dotted, the ball has a comet tail */
+/* The Pitch: passes fade within seconds, carries are dotted, the ball has a comet tail */
 .pitch .fresh { animation: passfade 5s ease-out forwards; }
 .pitch .fresh .pass { fill: none; stroke: var(--team); stroke-width: 0.45; stroke-linecap: round; }
 .pitch .fresh .pass.cut { stroke-dasharray: 1 1; }

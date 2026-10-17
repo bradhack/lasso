@@ -27,7 +27,7 @@ MARKET_OPEN_FOR = 3.0  # match minutes a challenge accepts calls
 IMPACT_SHOWN = 5  # players on the Player of the Match leaderboard (and the vote)
 VAR_STANDS_RATE = 0.7  # the base rate a checked goal stands, used to price "Will the goal stand?"
 PITCH_X, PITCH_Y = 105.0, 68.0  # meters; event coordinates are in each team's attacking frame
-BIG_CHANCE_XG = 0.2  # shots this good (and every goal) carry their build-up for the Touchline
+BIG_CHANCE_XG = 0.2  # shots this good (and every goal) carry their build-up for the Pitch
 MAX_CHAIN = 10
 TOUCH_TYPES = {"kickoff", "pass", "shot", "tackle", "interception", "save", "corner", "foul",
                "yellow_card", "red_card", "substitution"}
@@ -113,8 +113,8 @@ class MatchRoom:
         self.last_market_min = -99.0
         self.last_meter_push = 0.0
         self.started_at: float | None = None
-        self.touches: list[dict] = []  # Touchline: recent ball actions, in absolute pitch coordinates
-        self.shot_map: list[dict] = []  # every shot of the match, for the Touchline shot map
+        self.touches: list[dict] = []  # the Pitch: recent ball actions, in absolute pitch coordinates
+        self.shot_map: list[dict] = []  # every shot of the match, for the Pitch shot map
         self.pending_touches: list[dict] = []
         self.possession: int | None = None
         self.cards: list[dict] = []  # bookings for the scoreboard: team, yellow/red, surname, minute
@@ -498,7 +498,7 @@ class MatchRoom:
         if moved or etype in PUSH_NOW or now - self.last_meter_push > 1.0:
             self.last_meter_push = now
             pt = self._record_point()
-            # Touchline rides along with the Gauge update: no extra realtime messages.
+            # The Pitch rides along with the Gauge update: no extra realtime messages.
             out.append({"type": "meter", "match_id": self.match_id, "point": pt,
                         "score": list(self.state.goals), "minute": self.minute(), "period": self.state.period,
                         "clock": round(self.state.clock, 2), "status": self.status,
@@ -507,7 +507,7 @@ class MatchRoom:
             self.pending_touches = []
         return out
 
-    # ------------------------------------------------------------- touchline
+    # ---------------------------------------------------------------- pitch
     def _abs(self, x, y, t: int) -> tuple[float, float] | None:
         """Home attacks left to right; flip the away team's attacking frame onto the same pitch."""
         if x is None or y is None or (isinstance(x, float) and math.isnan(x)) or (isinstance(y, float) and math.isnan(y)):
@@ -516,7 +516,7 @@ class MatchRoom:
         return (round(x, 1), round(y, 1)) if t == 0 else (round(PITCH_X - x, 1), round(PITCH_Y - y, 1))
 
     def _touch(self, ev: dict, t: int | None) -> dict | None:
-        """A compact ball action for the Touchline view."""
+        """A compact ball action for the Pitch view."""
         et = ev["type"]
         if et not in TOUCH_TYPES or t is None:
             return None

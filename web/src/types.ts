@@ -254,7 +254,7 @@ export interface Market {
   params?: { team?: string; until?: number };
 }
 
-/** One ball action for the Touchline view. Home attacks left to right; pitch is 105 x 68 m. */
+/** One ball action for the Pitch view. Home attacks left to right; pitch is 105 x 68 m. */
 export interface Touch {
   s: number; // event sequence
   t: "kickoff" | "pass" | "shot" | "tackle" | "interception" | "save" | "corner" | "foul" | "yellow_card" | "red_card" | "substitution";

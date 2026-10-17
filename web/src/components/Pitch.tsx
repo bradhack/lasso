@@ -5,7 +5,7 @@ import type { Lang, MatchSnapshot, Touch } from "../types";
 import { Crest } from "./bits";
 
 /**
- * Touchline: the ball, live, on a 105 x 68 m pitch. Home attacks left to right.
+ * The Pitch: the ball, live, on a 105 x 68 m pitch. Home attacks left to right.
  * Touches arrive in small batches with each Gauge update; we replay them one by one so the ball
  * travels pass by pass instead of jumping.
  */
@@ -13,6 +13,7 @@ import { Crest } from "./bits";
 const W = 105;
 const H = 68;
 const TEAM = ["var(--home)", "var(--away)"];
+// Storage keys keep the old "touchline" name so fans keep their settings.
 const KEY = "lasso-touchline-hidden";
 const VIEW_KEY = "lasso-touchline-view";
 const GROUND_PASS = 18; // metres: shorter passes are played along the ground and drawn nearly straight
@@ -41,7 +42,7 @@ function readHidden() {
   return readPref(KEY) === "1";
 }
 
-export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
+export function Pitch({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
   const touches = snap.touches ?? [];
   const [hidden, setHidden] = useState(readHidden);
   const [cursor, setCursor] = useState(() => touches[touches.length - 1]?.s ?? 0);
@@ -117,9 +118,9 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
   };
 
   return (
-    <section className="card touchline" aria-label={t("touchline", lang)}>
+    <section className="card pitch-card" aria-label={t("pitch", lang)}>
       <div className="row">
-        <span className="eyebrow gold">{t("touchline", lang)}</span>
+        <span className="eyebrow gold">{t("pitch", lang)}</span>
         <div className="row" style={{ gap: 8 }}>
           {!hidden && (
             <div className="seg mini" role="tablist">
@@ -136,7 +137,7 @@ export function Touchline({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
       {!hidden && (
         <>
           <svg className="pitch" viewBox={`-3 -3 ${W + 6} ${H + 6}`} role="group"
-            aria-label={view === "live" ? (last ? describe(last, snap, lang) : t("touchline", lang)) : view === "shots" ? t("vShots", lang) : t("vGoals", lang)}>
+            aria-label={view === "live" ? (last ? describe(last, snap, lang) : t("pitch", lang)) : view === "shots" ? t("vShots", lang) : t("vGoals", lang)}>
             <PitchMarkings />
             {view === "live" && (
               <>

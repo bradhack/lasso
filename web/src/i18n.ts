@@ -139,7 +139,7 @@ const S = {
   bronze: { en: "Bronze", es: "Bronce", pt: "Bronze", fr: "Bronze" },
   hopeLine: { en: "It's the hope that kills you.", es: "Lo que mata es la esperanza.", pt: "O que mata é a esperança.", fr: "C'est l'espoir qui fait mal." },
   hopeSub: { en: "So close. The Gaffer had it at", es: "Por poco. El Gaffer lo veía al", pt: "Por pouco. O Gaffer via em", fr: "Si près. Le Gaffer le voyait à" },
-  touchline: { en: "Touchline", es: "Desde la banda", pt: "Beira do campo", fr: "Bord du terrain" },
+  pitch: { en: "The Pitch", es: "El campo", pt: "O campo", fr: "Le terrain" },
   ball: { en: "ball", es: "con el balón", pt: "com a bola", fr: "au ballon" },
   tShot: { en: "Shot", es: "Tiro", pt: "Chute", fr: "Tir" },
   tGoal: { en: "GOAL", es: "GOL", pt: "GOL", fr: "BUT" },

@@ -5,7 +5,7 @@ import { Crest, pct } from "../components/bits";
 import { CallIt } from "../components/CallIt";
 import { Back, Chevron } from "../components/Icons";
 import { Believe } from "../components/Believe";
-import { Touchline } from "../components/Touchline";
+import { Pitch } from "../components/Pitch";
 import { VarCheck } from "../components/VarCheck";
 import { RACE_LABEL, SeasonOutlook } from "../components/SeasonOutlook";
 import { PlayerOfMatch } from "../components/PlayerOfMatch";
@@ -186,7 +186,7 @@ export function MatchPage({ id }: { id: string }) {
     }));
   };
   const why = moment && <WhyItMoved snap={snap} moment={moment} lang={lang} onAsk={goAsk} />;
-  const touch = <Touchline snap={snap} lang={lang} />;
+  const touch = <Pitch snap={snap} lang={lang} />;
   const call = <CallIt snap={snap} lang={lang} />;
   const ask = <AskGaffer snap={snap} lang={lang} />;
   const motm = <PlayerOfMatch snap={snap} lang={lang} />;
