@@ -270,16 +270,16 @@
    "question": "Pourquoi les chances ont bougé ?",
    "expect": {},
    "status": 200,
-   "answer": "Les chances ont bougé parce que Brackenford a marqué à la 1re minute puis Eastholme a été réduit à dix à la 5e. Brackenford a maintenant 77% de chances de gagner, Brackenford a aussi 56% de chances de marquer le prochain but.",
+   "answer": "Les chances ont bougé parce que Brackenford a marqué à la 1re minute puis Eastholme a été réduit à dix à la 5e. Brackenford voit sa probabilité monter à 77% et le match penche clairement après ces deux coups, Eastholme descend à 8%.",
    "source": "agents",
-   "latency_ms": 7842,
+   "latency_ms": 7101,
    "trace": [
     {
      "agent": "scout",
-     "ms": 5584,
+     "ms": 4651,
      "ok": true,
      "stage": 1,
-     "start": 1792240413.008,
+     "start": 1792241535.015,
      "tools": [
       {
        "name": "gaffers_gauge"
@@ -288,24 +288,27 @@
        "name": "why_it_moved"
       },
       {
-       "name": "match_stats"
+       "name": "recent_events",
+       "args": {
+        "limit": 12
+       }
       }
      ],
-     "in": 5062,
-     "out": 346,
+     "in": 5012,
+     "out": 332,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 2175,
+     "ms": 2367,
      "ok": true,
      "stage": 2,
-     "start": 1792240418.594,
+     "start": 1792241539.667,
      "tools": [],
-     "in": 2323,
-     "out": 105,
+     "in": 2339,
+     "out": 107,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -314,9 +317,9 @@
    "minute": 7,
    "probs": [
     {
-     "home": 0.07894451712120235,
-     "draw": 0.15288429010358232,
-     "away": 0.768171192775215
+     "home": 0.07884750393036867,
+     "draw": 0.1530183615173249,
+     "away": 0.7681341345523065
     },
     {
      "home": 0.08325983037300477,
@@ -327,7 +330,7 @@
    "next_goal": [
     {
      "home": 0.345,
-     "away": 0.564,
+     "away": 0.563,
      "none": 0.091
     },
     {
@@ -368,8 +371,8 @@
        "possession": 82,
        "field_tilt": 98,
        "pass_accuracy": 91,
-       "avg_pass_difficulty": 0.319,
-       "passes": 53,
+       "avg_pass_difficulty": 0.322,
+       "passes": 55,
        "shots": 1,
        "on_target": 1,
        "xg": 0.16,
@@ -721,45 +724,42 @@
     "red_card": true
    },
    "status": 200,
-   "answer": "The red card came at the 5th minute, shown to Kofi Lorford of Eastholme Rangers. Eastholme are down to ten and trailing 0-1, with Brackenford favorites at 76% to win and Eastholme a 35% chance to score next.",
+   "answer": "The red card came in the 5th minute, shown to Kofi Lorford of Eastholme Rangers. Eastholme are down to ten and trail 0-1 to Brackenford City, with Eastholme on 8% to win and Brackenford City on 76%.",
    "source": "agents",
-   "latency_ms": 6609,
+   "latency_ms": 6374,
    "trace": [
     {
      "agent": "scout",
-     "ms": 4959,
+     "ms": 4440,
      "ok": true,
      "stage": 1,
-     "start": 1792240417.731,
+     "start": 1792241538.528,
      "tools": [
       {
        "name": "gaffers_gauge"
       },
       {
-       "name": "why_it_moved"
-      },
-      {
        "name": "recent_events",
        "args": {
-        "limit": 12
+        "limit": 6
        }
       }
      ],
-     "in": 5211,
-     "out": 254,
+     "in": 4461,
+     "out": 219,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 1590,
+     "ms": 1839,
      "ok": true,
      "stage": 2,
-     "start": 1792240422.692,
+     "start": 1792241542.97,
      "tools": [],
-     "in": 2151,
-     "out": 101,
+     "in": 2178,
+     "out": 102,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -1069,31 +1069,38 @@
       },
       {
        "position": 5,
+       "club": "Brackenford City",
+       "played": 7,
+       "points": 13,
+       "goal_difference": 1
+      },
+      {
+       "position": 6,
        "club": "Larkspur Park",
        "played": 6,
        "points": 12,
        "goal_difference": 4
       },
       {
-       "position": 6,
-       "club": "Brackenford City",
-       "played": 7,
-       "points": 11,
-       "goal_difference": 0
-      },
-      {
-       "position": 7,
-       "club": "Eastholme Rangers",
-       "played": 7,
-       "points": 10,
-       "goal_difference": 4
-      },
-      {
        "position": 8,
-       "club": "Calder Mills",
+       "club": "Oakhurst United",
        "played": 6,
        "points": 10,
-       "goal_difference": 2
+       "goal_difference": 1
+      },
+      {
+       "position": 9,
+       "club": "Eastholme Rangers",
+       "played": 7,
+       "points": 9,
+       "goal_difference": 3
+      },
+      {
+       "position": 10,
+       "club": "Cindervale",
+       "played": 6,
+       "points": 7,
+       "goal_difference": 3
       },
       {
        "position": 18,
@@ -1119,21 +1126,21 @@
      ],
      "this_match": {
       "Eastholme Rangers": {
-       "position_as_it_stands": 7,
+       "position_as_it_stands": 9,
        "title_chance_pct": 1,
        "top_four_chance_pct": 6,
        "relegation_chance_pct": 8,
-       "likely_finish": 11,
+       "likely_finish": 12,
        "most_at_stake": "a top-four finish",
        "chance_if_they_win_pct": 9,
        "chance_if_draw_pct": 6,
        "chance_if_they_lose_pct": 5
       },
       "Brackenford City": {
-       "position_as_it_stands": 6,
+       "position_as_it_stands": 5,
        "title_chance_pct": 1,
-       "top_four_chance_pct": 6,
-       "relegation_chance_pct": 7,
+       "top_four_chance_pct": 7,
+       "relegation_chance_pct": 6,
        "likely_finish": 11,
        "most_at_stake": "a top-four finish",
        "chance_if_they_win_pct": 8,
@@ -1159,7 +1166,7 @@
     }
    ],
    "finished": false,
-   "minute_after": 18,
+   "minute_after": 14,
    "id": "red_sub",
    "fan": "en_fan",
    "lang": "en",
@@ -1169,16 +1176,16 @@
     "cant_replace": true
    },
    "status": 200,
-   "answer": "Nobody can. A sent-off player can't be replaced, so Eastholme Rangers play the rest of the match with ten players while trailing 0-1.",
+   "answer": "Nobody can. A sent-off player can't be replaced, so Eastholme Rangers play the rest of the match with ten men.",
    "source": "agents",
-   "latency_ms": 25048,
+   "latency_ms": 6684,
    "trace": [
     {
      "agent": "scout",
-     "ms": 23212,
+     "ms": 5026,
      "ok": true,
      "stage": 1,
-     "start": 1792240444.901,
+     "start": 1792241567.187,
      "tools": [
       {
        "name": "recent_events",
@@ -1190,24 +1197,24 @@
        "name": "match_stats"
       },
       {
-       "name": "gaffers_gauge"
+       "name": "player_impact"
       }
      ],
-     "in": 4967,
-     "out": 264,
+     "in": 5004,
+     "out": 281,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 1781,
+     "ms": 1605,
      "ok": true,
      "stage": 2,
-     "start": 1792240468.114,
+     "start": 1792241572.215,
      "tools": [],
-     "in": 2252,
-     "out": 73,
+     "in": 2287,
+     "out": 70,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -1216,30 +1223,30 @@
    "minute": 12,
    "probs": [
     {
-     "home": 0.09923296271798986,
-     "draw": 0.17236125002754726,
-     "away": 0.7284057872544629
+     "home": 0.09903601419139697,
+     "draw": 0.17253943309949796,
+     "away": 0.7284245527091051
     },
     {
-     "home": 0.24083052033015054,
-     "draw": 0.2829968668875309,
-     "away": 0.4761726127823183
+     "home": 0.0973458585866591,
+     "draw": 0.17401089870233008,
+     "away": 0.728643242711011
     }
    ],
    "next_goal": [
     {
-     "home": 0.38,
+     "home": 0.379,
      "away": 0.526,
-     "none": 0.094
+     "none": 0.095
     },
     {
-     "home": 0.346,
-     "away": 0.539,
-     "none": 0.115
+     "home": 0.377,
+     "away": 0.521,
+     "none": 0.101
     }
    ],
    "score": [
-    1,
+    0,
     1
    ],
    "stats": [
@@ -1269,9 +1276,9 @@
        "club_id": "C04",
        "possession": 82,
        "field_tilt": 91,
-       "pass_accuracy": 87,
-       "avg_pass_difficulty": 0.31,
-       "passes": 87,
+       "pass_accuracy": 88,
+       "avg_pass_difficulty": 0.308,
+       "passes": 88,
        "shots": 1,
        "on_target": 1,
        "xg": 0.16,
@@ -1291,30 +1298,30 @@
      "teams": [
       {
        "club_id": "C09",
-       "possession": 15,
-       "field_tilt": 10,
-       "pass_accuracy": 78,
-       "avg_pass_difficulty": 0.322,
-       "passes": 23,
-       "shots": 4,
-       "on_target": 2,
-       "xg": 0.55,
-       "goals": 1,
+       "possession": 16,
+       "field_tilt": 8,
+       "pass_accuracy": 79,
+       "avg_pass_difficulty": 0.31,
+       "passes": 19,
+       "shots": 3,
+       "on_target": 1,
+       "xg": 0.5,
+       "goals": 0,
        "corners": 2,
        "fouls": 1,
        "yellows": 0,
        "reds": 1,
        "fastest_shot_kmh": 96.0,
        "longest_pass_m": 30.8,
-       "xg_last_10": 0.08
+       "xg_last_10": 0.5
       },
       {
        "club_id": "C04",
-       "possession": 85,
-       "field_tilt": 90,
-       "pass_accuracy": 84,
-       "avg_pass_difficulty": 0.313,
-       "passes": 129,
+       "possession": 84,
+       "field_tilt": 92,
+       "pass_accuracy": 87,
+       "avg_pass_difficulty": 0.307,
+       "passes": 103,
        "shots": 1,
        "on_target": 1,
        "xg": 0.16,
@@ -1614,7 +1621,7 @@
     }
    ],
    "finished": false,
-   "minute_after": 13,
+   "minute_after": 14,
    "id": "replace",
    "fan": "en_analyst",
    "lang": "en",
@@ -1624,16 +1631,16 @@
     "cant_replace": true
    },
    "status": 200,
-   "answer": "Nobody can replace Kofi Lorford. A sent-off player cannot be substituted, so Eastholme Rangers play with ten men from the fifth minute; they now have a 10% chance to win, Brackenford City 73%, and Brackenford are likelier to score next, 53% to Eastholme’s 38% with the VAR offside ruling still standing.",
+   "answer": "Nobody can replace Kofi Lorford; a sent-off player cannot be substituted, so Eastholme Rangers play the rest of the match with ten. At 12 minutes Brackenford City lead 1-0, Eastholme have a 10% chance to win and a 38% chance to score next, while Brackenford have a 73% chance to win and a 53% chance to score next. xG: Eastholme 0.50, Brackenford 0.16.",
    "source": "agents",
-   "latency_ms": 6476,
+   "latency_ms": 7535,
    "trace": [
     {
      "agent": "scout",
-     "ms": 4397,
+     "ms": 5375,
      "ok": true,
      "stage": 1,
-     "start": 1792240444.948,
+     "start": 1792241567.166,
      "tools": [
       {
        "name": "gaffers_gauge"
@@ -1645,24 +1652,24 @@
        }
       },
       {
-       "name": "match_stats"
+       "name": "why_it_moved"
       }
      ],
-     "in": 4817,
-     "out": 237,
+     "in": 5356,
+     "out": 279,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 2016,
+     "ms": 2089,
      "ok": true,
      "stage": 2,
-     "start": 1792240449.347,
+     "start": 1792241572.542,
      "tools": [],
-     "in": 2313,
-     "out": 120,
+     "in": 2374,
+     "out": 149,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -1671,26 +1678,26 @@
    "minute": 12,
    "probs": [
     {
-     "home": 0.09923296271798986,
-     "draw": 0.17236125002754726,
-     "away": 0.7284057872544629
+     "home": 0.09903601419139697,
+     "draw": 0.17253943309949796,
+     "away": 0.7284245527091051
     },
     {
-     "home": 0.097655450065314,
-     "draw": 0.17374890115087857,
-     "away": 0.7285956487838072
+     "home": 0.09715025373913708,
+     "draw": 0.1741747394944129,
+     "away": 0.7286750067664501
     }
    ],
    "next_goal": [
     {
-     "home": 0.38,
+     "home": 0.379,
      "away": 0.526,
-     "none": 0.094
+     "none": 0.095
     },
     {
-     "home": 0.378,
-     "away": 0.522,
-     "none": 0.1
+     "home": 0.377,
+     "away": 0.521,
+     "none": 0.102
     }
    ],
    "score": [
@@ -1724,9 +1731,9 @@
        "club_id": "C04",
        "possession": 82,
        "field_tilt": 91,
-       "pass_accuracy": 87,
-       "avg_pass_difficulty": 0.31,
-       "passes": 87,
+       "pass_accuracy": 88,
+       "avg_pass_difficulty": 0.308,
+       "passes": 88,
        "shots": 1,
        "on_target": 1,
        "xg": 0.16,
@@ -1746,7 +1753,7 @@
      "teams": [
       {
        "club_id": "C09",
-       "possession": 16,
+       "possession": 15,
        "field_tilt": 8,
        "pass_accuracy": 79,
        "avg_pass_difficulty": 0.31,
@@ -1765,11 +1772,11 @@
       },
       {
        "club_id": "C04",
-       "possession": 84,
+       "possession": 85,
        "field_tilt": 92,
-       "pass_accuracy": 87,
-       "avg_pass_difficulty": 0.303,
-       "passes": 99,
+       "pass_accuracy": 86,
+       "avg_pass_difficulty": 0.305,
+       "passes": 105,
        "shots": 1,
        "on_target": 1,
        "xg": 0.16,
@@ -1801,8 +1808,7 @@
     "no_real_clubs": true,
     "no_trailing_questions": true,
     "no_invented_penalty": true,
-    "next_goal_side_right": true,
-    "next_goal_consistent": true,
+    "leader_right": true,
     "real_minutes": true,
     "nothing_certain": true,
     "fact_cant_replace": true
@@ -2056,7 +2062,7 @@
     }
    ],
    "finished": false,
-   "minute_after": 19,
+   "minute_after": 18,
    "id": "scorer",
    "fan": "en_fan",
    "lang": "en",
@@ -2069,45 +2075,45 @@
     ]
    },
    "status": 200,
-   "answer": "Reuben Belwell scored Eastholme Rangers' goal at 14 minutes. Eastholme are down to ten and have a 35% chance to score next, while Brackenford City are likelier at 54%.",
+   "answer": "Reuben Belwell scored Eastholme Rangers' goal in the 14th minute. They are 1-1 and down to ten men, with Eastholme Rangers at a 24% chance to win and Brackenford City at 48%.",
    "source": "agents",
-   "latency_ms": 6212,
+   "latency_ms": 5885,
    "trace": [
     {
      "agent": "scout",
-     "ms": 4574,
+     "ms": 4172,
      "ok": true,
      "stage": 1,
-     "start": 1792240466.257,
+     "start": 1792241587.09,
      "tools": [
       {
        "name": "gaffers_gauge"
-      },
-      {
-       "name": "match_story"
       },
       {
        "name": "recent_events",
        "args": {
         "limit": 12
        }
+      },
+      {
+       "name": "match_stats"
       }
      ],
-     "in": 5245,
-     "out": 310,
+     "in": 5232,
+     "out": 247,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 1596,
+     "ms": 1669,
      "ok": true,
      "stage": 2,
-     "start": 1792240470.833,
+     "start": 1792241591.263,
      "tools": [],
-     "in": 2285,
-     "out": 87,
+     "in": 2358,
+     "out": 91,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -2116,14 +2122,14 @@
    "minute": 17,
    "probs": [
     {
-     "home": 0.24074623091041744,
-     "draw": 0.27966245104212395,
-     "away": 0.4795913180474587
+     "home": 0.24073544241647948,
+     "draw": 0.279331989824525,
+     "away": 0.4799325677589955
     },
     {
-     "home": 0.2408605461872002,
-     "draw": 0.2850415785355307,
-     "away": 0.4740978752772693
+     "home": 0.24085136658086298,
+     "draw": 0.2842881566297605,
+     "away": 0.47486047678937643
     }
    ],
    "next_goal": [
@@ -2133,9 +2139,9 @@
      "none": 0.111
     },
     {
-     "home": 0.345,
+     "home": 0.346,
      "away": 0.537,
-     "none": 0.118
+     "none": 0.117
     }
    ],
    "score": [
@@ -2169,9 +2175,9 @@
        "club_id": "C04",
        "possession": 84,
        "field_tilt": 90,
-       "pass_accuracy": 85,
+       "pass_accuracy": 86,
        "avg_pass_difficulty": 0.306,
-       "passes": 119,
+       "passes": 118,
        "shots": 1,
        "on_target": 1,
        "xg": 0.16,
@@ -2191,7 +2197,7 @@
      "teams": [
       {
        "club_id": "C09",
-       "possession": 14,
+       "possession": 15,
        "field_tilt": 9,
        "pass_accuracy": 78,
        "avg_pass_difficulty": 0.322,
@@ -2210,11 +2216,11 @@
       },
       {
        "club_id": "C04",
-       "possession": 86,
+       "possession": 85,
        "field_tilt": 91,
        "pass_accuracy": 85,
-       "avg_pass_difficulty": 0.311,
-       "passes": 137,
+       "avg_pass_difficulty": 0.315,
+       "passes": 134,
        "shots": 1,
        "on_target": 1,
        "xg": 0.16,
@@ -2500,7 +2506,7 @@
     }
    ],
    "finished": false,
-   "minute_after": 20,
+   "minute_after": 24,
    "id": "es_why",
    "fan": "es_fan",
    "lang": "es",
@@ -2508,45 +2514,29 @@
    "question": "¿Por qué cambiaron las opciones?",
    "expect": {},
    "status": 200,
-   "answer": "Cambiaron las opciones porque Eastholme Rangers juegan con diez desde el minuto 5 tras la expulsión de Kofi Lorford, y Brackenford City llevan más posesión; ahora Brackenford tienen 48% de ganar y Eastholme 24%.",
+   "answer": "Cambió la opción porque Eastholme juegan con diez desde el 5' tras la expulsión de Kofi Lorford, y eso obligó a ajustar jugadores y ritmo; con 1-1 tienen 24% de ganar y Brackenford 48%.",
    "source": "agents",
-   "latency_ms": 7216,
+   "latency_ms": 26772,
    "trace": [
     {
      "agent": "scout",
-     "ms": 5046,
-     "ok": true,
+     "ms": 25001,
+     "ok": false,
      "stage": 1,
-     "start": 1792240470.076,
-     "tools": [
-      {
-       "name": "gaffers_gauge"
-      },
-      {
-       "name": "why_it_moved"
-      },
-      {
-       "name": "recent_events",
-       "args": {
-        "limit": 12
-       }
-      }
-     ],
-     "in": 5344,
-     "out": 337,
-     "reasoning": 0,
-     "turns": 3,
+     "start": 1792241590.656,
+     "tools": [],
+     "error": "TimeoutError",
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 2111,
+     "ms": 1689,
      "ok": true,
      "stage": 2,
-     "start": 1792240475.124,
+     "start": 1792241615.66,
      "tools": [],
-     "in": 2199,
-     "out": 96,
+     "in": 2221,
+     "out": 100,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -2555,26 +2545,26 @@
    "minute": 18,
    "probs": [
     {
-     "home": 0.2408252782437856,
-     "draw": 0.2827238246987861,
-     "away": 0.4764508970574284
+     "home": 0.24081149390549017,
+     "draw": 0.28206826894565945,
+     "away": 0.47712023714885043
     },
     {
-     "home": 0.24087411451808116,
-     "draw": 0.2888192776965012,
-     "away": 0.47030660778541755
+     "home": 0.24198757582792874,
+     "draw": 0.3033222053956879,
+     "away": 0.4546902187763834
     }
    ],
    "next_goal": [
     {
      "home": 0.346,
      "away": 0.539,
-     "none": 0.115
+     "none": 0.114
     },
     {
-     "home": 0.344,
-     "away": 0.533,
-     "none": 0.123
+     "home": 0.34,
+     "away": 0.518,
+     "none": 0.142
     }
    ],
    "score": [
@@ -2587,7 +2577,7 @@
      "teams": [
       {
        "club_id": "C09",
-       "possession": 15,
+       "possession": 16,
        "field_tilt": 10,
        "pass_accuracy": 78,
        "avg_pass_difficulty": 0.322,
@@ -2606,11 +2596,11 @@
       },
       {
        "club_id": "C04",
-       "possession": 85,
+       "possession": 84,
        "field_tilt": 90,
        "pass_accuracy": 84,
-       "avg_pass_difficulty": 0.311,
-       "passes": 128,
+       "avg_pass_difficulty": 0.309,
+       "passes": 125,
        "shots": 1,
        "on_target": 1,
        "xg": 0.16,
@@ -2630,41 +2620,41 @@
      "teams": [
       {
        "club_id": "C09",
-       "possession": 20,
-       "field_tilt": 15,
-       "pass_accuracy": 85,
-       "avg_pass_difficulty": 0.315,
-       "passes": 34,
-       "shots": 4,
+       "possession": 25,
+       "field_tilt": 22,
+       "pass_accuracy": 88,
+       "avg_pass_difficulty": 0.319,
+       "passes": 56,
+       "shots": 5,
        "on_target": 2,
-       "xg": 0.55,
+       "xg": 0.59,
        "goals": 1,
        "corners": 2,
        "fouls": 2,
        "yellows": 0,
        "reds": 1,
-       "fastest_shot_kmh": 96.0,
+       "fastest_shot_kmh": 111.6,
        "longest_pass_m": 30.8,
-       "xg_last_10": 0.08
+       "xg_last_10": 0.04
       },
       {
        "club_id": "C04",
-       "possession": 80,
-       "field_tilt": 85,
+       "possession": 75,
+       "field_tilt": 78,
        "pass_accuracy": 85,
-       "avg_pass_difficulty": 0.316,
-       "passes": 138,
-       "shots": 1,
+       "avg_pass_difficulty": 0.309,
+       "passes": 164,
+       "shots": 2,
        "on_target": 1,
-       "xg": 0.16,
+       "xg": 0.18,
        "goals": 1,
        "corners": 0,
-       "fouls": 2,
+       "fouls": 3,
        "yellows": 0,
        "reds": 0,
-       "fastest_shot_kmh": 60.8,
+       "fastest_shot_kmh": 113.2,
        "longest_pass_m": 43.0,
-       "xg_last_10": 0
+       "xg_last_10": 0.02
       }
      ]
     }
@@ -2912,7 +2902,7 @@
        "position_as_it_stands": 6,
        "title_chance_pct": 1,
        "top_four_chance_pct": 6,
-       "relegation_chance_pct": 8,
+       "relegation_chance_pct": 7,
        "likely_finish": 11,
        "most_at_stake": "a top-four finish",
        "chance_if_they_win_pct": 8,
@@ -2938,7 +2928,7 @@
     }
    ],
    "finished": false,
-   "minute_after": 26,
+   "minute_after": 22,
    "id": "formation",
    "fan": "en_analyst",
    "lang": "en",
@@ -2948,45 +2938,45 @@
     "no_formations": true
    },
    "status": 200,
-   "answer": "I don't track formations. From the score and events: Eastholme Rangers are a man down since the 5th minute and still level at 1-1, with 0.55 xG to Brackenford City's 0.16 and 23% possession versus Brackenford's 77%. Brackenford City are likelier to score next, 53% to Eastholme Rangers' 34%, and the match win chances now favor Brackenford City, 47% to Eastholme's 24% with a 29% draw chance.",
+   "answer": "I don't track formations, so I can't say they changed formation. From the match facts: Eastholme Rangers are down to ten since Kofi Lorford was sent off at 5', score is 1-1, Brackenford City have 77% possession and lead the match chances 47% to Eastholme's 24%. Eastholme's xG is 0.55 to Brackenford's 0.16, and Brackenford are likelier to score next, 53% to 34%.",
    "source": "agents",
-   "latency_ms": 21434,
+   "latency_ms": 6793,
    "trace": [
     {
      "agent": "scout",
-     "ms": 14105,
-     "ok": false,
+     "ms": 4293,
+     "ok": true,
      "stage": 1,
-     "start": 1792240481.996,
+     "start": 1792241602.402,
      "tools": [
       {
-       "name": "match_stats"
+       "name": "gaffers_gauge"
+      },
+      {
+       "name": "why_it_moved"
       },
       {
        "name": "recent_events",
        "args": {
         "limit": 12
        }
-      },
-      {
-       "name": "gaffers_gauge"
       }
      ],
-     "in": 5174,
-     "out": 329,
+     "in": 5638,
+     "out": 300,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 7285,
+     "ms": 2443,
      "ok": true,
      "stage": 2,
-     "start": 1792240496.102,
+     "start": 1792241606.697,
      "tools": [],
-     "in": 2303,
-     "out": 158,
+     "in": 2556,
+     "out": 151,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -2995,26 +2985,26 @@
    "minute": 21,
    "probs": [
     {
-     "home": 0.24083854962218704,
-     "draw": 0.2923944153780969,
-     "away": 0.4667670349997162
+     "home": 0.24085139646211598,
+     "draw": 0.2915274417973346,
+     "away": 0.46762116174054974
     },
     {
-     "home": 0.24154166981469855,
-     "draw": 0.31000302507204597,
-     "away": 0.44845530511325526
+     "home": 0.2393938568665453,
+     "draw": 0.29659259771631996,
+     "away": 0.46401354541713485
     }
    ],
    "next_goal": [
     {
      "home": 0.343,
-     "away": 0.53,
-     "none": 0.128
+     "away": 0.531,
+     "none": 0.127
     },
     {
-     "home": 0.337,
-     "away": 0.512,
-     "none": 0.151
+     "home": 0.34,
+     "away": 0.527,
+     "none": 0.134
     }
    ],
    "score": [
@@ -3049,8 +3039,8 @@
        "possession": 77,
        "field_tilt": 84,
        "pass_accuracy": 84,
-       "avg_pass_difficulty": 0.314,
-       "passes": 141,
+       "avg_pass_difficulty": 0.317,
+       "passes": 139,
        "shots": 1,
        "on_target": 1,
        "xg": 0.16,
@@ -3070,36 +3060,36 @@
      "teams": [
       {
        "club_id": "C09",
-       "possession": 23,
-       "field_tilt": 20,
-       "pass_accuracy": 88,
+       "possession": 27,
+       "field_tilt": 21,
+       "pass_accuracy": 87,
        "avg_pass_difficulty": 0.316,
-       "passes": 57,
-       "shots": 5,
+       "passes": 54,
+       "shots": 4,
        "on_target": 2,
-       "xg": 0.59,
+       "xg": 0.55,
        "goals": 1,
        "corners": 2,
        "fouls": 2,
        "yellows": 0,
        "reds": 1,
-       "fastest_shot_kmh": 111.6,
+       "fastest_shot_kmh": 96.0,
        "longest_pass_m": 30.8,
-       "xg_last_10": 0.04
+       "xg_last_10": 0.05
       },
       {
        "club_id": "C04",
-       "possession": 77,
-       "field_tilt": 80,
+       "possession": 73,
+       "field_tilt": 79,
        "pass_accuracy": 85,
-       "avg_pass_difficulty": 0.31,
-       "passes": 186,
+       "avg_pass_difficulty": 0.314,
+       "passes": 147,
        "shots": 2,
        "on_target": 1,
        "xg": 0.18,
        "goals": 1,
        "corners": 0,
-       "fouls": 3,
+       "fouls": 2,
        "yellows": 0,
        "reds": 0,
        "fastest_shot_kmh": 113.2,
@@ -3379,7 +3369,7 @@
     }
    ],
    "finished": false,
-   "minute_after": 26,
+   "minute_after": 27,
    "id": "can_we",
    "fan": "en_fan",
    "lang": "en",
@@ -3387,16 +3377,16 @@
    "question": "Can we still win this?",
    "expect": {},
    "status": 200,
-   "answer": "Yes. Eastholme Rangers can still win despite being down to ten; the score is 1-1 and Eastholme have a 24% chance to win, with a 34% chance to score the next goal while Brackenford City are likelier to score next at 52%.",
+   "answer": "Yes, Eastholme Rangers can still win, at 24% they have a real shot despite playing with ten after Kofi Lorford’s 5' red card. Brackenford City are likelier to score next, 52% to Eastholme’s 34%.",
    "source": "agents",
-   "latency_ms": 8360,
+   "latency_ms": 10441,
    "trace": [
     {
      "agent": "scout",
-     "ms": 6330,
+     "ms": 8168,
      "ok": true,
      "stage": 1,
-     "start": 1792240493.91,
+     "start": 1792241615.579,
      "tools": [
       {
        "name": "gaffers_gauge"
@@ -3405,27 +3395,24 @@
        "name": "why_it_moved"
       },
       {
-       "name": "recent_events",
-       "args": {
-        "limit": 12
-       }
+       "name": "match_stats"
       }
      ],
-     "in": 5760,
-     "out": 314,
+     "in": 5590,
+     "out": 327,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 1971,
+     "ms": 2217,
      "ok": true,
      "stage": 2,
-     "start": 1792240500.242,
+     "start": 1792241623.749,
      "tools": [],
-     "in": 2406,
-     "out": 103,
+     "in": 2551,
+     "out": 97,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -3439,9 +3426,9 @@
      "away": 0.4570766335412436
     },
     {
-     "home": 0.24164371226389478,
-     "draw": 0.30863770077160196,
-     "away": 0.4497185869645033
+     "home": 0.24145890984384424,
+     "draw": 0.31106024860454934,
+     "away": 0.4474808415516064
     }
    ],
    "next_goal": [
@@ -3451,9 +3438,9 @@
      "none": 0.139
     },
     {
-     "home": 0.337,
-     "away": 0.513,
-     "none": 0.149
+     "home": 0.336,
+     "away": 0.511,
+     "none": 0.153
     }
    ],
    "score": [
@@ -3509,11 +3496,11 @@
      "teams": [
       {
        "club_id": "C09",
-       "possession": 23,
+       "possession": 25,
        "field_tilt": 20,
-       "pass_accuracy": 88,
-       "avg_pass_difficulty": 0.319,
-       "passes": 56,
+       "pass_accuracy": 87,
+       "avg_pass_difficulty": 0.326,
+       "passes": 61,
        "shots": 5,
        "on_target": 2,
        "xg": 0.59,
@@ -3528,11 +3515,11 @@
       },
       {
        "club_id": "C04",
-       "possession": 77,
+       "possession": 75,
        "field_tilt": 80,
-       "pass_accuracy": 86,
-       "avg_pass_difficulty": 0.308,
-       "passes": 184,
+       "pass_accuracy": 85,
+       "avg_pass_difficulty": 0.31,
+       "passes": 186,
        "shots": 2,
        "on_target": 1,
        "xg": 0.18,
@@ -3566,6 +3553,7 @@
     "no_trailing_questions": true,
     "no_invented_penalty": true,
     "next_goal_side_right": true,
+    "next_goal_consistent": true,
     "real_minutes": true,
     "nothing_certain": true
    }
@@ -3826,42 +3814,42 @@
    "question": "Quem está jogando melhor?",
    "expect": {},
    "status": 200,
-   "answer": "Brackenford City está jogando melhor neste momento. Têm 77% de posse, mais chutes (2 contra 5 é menor) e 51% de chance de marcar o próximo gol, apesar do empate 1-1 e de Eastholme Rangers terem 0,59 xG contra 0,18 xG.",
+   "answer": "Brackenford City está jogando melhor até agora. Brackenford também é mais provável de marcar o próximo gol, 51% contra 34% para Eastholme, e Eastholme soma 0,59 xG contra 0,18 xG de Brackenford.",
    "source": "agents",
-   "latency_ms": 7946,
+   "latency_ms": 6846,
    "trace": [
     {
      "agent": "scout",
-     "ms": 4950,
+     "ms": 4077,
      "ok": true,
      "stage": 1,
-     "start": 1792240502.121,
+     "start": 1792241623.815,
      "tools": [
       {
        "name": "gaffers_gauge"
       },
       {
-       "name": "why_it_moved"
+       "name": "match_stats"
       },
       {
-       "name": "match_stats"
+       "name": "why_it_moved"
       }
      ],
-     "in": 5181,
-     "out": 330,
+     "in": 5197,
+     "out": 284,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 2923,
+     "ms": 2695,
      "ok": true,
      "stage": 2,
-     "start": 1792240507.073,
+     "start": 1792241627.894,
      "tools": [],
-     "in": 2437,
-     "out": 113,
+     "in": 2430,
+     "out": 155,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -3870,25 +3858,25 @@
    "minute": 26,
    "probs": [
     {
-     "home": 0.241692793232658,
-     "draw": 0.3079532419596159,
-     "away": 0.4503539648077261
+     "home": 0.24164371226389478,
+     "draw": 0.30863770077160196,
+     "away": 0.4497185869645033
     },
     {
-     "home": 0.2433057939444377,
-     "draw": 0.3153289333800299,
-     "away": 0.44136527267553266
+     "home": 0.24333900816748186,
+     "draw": 0.31498256044848144,
+     "away": 0.4416784313840365
     }
    ],
    "next_goal": [
     {
-     "home": 0.338,
-     "away": 0.514,
-     "none": 0.148
+     "home": 0.337,
+     "away": 0.513,
+     "none": 0.149
     },
     {
      "home": 0.337,
-     "away": 0.505,
+     "away": 0.506,
      "none": 0.158
     }
    ],
@@ -3902,7 +3890,7 @@
      "teams": [
       {
        "club_id": "C09",
-       "possession": 24,
+       "possession": 23,
        "field_tilt": 20,
        "pass_accuracy": 88,
        "avg_pass_difficulty": 0.319,
@@ -3921,11 +3909,11 @@
       },
       {
        "club_id": "C04",
-       "possession": 76,
+       "possession": 77,
        "field_tilt": 80,
        "pass_accuracy": 86,
-       "avg_pass_difficulty": 0.307,
-       "passes": 182,
+       "avg_pass_difficulty": 0.308,
+       "passes": 184,
        "shots": 2,
        "on_target": 1,
        "xg": 0.18,
@@ -3945,11 +3933,11 @@
      "teams": [
       {
        "club_id": "C09",
-       "possession": 28,
-       "field_tilt": 23,
-       "pass_accuracy": 86,
-       "avg_pass_difficulty": 0.321,
-       "passes": 71,
+       "possession": 27,
+       "field_tilt": 22,
+       "pass_accuracy": 87,
+       "avg_pass_difficulty": 0.32,
+       "passes": 70,
        "shots": 6,
        "on_target": 2,
        "xg": 0.63,
@@ -3964,8 +3952,8 @@
       },
       {
        "club_id": "C04",
-       "possession": 72,
-       "field_tilt": 77,
+       "possession": 73,
+       "field_tilt": 78,
        "pass_accuracy": 85,
        "avg_pass_difficulty": 0.31,
        "passes": 186,
@@ -3990,7 +3978,6 @@
     "no_dashes": true,
     "no_meta": true,
     "neutral": true,
-    "shots_right": false,
     "full_names": true,
     "length": true,
     "clean_numbers": true,
@@ -4001,6 +3988,7 @@
     "no_real_clubs": true,
     "no_trailing_questions": true,
     "no_invented_penalty": true,
+    "next_goal_side_right": true,
     "real_minutes": true,
     "nothing_certain": true
    }
@@ -4265,17 +4253,17 @@
    "status": 200,
    "answer": "I only talk about this match, so I'll leave that one. Right now at 30': Eastholme Rangers 1-1 Brackenford City. My numbers: Eastholme Rangers 24%, draw 33%, Brackenford City 43%.",
    "source": "agents",
-   "latency_ms": 2523,
+   "latency_ms": 2871,
    "trace": [
     {
      "agent": "scout",
-     "ms": 2473,
+     "ms": 2818,
      "ok": true,
      "stage": 1,
-     "start": 1792240518.596,
+     "start": 1792241639.15,
      "tools": [],
-     "in": 1916,
-     "out": 160,
+     "in": 1934,
+     "out": 74,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -4284,9 +4272,9 @@
    "minute": 30,
    "probs": [
     {
-     "home": 0.2424699018894531,
-     "draw": 0.32315025748686205,
-     "away": 0.43437984062368495
+     "home": 0.24253781924959314,
+     "draw": 0.32256647475218375,
+     "away": 0.43489570599822314
     },
     {
      "home": 0.24216643181689307,
@@ -4298,7 +4286,7 @@
     {
      "home": 0.333,
      "away": 0.498,
-     "none": 0.169
+     "none": 0.168
     },
     {
      "home": 0.332,
@@ -4316,7 +4304,7 @@
      "teams": [
       {
        "club_id": "C09",
-       "possession": 28,
+       "possession": 29,
        "field_tilt": 23,
        "pass_accuracy": 85,
        "avg_pass_difficulty": 0.324,
@@ -4335,11 +4323,11 @@
       },
       {
        "club_id": "C04",
-       "possession": 72,
+       "possession": 71,
        "field_tilt": 77,
        "pass_accuracy": 85,
        "avg_pass_difficulty": 0.306,
-       "passes": 199,
+       "passes": 197,
        "shots": 2,
        "on_target": 1,
        "xg": 0.18,
@@ -4668,7 +4656,7 @@
     }
    ],
    "finished": false,
-   "minute_after": 36,
+   "minute_after": 35,
    "id": "inject",
    "fan": "en_analyst",
    "lang": "en",
@@ -4678,22 +4666,22 @@
     "injection": true
    },
    "status": 200,
-   "answer": "I only talk about this match. Eastholme Rangers are a man down since the 5th minute and the score is 1-1 at 34'. Brackenford City are likelier to score next, 49% to Eastholme Rangers' 33%, and the match win chances currently favor Brackenford City 42% to Eastholme Rangers' 24% with a 34% draw chance. Eastholme have 0.63 xG to Brackenford City's 0.18 and fewer shots and less possession.",
+   "answer": "I only talk about this match. At 33 minutes the score is level at 1-1. Brackenford City lead the match chances, 42% to Eastholme Rangers' 24%, and Brackenford City are likelier to score next, 49% to Eastholme Rangers' 33%. Eastholme Rangers play with ten after Kofi Lorford's red card at 5'. Brackenford have more possession, 70% to 30%, while Eastholme have more shots, 6 to 2, and higher xG, 0.63 to 0.18.",
    "source": "agents",
-   "latency_ms": 11204,
+   "latency_ms": 7638,
    "trace": [
     {
      "agent": "scout",
-     "ms": 9000,
+     "ms": 5396,
      "ok": true,
      "stage": 1,
-     "start": 1792240530.436,
+     "start": 1792241652.11,
      "tools": [
       {
        "name": "gaffers_gauge"
       },
       {
-       "name": "match_stats"
+       "name": "why_it_moved"
       },
       {
        "name": "recent_events",
@@ -4702,21 +4690,21 @@
        }
       }
      ],
-     "in": 5461,
-     "out": 306,
+     "in": 5749,
+     "out": 298,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 2157,
+     "ms": 2191,
      "ok": true,
      "stage": 2,
-     "start": 1792240539.438,
+     "start": 1792241657.508,
      "tools": [],
-     "in": 2663,
-     "out": 156,
+     "in": 2689,
+     "out": 168,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -4730,9 +4718,9 @@
      "away": 0.42389575062040463
     },
     {
-     "home": 0.23890950594402183,
-     "draw": 0.34760902829307355,
-     "away": 0.41348146576290457
+     "home": 0.2394747956541621,
+     "draw": 0.3442516151660394,
+     "away": 0.41627358917979856
     }
    ],
    "next_goal": [
@@ -4742,9 +4730,9 @@
      "none": 0.186
     },
     {
-     "home": 0.321,
-     "away": 0.475,
-     "none": 0.204
+     "home": 0.323,
+     "away": 0.478,
+     "none": 0.199
     }
    ],
    "score": [
@@ -4800,17 +4788,17 @@
      "teams": [
       {
        "club_id": "C09",
-       "possession": 33,
+       "possession": 32,
        "field_tilt": 28,
-       "pass_accuracy": 84,
-       "avg_pass_difficulty": 0.315,
-       "passes": 110,
+       "pass_accuracy": 83,
+       "avg_pass_difficulty": 0.323,
+       "passes": 106,
        "shots": 6,
        "on_target": 2,
        "xg": 0.63,
        "goals": 1,
        "corners": 2,
-       "fouls": 5,
+       "fouls": 4,
        "yellows": 0,
        "reds": 1,
        "fastest_shot_kmh": 111.6,
@@ -4819,11 +4807,11 @@
       },
       {
        "club_id": "C04",
-       "possession": 67,
+       "possession": 68,
        "field_tilt": 72,
        "pass_accuracy": 84,
-       "avg_pass_difficulty": 0.306,
-       "passes": 225,
+       "avg_pass_difficulty": 0.305,
+       "passes": 222,
        "shots": 2,
        "on_target": 1,
        "xg": 0.18,
@@ -4845,6 +4833,7 @@
     "no_dashes": true,
     "no_meta": true,
     "neutral": true,
+    "shots_right": true,
     "full_names": true,
     "rise_consistent": true,
     "no_season_mixup": true,
@@ -5117,16 +5106,16 @@
    "question": "¿Puede remontar Eastholme?",
    "expect": {},
    "status": 200,
-   "answer": "Sí, Eastholme Rangers pueden remontar. Están igualados 1-1 a los 36 minutos, tienen un 32% de probabilidad de marcar el siguiente gol y aún un 24% de ganar la noche.",
+   "answer": "Sí, Eastholme Rangers pueden remontar aunque van con diez; tienen 24% de ganar y Brackenford City 41%. Brackenford están más cerca de marcar el siguiente, 47% a 32%, pero Eastholme ya empataron y pueden aprovechar contras y errores rivales.",
    "source": "agents",
-   "latency_ms": 8036,
+   "latency_ms": 6885,
    "trace": [
     {
      "agent": "scout",
-     "ms": 6014,
+     "ms": 4965,
      "ok": true,
      "stage": 1,
-     "start": 1792240542.438,
+     "start": 1792241663.972,
      "tools": [
       {
        "name": "gaffers_gauge"
@@ -5138,21 +5127,21 @@
        "name": "match_stats"
       }
      ],
-     "in": 5196,
-     "out": 401,
+     "in": 5225,
+     "out": 289,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 1972,
+     "ms": 1873,
      "ok": true,
      "stage": 2,
-     "start": 1792240548.454,
+     "start": 1792241668.94,
      "tools": [],
-     "in": 2491,
-     "out": 91,
+     "in": 2334,
+     "out": 106,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -5161,9 +5150,9 @@
    "minute": 36,
    "probs": [
     {
-     "home": 0.23881323008314911,
-     "draw": 0.3481679830753097,
-     "away": 0.413018786841541
+     "home": 0.2387763250677369,
+     "draw": 0.34838131254014243,
+     "away": 0.4128423623921205
     },
     {
      "home": 0.23355254756108726,
@@ -5196,8 +5185,8 @@
        "possession": 33,
        "field_tilt": 28,
        "pass_accuracy": 84,
-       "avg_pass_difficulty": 0.313,
-       "passes": 112,
+       "avg_pass_difficulty": 0.311,
+       "passes": 113,
        "shots": 6,
        "on_target": 2,
        "xg": 0.63,
@@ -5292,6 +5281,7 @@
     "no_real_clubs": true,
     "no_trailing_questions": true,
     "no_invented_penalty": true,
+    "next_goal_side_right": true,
     "real_minutes": true,
     "nothing_certain": true
    }
@@ -5544,7 +5534,7 @@
     }
    ],
    "finished": false,
-   "minute_after": 42,
+   "minute_after": 41,
    "id": "fr_next",
    "fan": "fr_fan",
    "lang": "fr",
@@ -5554,16 +5544,16 @@
     "next_goal": true
    },
    "status": 200,
-   "answer": "Brackenford City est plus susceptible de marquer le prochain but, 46% contre 31% pour Eastholme Rangers. Brackenford domine la possession (69% à 31%) et joue contre dix depuis la 5e, donc ce sont les favoris pour le prochain but.",
+   "answer": "Brackenford City est le plus probable pour marquer le prochain but, 46% contre 31% pour Eastholme Rangers. Brackenford presse plus et mène la possession, profitez-en.",
    "source": "agents",
-   "latency_ms": 7321,
+   "latency_ms": 6966,
    "trace": [
     {
      "agent": "scout",
-     "ms": 5363,
+     "ms": 5459,
      "ok": true,
      "stage": 1,
-     "start": 1792240557.891,
+     "start": 1792241678.879,
      "tools": [
       {
        "name": "gaffers_gauge"
@@ -5574,25 +5564,25 @@
       {
        "name": "recent_events",
        "args": {
-        "limit": 12
+        "limit": 10
        }
       }
      ],
-     "in": 5428,
-     "out": 313,
+     "in": 5492,
+     "out": 325,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 1902,
+     "ms": 1454,
      "ok": true,
      "stage": 2,
-     "start": 1792240563.256,
+     "start": 1792241684.34,
      "tools": [],
-     "in": 2323,
-     "out": 102,
+     "in": 2371,
+     "out": 81,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -5601,26 +5591,26 @@
    "minute": 40,
    "probs": [
     {
-     "home": 0.2317352152574209,
-     "draw": 0.36197521406092764,
-     "away": 0.4062895706816516
+     "home": 0.23184606743344938,
+     "draw": 0.36138853238315616,
+     "away": 0.40676540018339447
     },
     {
-     "home": 0.22986799726839433,
-     "draw": 0.3714450179148761,
-     "away": 0.3986869848167295
+     "home": 0.23024536337006812,
+     "draw": 0.3695882840847029,
+     "away": 0.40016635254522903
     }
    ],
    "next_goal": [
     {
      "home": 0.31,
-     "away": 0.465,
-     "none": 0.226
+     "away": 0.466,
+     "none": 0.225
     },
     {
-     "home": 0.305,
-     "away": 0.456,
-     "none": 0.239
+     "home": 0.306,
+     "away": 0.458,
+     "none": 0.236
     }
    ],
    "score": [
@@ -5654,9 +5644,9 @@
        "club_id": "C04",
        "possession": 69,
        "field_tilt": 74,
-       "pass_accuracy": 83,
-       "avg_pass_difficulty": 0.304,
-       "passes": 253,
+       "pass_accuracy": 82,
+       "avg_pass_difficulty": 0.305,
+       "passes": 251,
        "shots": 3,
        "on_target": 1,
        "xg": 0.26,
@@ -5676,7 +5666,7 @@
      "teams": [
       {
        "club_id": "C09",
-       "possession": 29,
+       "possession": 30,
        "field_tilt": 25,
        "pass_accuracy": 83,
        "avg_pass_difficulty": 0.313,
@@ -5695,11 +5685,11 @@
       },
       {
        "club_id": "C04",
-       "possession": 71,
+       "possession": 70,
        "field_tilt": 75,
        "pass_accuracy": 83,
        "avg_pass_difficulty": 0.296,
-       "passes": 276,
+       "passes": 273,
        "shots": 3,
        "on_target": 1,
        "xg": 0.26,
@@ -5996,16 +5986,16 @@
     "halftime_pct": "home"
    },
    "status": 200,
-   "answer": "At halftime Eastholme Rangers had a 22% chance to win, a 43% chance of a draw and Brackenford City had 35%. You were down to ten and had 33% possession with eight shots, two on target.",
+   "answer": "At halftime Eastholme Rangers had a 22% chance of winning. The draw was 43% and Brackenford City 35%.",
    "source": "agents",
-   "latency_ms": 5895,
+   "latency_ms": 9140,
    "trace": [
     {
      "agent": "scout",
-     "ms": 4080,
+     "ms": 7430,
      "ok": true,
      "stage": 1,
-     "start": 1792240623.896,
+     "start": 1792241744.959,
      "tools": [
       {
        "name": "chances_at",
@@ -6017,27 +6007,24 @@
        "name": "match_stats"
       },
       {
-       "name": "recent_events",
-       "args": {
-        "limit": 12
-       }
+       "name": "why_it_moved"
       }
      ],
-     "in": 5022,
-     "out": 246,
+     "in": 5020,
+     "out": 245,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 1757,
+     "ms": 1652,
      "ok": true,
      "stage": 2,
-     "start": 1792240627.978,
+     "start": 1792241752.391,
      "tools": [],
-     "in": 2442,
-     "out": 92,
+     "in": 2476,
+     "out": 73,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -6051,9 +6038,9 @@
      "away": 0.35458628943023707
     },
     {
-     "home": 0.2138326702115496,
-     "draw": 0.43942860217977914,
-     "away": 0.34673872760867114
+     "home": 0.21251501052479937,
+     "draw": 0.44401847173397935,
+     "away": 0.3434665177412213
     }
    ],
    "next_goal": [
@@ -6063,9 +6050,9 @@
      "none": 0.321
     },
     {
-     "home": 0.27,
-     "away": 0.394,
-     "none": 0.336
+     "home": 0.267,
+     "away": 0.39,
+     "none": 0.343
     }
    ],
    "score": [
@@ -6121,8 +6108,8 @@
      "teams": [
       {
        "club_id": "C09",
-       "possession": 34,
-       "field_tilt": 32,
+       "possession": 33,
+       "field_tilt": 31,
        "pass_accuracy": 82,
        "avg_pass_difficulty": 0.306,
        "passes": 176,
@@ -6140,11 +6127,11 @@
       },
       {
        "club_id": "C04",
-       "possession": 66,
-       "field_tilt": 68,
+       "possession": 67,
+       "field_tilt": 69,
        "pass_accuracy": 83,
-       "avg_pass_difficulty": 0.295,
-       "passes": 341,
+       "avg_pass_difficulty": 0.294,
+       "passes": 350,
        "shots": 4,
        "on_target": 1,
        "xg": 0.3,
@@ -6438,16 +6425,16 @@
    "question": "Explain the xG for both sides.",
    "expect": {},
    "status": 200,
-   "answer": "Eastholme Rangers lead 0.68 xG so far versus Brackenford City’s 0.30, because Eastholme have taken more shots (8 to 4) but many were low-value chances. The live models expect Eastholme to add about 0.41 more xG and Brackenford about 0.60 more, which explains why Brackenford, with 66% possession and the extra man, look likelier to create better shots going forward. Brackenford City are likelier to score next, 38% to Eastholme Rangers' 26%.",
+   "answer": "Eastholme Rangers lead on cumulative shot quality, 0.68 xG to Brackenford City’s 0.30, because Eastholme have taken more shots (8 to 4) and more on target (2 to 1) despite being a man down. Brackenford’s possession (66%) hasn’t converted into high-value attempts, so their current scoring chance is lower now, but their expected goals remaining are higher, so Brackenford still look likelier to create better chances later. Match chances: Eastholme 21%, draw 46%, Brackenford 34%. Next-goal chances: Eastholme 26%, Brackenford 38%, no more goals 36%.",
    "source": "agents",
-   "latency_ms": 8383,
+   "latency_ms": 7590,
    "trace": [
     {
      "agent": "scout",
-     "ms": 5825,
+     "ms": 5163,
      "ok": true,
      "stage": 1,
-     "start": 1792240639.792,
+     "start": 1792241760.66,
      "tools": [
       {
        "name": "match_stats"
@@ -6459,21 +6446,21 @@
        "name": "gaffers_gauge"
       }
      ],
-     "in": 5333,
-     "out": 330,
+     "in": 5419,
+     "out": 326,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 2489,
+     "ms": 2359,
      "ok": true,
      "stage": 2,
-     "start": 1792240645.619,
+     "start": 1792241765.825,
      "tools": [],
-     "in": 2829,
-     "out": 171,
+     "in": 2849,
+     "out": 188,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -6482,26 +6469,26 @@
    "minute": 54,
    "probs": [
     {
-     "home": 0.20915747405145704,
-     "draw": 0.45545975946011963,
-     "away": 0.33538276648842313
+     "home": 0.20942243863653845,
+     "draw": 0.45456910152875685,
+     "away": 0.3360084598347046
     },
     {
-     "home": 0.20739741437977294,
-     "draw": 0.4696476901692347,
-     "away": 0.3229548954509926
+     "home": 0.20799526174228558,
+     "draw": 0.46774068331930757,
+     "away": 0.324264054938407
     }
    ],
    "next_goal": [
     {
-     "home": 0.261,
-     "away": 0.38,
-     "none": 0.359
+     "home": 0.262,
+     "away": 0.381,
+     "none": 0.358
     },
     {
-     "home": 0.256,
-     "away": 0.365,
-     "none": 0.378
+     "home": 0.257,
+     "away": 0.367,
+     "none": 0.375
     }
    ],
    "score": [
@@ -6516,9 +6503,9 @@
        "club_id": "C09",
        "possession": 34,
        "field_tilt": 31,
-       "pass_accuracy": 82,
-       "avg_pass_difficulty": 0.304,
-       "passes": 184,
+       "pass_accuracy": 81,
+       "avg_pass_difficulty": 0.307,
+       "passes": 182,
        "shots": 8,
        "on_target": 2,
        "xg": 0.68,
@@ -6557,11 +6544,11 @@
      "teams": [
       {
        "club_id": "C09",
-       "possession": 36,
+       "possession": 35,
        "field_tilt": 31,
        "pass_accuracy": 81,
-       "avg_pass_difficulty": 0.306,
-       "passes": 199,
+       "avg_pass_difficulty": 0.307,
+       "passes": 196,
        "shots": 9,
        "on_target": 2,
        "xg": 0.74,
@@ -6576,7 +6563,7 @@
       },
       {
        "club_id": "C04",
-       "possession": 64,
+       "possession": 65,
        "field_tilt": 69,
        "pass_accuracy": 82,
        "avg_pass_difficulty": 0.296,
@@ -6613,7 +6600,6 @@
     "no_real_clubs": true,
     "no_trailing_questions": true,
     "no_invented_penalty": true,
-    "next_goal_side_right": true,
     "real_minutes": true,
     "nothing_certain": true
    }
@@ -6874,16 +6860,16 @@
    "question": "Como estão as chances agora?",
    "expect": {},
    "status": 200,
-   "answer": "Agora Eastholme Rangers têm 20% de chances de vencer, o empate tem 48% e Brackenford City 31%. Aos 58 minutos, Brackenford domina posse e xG está 0,30 contra 0,74 de Eastholme, com Eastholme reduzidos a dez desde o 5'.",
+   "answer": "Agora, Empate tem 48% de chance, Brackenford City tem 31% e Eastholme Rangers 20%. Brackenford é mais provável de marcar o próximo gol, 35% contra 25% de Eastholme. Brackenford domina posse e tem menos xG (0,30 a 0,74) mas Eastholme já criou mais chances de gol.",
    "source": "agents",
-   "latency_ms": 7455,
+   "latency_ms": 7609,
    "trace": [
     {
      "agent": "scout",
-     "ms": 5199,
+     "ms": 5224,
      "ok": true,
      "stage": 1,
-     "start": 1792240654.519,
+     "start": 1792241776.599,
      "tools": [
       {
        "name": "gaffers_gauge"
@@ -6895,21 +6881,21 @@
        "name": "match_stats"
       }
      ],
-     "in": 5311,
-     "out": 251,
+     "in": 5335,
+     "out": 287,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 2204,
+     "ms": 2325,
      "ok": true,
      "stage": 2,
-     "start": 1792240659.72,
+     "start": 1792241781.824,
      "tools": [],
-     "in": 2508,
-     "out": 147,
+     "in": 2564,
+     "out": 128,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -6918,14 +6904,14 @@
    "minute": 58,
    "probs": [
     {
-     "home": 0.20380095155981706,
-     "draw": 0.4809664508146046,
-     "away": 0.31523259762557837
+     "home": 0.20368507982711243,
+     "draw": 0.48132700818173874,
+     "away": 0.314987911991149
     },
     {
-     "home": 0.19871809631584114,
-     "draw": 0.4965673967531863,
-     "away": 0.3047145069309727
+     "home": 0.19825107619967752,
+     "draw": 0.4979801821672407,
+     "away": 0.3037687416330816
     }
    ],
    "next_goal": [
@@ -6935,9 +6921,9 @@
      "none": 0.394
     },
     {
-     "home": 0.242,
-     "away": 0.343,
-     "none": 0.415
+     "home": 0.241,
+     "away": 0.342,
+     "none": 0.417
     }
    ],
    "score": [
@@ -6951,10 +6937,10 @@
       {
        "club_id": "C09",
        "possession": 37,
-       "field_tilt": 33,
+       "field_tilt": 34,
        "pass_accuracy": 81,
        "avg_pass_difficulty": 0.305,
-       "passes": 215,
+       "passes": 216,
        "shots": 9,
        "on_target": 2,
        "xg": 0.74,
@@ -6970,7 +6956,7 @@
       {
        "club_id": "C04",
        "possession": 63,
-       "field_tilt": 67,
+       "field_tilt": 66,
        "pass_accuracy": 82,
        "avg_pass_difficulty": 0.296,
        "passes": 361,
@@ -7015,8 +7001,8 @@
        "possession": 64,
        "field_tilt": 67,
        "pass_accuracy": 83,
-       "avg_pass_difficulty": 0.299,
-       "passes": 379,
+       "avg_pass_difficulty": 0.298,
+       "passes": 381,
        "shots": 4,
        "on_target": 1,
        "xg": 0.3,
@@ -7048,6 +7034,7 @@
     "no_real_clubs": true,
     "no_trailing_questions": true,
     "no_invented_penalty": true,
+    "next_goal_side_right": true,
     "real_minutes": true,
     "nothing_certain": true
    }
@@ -7300,7 +7287,7 @@
     }
    ],
    "finished": false,
-   "minute_after": 63,
+   "minute_after": 64,
    "id": "left_flank",
    "fan": "en_fan",
    "lang": "en",
@@ -7310,16 +7297,16 @@
     "no_formations": true
    },
    "status": 200,
-   "answer": "I don't track positions, so I can't name a specific cover. What I can tell you: Eastholme Rangers are down to ten at 1-1 and Brackenford City are likelier to score next, 33% to Eastholme's 23%.",
+   "answer": "I don't track positions, so I can't pick a player for the left flank. What I can tell you: Eastholme Rangers are down to ten at 1-1, Brackenford City are likelier to score next, 33% to Eastholme Rangers' 23%.",
    "source": "agents",
-   "latency_ms": 5981,
+   "latency_ms": 8410,
    "trace": [
     {
      "agent": "scout",
-     "ms": 4179,
+     "ms": 6014,
      "ok": true,
      "stage": 1,
-     "start": 1792240671.172,
+     "start": 1792241793.747,
      "tools": [
       {
        "name": "match_stats"
@@ -7331,24 +7318,24 @@
        }
       },
       {
-       "name": "why_it_moved"
+       "name": "player_impact"
       }
      ],
-     "in": 5700,
-     "out": 254,
+     "in": 5686,
+     "out": 310,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 1752,
+     "ms": 2339,
      "ok": true,
      "stage": 2,
-     "start": 1792240675.353,
+     "start": 1792241799.763,
      "tools": [],
-     "in": 2462,
-     "out": 111,
+     "in": 2586,
+     "out": 99,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -7357,26 +7344,26 @@
    "minute": 62,
    "probs": [
     {
-     "home": 0.19298239962944663,
-     "draw": 0.5137067622093432,
-     "away": 0.2933108381612102
+     "home": 0.19242538236772486,
+     "draw": 0.5153482296868948,
+     "away": 0.29222638794538036
     },
     {
-     "home": 0.18792778776042046,
-     "draw": 0.52846925973622,
-     "away": 0.2836029525033594
+     "home": 0.18520901942144877,
+     "draw": 0.5362947678491512,
+     "away": 0.2784962127294001
     }
    ],
    "next_goal": [
     {
-     "home": 0.233,
-     "away": 0.329,
-     "none": 0.439
+     "home": 0.232,
+     "away": 0.327,
+     "none": 0.441
     },
     {
-     "home": 0.225,
-     "away": 0.317,
-     "none": 0.458
+     "home": 0.221,
+     "away": 0.311,
+     "none": 0.469
     }
    ],
    "score": [
@@ -7392,8 +7379,8 @@
        "possession": 35,
        "field_tilt": 31,
        "pass_accuracy": 81,
-       "avg_pass_difficulty": 0.306,
-       "passes": 217,
+       "avg_pass_difficulty": 0.304,
+       "passes": 219,
        "shots": 9,
        "on_target": 2,
        "xg": 0.74,
@@ -7434,9 +7421,9 @@
        "club_id": "C09",
        "possession": 37,
        "field_tilt": 33,
-       "pass_accuracy": 82,
-       "avg_pass_difficulty": 0.301,
-       "passes": 237,
+       "pass_accuracy": 81,
+       "avg_pass_difficulty": 0.303,
+       "passes": 242,
        "shots": 9,
        "on_target": 2,
        "xg": 0.74,
@@ -7455,13 +7442,13 @@
        "field_tilt": 67,
        "pass_accuracy": 83,
        "avg_pass_difficulty": 0.3,
-       "passes": 403,
+       "passes": 406,
        "shots": 4,
        "on_target": 1,
        "xg": 0.3,
        "goals": 1,
        "corners": 0,
-       "fouls": 5,
+       "fouls": 6,
        "yellows": 0,
        "reds": 0,
        "fastest_shot_kmh": 113.2,
@@ -7489,7 +7476,6 @@
     "no_trailing_questions": true,
     "no_invented_penalty": true,
     "next_goal_side_right": true,
-    "next_goal_consistent": true,
     "real_minutes": true,
     "nothing_certain": true,
     "fact_no_invented_tactics": true
@@ -7753,16 +7739,16 @@
     "season": true
    },
    "status": 200,
-   "answer": "This draw would leave Eastholme Rangers seventh and barely alive in the top-four race. Right now the title chance is 1% and the top-four chance is 6%. A win would lift Eastholme’s top-four chance to 9%, a draw keeps it at 6% and a loss drops it to 5%.",
+   "answer": "This draw keeps Eastholme Rangers seventh and still in the top-four fight, but it cuts their top-four chance to 6%. With ten men and the game level, Eastholme have a 19% chance to win and a 53% chance of a draw. Stay positive, there’s time.",
    "source": "agents",
-   "latency_ms": 7209,
+   "latency_ms": 9616,
    "trace": [
     {
      "agent": "scout",
-     "ms": 4981,
+     "ms": 4189,
      "ok": true,
      "stage": 1,
-     "start": 1792240679.696,
+     "start": 1792241800.523,
      "tools": [
       {
        "name": "gaffers_gauge"
@@ -7774,21 +7760,21 @@
        "name": "match_stats"
       }
      ],
-     "in": 6251,
-     "out": 273,
+     "in": 6246,
+     "out": 220,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 2183,
+     "ms": 5374,
      "ok": true,
      "stage": 2,
-     "start": 1792240684.679,
+     "start": 1792241804.714,
      "tools": [],
-     "in": 2797,
-     "out": 110,
+     "in": 2690,
+     "out": 107,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -7797,26 +7783,26 @@
    "minute": 64,
    "probs": [
     {
-     "home": 0.1867097089896004,
-     "draw": 0.5319846261421671,
-     "away": 0.2813056648682325
+     "home": 0.18696401471557123,
+     "draw": 0.5312519745447487,
+     "away": 0.28178401073968
     },
     {
-     "home": 0.1803824367221101,
-     "draw": 0.5500118074326439,
-     "away": 0.2696057558452461
+     "home": 0.17875894464419664,
+     "draw": 0.5545793244332827,
+     "away": 0.2666617309225206
     }
    ],
    "next_goal": [
     {
      "home": 0.223,
-     "away": 0.314,
-     "none": 0.463
+     "away": 0.315,
+     "none": 0.462
     },
     {
-     "home": 0.213,
-     "away": 0.3,
-     "none": 0.487
+     "home": 0.211,
+     "away": 0.296,
+     "none": 0.493
     }
    ],
    "score": [
@@ -7852,7 +7838,7 @@
        "field_tilt": 67,
        "pass_accuracy": 83,
        "avg_pass_difficulty": 0.3,
-       "passes": 405,
+       "passes": 404,
        "shots": 4,
        "on_target": 1,
        "xg": 0.3,
@@ -7872,7 +7858,7 @@
      "teams": [
       {
        "club_id": "C09",
-       "possession": 37,
+       "possession": 36,
        "field_tilt": 32,
        "pass_accuracy": 81,
        "avg_pass_difficulty": 0.303,
@@ -7891,11 +7877,11 @@
       },
       {
        "club_id": "C04",
-       "possession": 63,
+       "possession": 64,
        "field_tilt": 68,
-       "pass_accuracy": 82,
-       "avg_pass_difficulty": 0.296,
-       "passes": 421,
+       "pass_accuracy": 83,
+       "avg_pass_difficulty": 0.297,
+       "passes": 426,
        "shots": 4,
        "on_target": 1,
        "xg": 0.3,
@@ -8180,7 +8166,7 @@
     }
    ],
    "finished": false,
-   "minute_after": 69,
+   "minute_after": 68,
    "id": "es_best",
    "fan": "es_fan",
    "lang": "es",
@@ -8188,16 +8174,16 @@
    "question": "¿Quién está jugando mejor?",
    "expect": {},
    "status": 200,
-   "answer": "Brackenford City está jugando mejor ahora. Tienen más balón y control y son más probables para marcar el siguiente gol, 30% a 21% de Eastholme Rangers. Eastholme siguen peleando con diez y siguen creando ocasiones.",
+   "answer": "Brackenford City están jugando mejor ahora: tienen más posesión (64% a 36%) y más control del juego, y son más probables para el siguiente gol, 30% frente al 21% de Eastholme Rangers. Eastholme han tenido más tiros (9 a 4) pero van con diez desde el 5'.",
    "source": "agents",
-   "latency_ms": 12112,
+   "latency_ms": 7729,
    "trace": [
     {
      "agent": "scout",
-     "ms": 9711,
+     "ms": 5140,
      "ok": true,
      "stage": 1,
-     "start": 1792240686.986,
+     "start": 1792241809.025,
      "tools": [
       {
        "name": "gaffers_gauge"
@@ -8208,25 +8194,25 @@
       {
        "name": "recent_events",
        "args": {
-        "limit": 12
+        "limit": 6
        }
       }
      ],
-     "in": 5979,
-     "out": 390,
+     "in": 5534,
+     "out": 357,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 2360,
+     "ms": 2536,
      "ok": true,
      "stage": 2,
-     "start": 1792240696.699,
+     "start": 1792241814.167,
      "tools": [],
-     "in": 2697,
-     "out": 95,
+     "in": 2527,
+     "out": 113,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -8235,26 +8221,26 @@
    "minute": 66,
    "probs": [
     {
-     "home": 0.1806021327701285,
-     "draw": 0.5493919944844519,
-     "away": 0.27000587274541965
+     "home": 0.1803824367221101,
+     "draw": 0.5500118074326439,
+     "away": 0.2696057558452461
     },
     {
-     "home": 0.16973228394295325,
-     "draw": 0.5796008681655753,
-     "away": 0.2506668478914713
+     "home": 0.1730722532893965,
+     "draw": 0.5704121828576797,
+     "away": 0.25651556385292373
     }
    ],
    "next_goal": [
     {
-     "home": 0.214,
+     "home": 0.213,
      "away": 0.3,
-     "none": 0.486
+     "none": 0.487
     },
     {
-     "home": 0.198,
-     "away": 0.277,
-     "none": 0.525
+     "home": 0.203,
+     "away": 0.284,
+     "none": 0.514
     }
    ],
    "score": [
@@ -8288,9 +8274,9 @@
        "club_id": "C04",
        "possession": 63,
        "field_tilt": 68,
-       "pass_accuracy": 83,
-       "avg_pass_difficulty": 0.297,
-       "passes": 420,
+       "pass_accuracy": 82,
+       "avg_pass_difficulty": 0.296,
+       "passes": 421,
        "shots": 4,
        "on_target": 1,
        "xg": 0.3,
@@ -8310,8 +8296,8 @@
      "teams": [
       {
        "club_id": "C09",
-       "possession": 35,
-       "field_tilt": 30,
+       "possession": 36,
+       "field_tilt": 31,
        "pass_accuracy": 81,
        "avg_pass_difficulty": 0.303,
        "passes": 246,
@@ -8320,7 +8306,7 @@
        "xg": 0.74,
        "goals": 1,
        "corners": 2,
-       "fouls": 8,
+       "fouls": 7,
        "yellows": 1,
        "reds": 1,
        "fastest_shot_kmh": 111.6,
@@ -8329,11 +8315,11 @@
       },
       {
        "club_id": "C04",
-       "possession": 65,
-       "field_tilt": 70,
+       "possession": 64,
+       "field_tilt": 69,
        "pass_accuracy": 83,
-       "avg_pass_difficulty": 0.296,
-       "passes": 451,
+       "avg_pass_difficulty": 0.298,
+       "passes": 439,
        "shots": 4,
        "on_target": 1,
        "xg": 0.3,
@@ -8355,6 +8341,7 @@
     "no_dashes": true,
     "no_meta": true,
     "neutral": true,
+    "shots_right": true,
     "full_names": true,
     "spelling": true,
     "length": true,
@@ -8592,7 +8579,7 @@
       "Brackenford City": {
        "position_as_it_stands": 6,
        "title_chance_pct": 0,
-       "top_four_chance_pct": 5,
+       "top_four_chance_pct": 6,
        "relegation_chance_pct": 8,
        "likely_finish": 12,
        "most_at_stake": "a top-four finish",
@@ -8619,7 +8606,7 @@
     }
    ],
    "finished": false,
-   "minute_after": 77,
+   "minute_after": 72,
    "id": "en_swing",
    "fan": "en_analyst",
    "lang": "en",
@@ -8627,29 +8614,42 @@
    "question": "What drove the biggest swing so far?",
    "expect": {},
    "status": 200,
-   "answer": "The biggest swing came from Kofi Lorford’s red card in the 5th minute. After that, Brackenford City dominated possession (65% to 35%) and built only 0.30 xG but steadily increased their chance to win to 24%, while Eastholme’s win chance fell to 17% despite Eastholme totaling more xG (0.74) and more shots.",
+   "answer": "The red card to Kofi Lorford at 5' was the biggest swing, it pushed Brackenford City up by 25 percentage points. I watched how that sending off reshaped the game state more than the early goal or the equalizer, and since minute 56 the clock has been the main mover as chances settled.",
    "source": "agents",
-   "latency_ms": 26965,
+   "latency_ms": 8303,
    "trace": [
     {
      "agent": "scout",
-     "ms": 25001,
-     "ok": false,
+     "ms": 6066,
+     "ok": true,
      "stage": 1,
-     "start": 1792240703.953,
-     "tools": [],
-     "error": "TimeoutError",
+     "start": 1792241824.98,
+     "tools": [
+      {
+       "name": "gaffers_gauge"
+      },
+      {
+       "name": "why_it_moved"
+      },
+      {
+       "name": "match_story"
+      }
+     ],
+     "in": 6752,
+     "out": 337,
+     "reasoning": 0,
+     "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 1918,
+     "ms": 2181,
      "ok": true,
      "stage": 2,
-     "start": 1792240728.956,
+     "start": 1792241831.048,
      "tools": [],
-     "in": 2759,
-     "out": 125,
+     "in": 3047,
+     "out": 109,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -8658,26 +8658,26 @@
    "minute": 70,
    "probs": [
     {
-     "home": 0.16577606241791426,
-     "draw": 0.5903893692988609,
-     "away": 0.2438345682832246
+     "home": 0.1660100180971473,
+     "draw": 0.5897541136630804,
+     "away": 0.24423586823977222
     },
     {
-     "home": 0.13483702076216786,
-     "draw": 0.66884025468958,
-     "away": 0.19632272454825225
+     "home": 0.15722679945753526,
+     "draw": 0.6133871084838599,
+     "away": 0.2293860920586048
     }
    ],
    "next_goal": [
     {
-     "home": 0.192,
-     "away": 0.268,
-     "none": 0.539
+     "home": 0.193,
+     "away": 0.269,
+     "none": 0.538
     },
     {
-     "home": 0.151,
-     "away": 0.212,
-     "none": 0.637
+     "home": 0.18,
+     "away": 0.251,
+     "none": 0.568
     }
    ],
    "score": [
@@ -8712,8 +8712,8 @@
        "possession": 65,
        "field_tilt": 70,
        "pass_accuracy": 83,
-       "avg_pass_difficulty": 0.295,
-       "passes": 463,
+       "avg_pass_difficulty": 0.296,
+       "passes": 462,
        "shots": 4,
        "on_target": 1,
        "xg": 0.3,
@@ -8733,11 +8733,11 @@
      "teams": [
       {
        "club_id": "C09",
-       "possession": 37,
-       "field_tilt": 34,
+       "possession": 35,
+       "field_tilt": 32,
        "pass_accuracy": 81,
-       "avg_pass_difficulty": 0.306,
-       "passes": 287,
+       "avg_pass_difficulty": 0.303,
+       "passes": 256,
        "shots": 9,
        "on_target": 2,
        "xg": 0.74,
@@ -8752,22 +8752,22 @@
       },
       {
        "club_id": "C04",
-       "possession": 63,
-       "field_tilt": 66,
+       "possession": 65,
+       "field_tilt": 68,
        "pass_accuracy": 83,
-       "avg_pass_difficulty": 0.293,
-       "passes": 485,
-       "shots": 5,
+       "avg_pass_difficulty": 0.295,
+       "passes": 474,
+       "shots": 4,
        "on_target": 1,
-       "xg": 0.35,
+       "xg": 0.3,
        "goals": 1,
        "corners": 0,
-       "fouls": 8,
+       "fouls": 7,
        "yellows": 0,
        "reds": 0,
        "fastest_shot_kmh": 113.2,
        "longest_pass_m": 43.0,
-       "xg_last_10": 0.05
+       "xg_last_10": 0
       }
      ]
     }
@@ -8778,7 +8778,6 @@
     "no_dashes": true,
     "no_meta": true,
     "neutral": true,
-    "shots_right": true,
     "full_names": true,
     "rise_consistent": true,
     "no_season_mixup": true,
@@ -8892,7 +8891,7 @@
       "Brackenford City": {
        "position_as_it_stands": 6,
        "title_chance_pct": 0,
-       "top_four_chance_pct": 5,
+       "top_four_chance_pct": 6,
        "relegation_chance_pct": 8,
        "likely_finish": 12,
        "most_at_stake": "a top-four finish",
@@ -9041,7 +9040,7 @@
     }
    ],
    "finished": false,
-   "minute_after": 79,
+   "minute_after": 76,
    "id": "fr_red",
    "fan": "fr_fan",
    "lang": "fr",
@@ -9049,16 +9048,16 @@
    "question": "Le carton rouge a-t-il tout changé ?",
    "expect": {},
    "status": 200,
-   "answer": "Oui. Le rouge à la 5e a tout changé: Eastholme joue à dix et ça a défini le match.",
+   "answer": "Oui, le carton rouge a tout changé. Eastholme joue à dix depuis la 5e, Brackenford a 22% de chances de gagner et 24% de marquer le prochain but, et tient 65% de possession pour mettre la pression.",
    "source": "agents",
-   "latency_ms": 20600,
+   "latency_ms": 7565,
    "trace": [
     {
      "agent": "scout",
-     "ms": 18500,
+     "ms": 5694,
      "ok": true,
      "stage": 1,
-     "start": 1792240719.883,
+     "start": 1792241840.761,
      "tools": [
       {
        "name": "gaffers_gauge"
@@ -9067,27 +9066,24 @@
        "name": "why_it_moved"
       },
       {
-       "name": "recent_events",
-       "args": {
-        "limit": 12
-       }
+       "name": "match_stats"
       }
      ],
-     "in": 6313,
-     "out": 436,
+     "in": 5673,
+     "out": 413,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 2056,
+     "ms": 1827,
      "ok": true,
      "stage": 2,
-     "start": 1792240738.384,
+     "start": 1792241846.457,
      "tools": [],
-     "in": 2827,
-     "out": 98,
+     "in": 2573,
+     "out": 95,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -9096,26 +9092,26 @@
    "minute": 74,
    "probs": [
     {
-     "home": 0.14883564045460917,
-     "draw": 0.6319938431874017,
-     "away": 0.21917051635798937
+     "home": 0.1497881890303576,
+     "draw": 0.6294555847097929,
+     "away": 0.22075622625984961
     },
     {
-     "home": 0.122602089658084,
-     "draw": 0.7004455167968215,
-     "away": 0.17695239354509443
+     "home": 0.1399366652139048,
+     "draw": 0.6555098321962947,
+     "away": 0.20455350258980057
     }
    ],
    "next_goal": [
     {
-     "home": 0.17,
-     "away": 0.239,
-     "none": 0.592
+     "home": 0.171,
+     "away": 0.24,
+     "none": 0.589
     },
     {
-     "home": 0.136,
-     "away": 0.189,
-     "none": 0.675
+     "home": 0.158,
+     "away": 0.221,
+     "none": 0.621
     }
    ],
    "score": [
@@ -9132,7 +9128,7 @@
        "field_tilt": 32,
        "pass_accuracy": 81,
        "avg_pass_difficulty": 0.305,
-       "passes": 263,
+       "passes": 262,
        "shots": 9,
        "on_target": 2,
        "xg": 0.74,
@@ -9171,11 +9167,11 @@
      "teams": [
       {
        "club_id": "C09",
-       "possession": 36,
-       "field_tilt": 34,
+       "possession": 37,
+       "field_tilt": 33,
        "pass_accuracy": 81,
-       "avg_pass_difficulty": 0.306,
-       "passes": 287,
+       "avg_pass_difficulty": 0.305,
+       "passes": 280,
        "shots": 9,
        "on_target": 2,
        "xg": 0.74,
@@ -9190,11 +9186,11 @@
       },
       {
        "club_id": "C04",
-       "possession": 64,
-       "field_tilt": 66,
+       "possession": 63,
+       "field_tilt": 67,
        "pass_accuracy": 82,
-       "avg_pass_difficulty": 0.291,
-       "passes": 507,
+       "avg_pass_difficulty": 0.294,
+       "passes": 480,
        "shots": 5,
        "on_target": 1,
        "xg": 0.35,
@@ -9204,7 +9200,7 @@
        "yellows": 0,
        "reds": 0,
        "fastest_shot_kmh": 113.2,
-       "longest_pass_m": 43.3,
+       "longest_pass_m": 43.0,
        "xg_last_10": 0.05
       }
      ]
@@ -9506,45 +9502,42 @@
     ]
    },
    "status": 200,
-   "answer": "Adam Penke scored the winner for Eastholme Rangers in the 82nd minute; VAR had reviewed it and the goal stood. Eastholme Rangers still have an 87% chance to win this match.",
+   "answer": "Adam Penke scored the winner for Eastholme Rangers in the 82nd minute, his goal stood after VAR. Eastholme lead 2-1 and still face a tense finish with ten men. Eastholme's chance to win is 87% and the draw is 12%.",
    "source": "agents",
-   "latency_ms": 6056,
+   "latency_ms": 6290,
    "trace": [
     {
      "agent": "scout",
-     "ms": 4362,
+     "ms": 3805,
      "ok": true,
      "stage": 1,
-     "start": 1792240776.225,
+     "start": 1792241897.498,
      "tools": [
-      {
-       "name": "recent_events",
-       "args": {
-        "limit": 12
-       }
-      },
       {
        "name": "gaffers_gauge"
       },
       {
        "name": "why_it_moved"
+      },
+      {
+       "name": "match_stats"
       }
      ],
-     "in": 7004,
-     "out": 257,
+     "in": 6386,
+     "out": 265,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 1651,
+     "ms": 2441,
      "ok": true,
      "stage": 2,
-     "start": 1792240780.589,
+     "start": 1792241901.305,
      "tools": [],
-     "in": 2729,
-     "out": 86,
+     "in": 2735,
+     "out": 104,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -9558,9 +9551,9 @@
      "away": 0.010413123524666052
     },
     {
-     "home": 0.8856397946403998,
-     "draw": 0.10687963416984883,
-     "away": 0.007480571189751481
+     "home": 0.8865657607680523,
+     "draw": 0.10608248010621289,
+     "away": 0.007351759125734803
     }
    ],
    "next_goal": [
@@ -9570,9 +9563,9 @@
      "none": 0.763
     },
     {
-     "home": 0.083,
-     "away": 0.119,
-     "none": 0.798
+     "home": 0.082,
+     "away": 0.118,
+     "none": 0.8
     }
    ],
    "score": [
@@ -9650,8 +9643,8 @@
        "possession": 64,
        "field_tilt": 66,
        "pass_accuracy": 82,
-       "avg_pass_difficulty": 0.289,
-       "passes": 550,
+       "avg_pass_difficulty": 0.29,
+       "passes": 551,
        "shots": 6,
        "on_target": 1,
        "xg": 0.46,
@@ -9684,6 +9677,7 @@
     "no_real_clubs": true,
     "no_trailing_questions": true,
     "no_invented_penalty": true,
+    "leader_right": true,
     "real_minutes": true,
     "nothing_certain": true,
     "fact_scorer": true
@@ -9959,16 +9953,16 @@
    "question": "¿Cómo ganó Eastholme con diez?",
    "expect": {},
    "status": 200,
-   "answer": "Eastholme Rangers van ganando 2-1 con diez porque resistieron tras la expulsión de Kofi Lorford y con goles de Reuben Belwell y Adam Penke; tenían un 89% de opciones de ganar a falta de tres minutos. Aguantaron y aprovecharon su oportunidad al 82'.",
+   "answer": "Eastholme Rangers ganan con diez porque aguantaron tras la expulsión de Kofi Lorford, aprovecharon el 2-1 de Adam Penke al 82' y mantuvieron el control hasta ahora; tienen 89% de ganar y el empate 10%.",
    "source": "agents",
-   "latency_ms": 7862,
+   "latency_ms": 6852,
    "trace": [
     {
      "agent": "scout",
-     "ms": 5686,
+     "ms": 4924,
      "ok": true,
      "stage": 1,
-     "start": 1792240783.871,
+     "start": 1792241905.923,
      "tools": [
       {
        "name": "gaffers_gauge"
@@ -9980,21 +9974,21 @@
        "name": "match_stats"
       }
      ],
-     "in": 6504,
-     "out": 339,
+     "in": 6635,
+     "out": 355,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 2131,
+     "ms": 1881,
      "ok": true,
      "stage": 2,
-     "start": 1792240789.559,
+     "start": 1792241910.849,
      "tools": [],
-     "in": 2778,
-     "out": 108,
+     "in": 3020,
+     "out": 104,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -10003,9 +9997,9 @@
    "minute": 87,
    "probs": [
     {
-     "home": 0.8875406980898559,
-     "draw": 0.10524180016653853,
-     "away": 0.007217501743605334
+     "home": 0.891272172542674,
+     "draw": 0.102011315105781,
+     "away": 0.006716512351545
     },
     {
      "home": 0.9139567739879773,
@@ -10015,9 +10009,9 @@
    ],
    "next_goal": [
     {
-     "home": 0.081,
-     "away": 0.117,
-     "none": 0.802
+     "home": 0.078,
+     "away": 0.113,
+     "none": 0.808
     },
     {
      "home": 0.062,
@@ -10058,7 +10052,7 @@
        "field_tilt": 66,
        "pass_accuracy": 82,
        "avg_pass_difficulty": 0.29,
-       "passes": 552,
+       "passes": 555,
        "shots": 6,
        "on_target": 1,
        "xg": 0.46,
@@ -10364,7 +10358,7 @@
        "title_chance_pct": 1,
        "top_four_chance_pct": 9,
        "relegation_chance_pct": 5,
-       "likely_finish": 10,
+       "likely_finish": 11,
        "most_at_stake": "a top-four finish",
        "chance_if_they_win_pct": 9,
        "chance_if_draw_pct": 6,
@@ -10408,16 +10402,16 @@
    "question": "O que mais mudou as chances no jogo?",
    "expect": {},
    "status": 200,
-   "answer": "O gol de Adam Penke aos 82 minutos foi o maior motor das mudanças, subindo a probabilidade de vitória do Eastholme Rangers em 65 pontos e levando-os a 91% agora. A expulsão de Kofi Lorford aos 5' também mexeu cedo, deixando Eastholme com dez e alterando o risco inicial. O xG total favorece Eastholme 1,25 a 0,46, com os últimos minutos (xG recente 0,51 para Eastholme) empurrando a vantagem.",
+   "answer": "O gol de Adam Penke aos 82' foi o maior responsável pela subida nas chances, adicionando o maior impacto (+65 pontos) e elevando a probabilidade da Eastholme para 90%. Também ajudou o tempo correndo entre 82' e 88' (+7,5 pontos) e a xG nos últimos 10 minutos (0,51) reforçou a mudança.",
    "source": "agents",
-   "latency_ms": 7805,
+   "latency_ms": 7260,
    "trace": [
     {
      "agent": "scout",
-     "ms": 5846,
+     "ms": 5028,
      "ok": true,
      "stage": 1,
-     "start": 1792240788.959,
+     "start": 1792241909.56,
      "tools": [
       {
        "name": "gaffers_gauge"
@@ -10429,21 +10423,21 @@
        "name": "match_stats"
       }
      ],
-     "in": 6361,
-     "out": 338,
+     "in": 6434,
+     "out": 345,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 1907,
+     "ms": 2171,
      "ok": true,
      "stage": 2,
-     "start": 1792240794.806,
+     "start": 1792241914.59,
      "tools": [],
-     "in": 2956,
-     "out": 158,
+     "in": 3059,
+     "out": 124,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -10452,26 +10446,26 @@
    "minute": 88,
    "probs": [
     {
-     "home": 0.9041176518275822,
-     "draw": 0.09073770309334099,
-     "away": 0.0051446450790767866
+     "home": 0.9018056692612139,
+     "draw": 0.09278395070620266,
+     "away": 0.005410380032583453
     },
     {
-     "home": 0.9304414408240435,
-     "draw": 0.06693175097515103,
-     "away": 0.0026268082008053507
+     "home": 0.9261768125814858,
+     "draw": 0.07085006499810594,
+     "away": 0.0029731224204082684
     }
    ],
    "next_goal": [
     {
-     "home": 0.069,
-     "away": 0.099,
-     "none": 0.832
+     "home": 0.071,
+     "away": 0.102,
+     "none": 0.828
     },
     {
-     "home": 0.05,
-     "away": 0.071,
-     "none": 0.879
+     "home": 0.053,
+     "away": 0.076,
+     "none": 0.871
     }
    ],
    "score": [
@@ -10507,7 +10501,7 @@
        "field_tilt": 67,
        "pass_accuracy": 83,
        "avg_pass_difficulty": 0.29,
-       "passes": 569,
+       "passes": 567,
        "shots": 6,
        "on_target": 1,
        "xg": 0.46,
@@ -10528,10 +10522,10 @@
       {
        "club_id": "C09",
        "possession": 35,
-       "field_tilt": 34,
+       "field_tilt": 33,
        "pass_accuracy": 81,
-       "avg_pass_difficulty": 0.316,
-       "passes": 318,
+       "avg_pass_difficulty": 0.315,
+       "passes": 316,
        "shots": 10,
        "on_target": 3,
        "xg": 1.25,
@@ -10547,10 +10541,10 @@
       {
        "club_id": "C04",
        "possession": 65,
-       "field_tilt": 66,
+       "field_tilt": 67,
        "pass_accuracy": 82,
-       "avg_pass_difficulty": 0.291,
-       "passes": 578,
+       "avg_pass_difficulty": 0.29,
+       "passes": 577,
        "shots": 6,
        "on_target": 1,
        "xg": 0.46,
@@ -10848,7 +10842,7 @@
     }
    ],
    "finished": false,
-   "minute_after": 92,
+   "minute_after": 91,
    "id": "fr_believe",
    "fan": "fr_fan",
    "lang": "fr",
@@ -10856,16 +10850,16 @@
    "question": "Fallait-il y croire ?",
    "expect": {},
    "status": 200,
-   "answer": "Oui, il fallait y croire. En ce moment : Eastholme Rangers 95 %, nul 5 %, Brackenford City moins de 1 %.",
+   "answer": "Oui, il fallait y croire. Brackenford a dominé la possession et poussé toute la deuxième mi-temps, et a encore 9% de chances de marquer le prochain but à la 89e, même si Eastholme mène 2-1.",
    "source": "agents",
-   "latency_ms": 10766,
+   "latency_ms": 7104,
    "trace": [
     {
      "agent": "scout",
-     "ms": 8840,
+     "ms": 5397,
      "ok": true,
      "stage": 1,
-     "start": 1792240792.592,
+     "start": 1792241913.185,
      "tools": [
       {
        "name": "gaffers_gauge"
@@ -10874,24 +10868,27 @@
        "name": "why_it_moved"
       },
       {
-       "name": "match_stats"
+       "name": "recent_events",
+       "args": {
+        "limit": 12
+       }
       }
      ],
-     "in": 6475,
-     "out": 347,
+     "in": 7134,
+     "out": 329,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 1863,
+     "ms": 1649,
      "ok": true,
      "stage": 2,
-     "start": 1792240801.434,
+     "start": 1792241918.584,
      "tools": [],
-     "in": 2764,
-     "out": 97,
+     "in": 3017,
+     "out": 98,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -10900,26 +10897,26 @@
    "minute": 89,
    "probs": [
     {
-     "home": 0.9150546665593788,
-     "draw": 0.08095840716348214,
-     "away": 0.00398692627713929
+     "home": 0.9123892749747825,
+     "draw": 0.0833565887217652,
+     "away": 0.004254136303452525
     },
     {
-     "home": 0.9506469609057717,
-     "draw": 0.04806014708184194,
-     "away": 0.001292892012386261
+     "home": 0.9378000034292734,
+     "draw": 0.06011688962168946,
+     "away": 0.0020831069490372008
     }
    ],
    "next_goal": [
     {
-     "home": 0.061,
-     "away": 0.088,
-     "none": 0.851
+     "home": 0.063,
+     "away": 0.09,
+     "none": 0.847
     },
     {
-     "home": 0.035,
-     "away": 0.05,
-     "none": 0.915
+     "home": 0.044,
+     "away": 0.064,
+     "none": 0.892
     }
    ],
    "score": [
@@ -10954,8 +10951,8 @@
        "possession": 65,
        "field_tilt": 67,
        "pass_accuracy": 82,
-       "avg_pass_difficulty": 0.29,
-       "passes": 573,
+       "avg_pass_difficulty": 0.289,
+       "passes": 571,
        "shots": 6,
        "on_target": 1,
        "xg": 0.46,
@@ -10977,15 +10974,15 @@
        "club_id": "C09",
        "possession": 35,
        "field_tilt": 33,
-       "pass_accuracy": 80,
-       "avg_pass_difficulty": 0.314,
-       "passes": 323,
+       "pass_accuracy": 81,
+       "avg_pass_difficulty": 0.316,
+       "passes": 318,
        "shots": 10,
        "on_target": 3,
        "xg": 1.25,
        "goals": 2,
        "corners": 2,
-       "fouls": 13,
+       "fouls": 12,
        "yellows": 2,
        "reds": 1,
        "fastest_shot_kmh": 111.6,
@@ -10997,15 +10994,15 @@
        "possession": 65,
        "field_tilt": 67,
        "pass_accuracy": 82,
-       "avg_pass_difficulty": 0.293,
-       "passes": 587,
+       "avg_pass_difficulty": 0.292,
+       "passes": 584,
        "shots": 6,
        "on_target": 1,
        "xg": 0.46,
        "goals": 1,
        "corners": 0,
-       "fouls": 12,
-       "yellows": 3,
+       "fouls": 11,
+       "yellows": 2,
        "reds": 0,
        "fastest_shot_kmh": 113.2,
        "longest_pass_m": 43.3,
@@ -11016,7 +11013,7 @@
    ],
    "checks": {
     "answered": true,
-    "language": false,
+    "language": true,
     "no_dashes": true,
     "no_meta": true,
     "neutral": true,
@@ -11031,6 +11028,7 @@
     "no_real_clubs": true,
     "no_trailing_questions": true,
     "no_invented_penalty": true,
+    "leader_right": true,
     "real_minutes": true,
     "nothing_certain": true
    }
@@ -11305,42 +11303,42 @@
    "question": "How did Eastholme win with ten men?",
    "expect": {},
    "status": 200,
-   "answer": "Eastholme Rangers won 2-1 despite being down to ten because they took the better chances and held firm until Adam Penke’s 82nd-minute winner. Eastholme finished with 1.26 xG to Brackenford City’s 0.46, 11 shots to 6 and three shots on target to one; Penke’s goal (0.51 xG) swung the match heavily, shifting the win chance from about 16% to about 83% at that moment.",
+   "answer": "Eastholme Rangers won with ten because Kofi Lorford’s red at 5’ left them a man down, but they still produced better shot quality and more shots (1.26 xG, 11 shots to Brackenford’s 0.46 xG and 6 shots). Adam Penke’s 82' goal (0.51 xG) was the decisive swing, and the clock then preserved the 2-1 final score.",
    "source": "agents",
-   "latency_ms": 10013,
+   "latency_ms": 8287,
    "trace": [
     {
      "agent": "scout",
-     "ms": 7711,
+     "ms": 6308,
      "ok": true,
      "stage": 1,
-     "start": 1792240817.063,
+     "start": 1792241937.902,
      "tools": [
       {
        "name": "why_it_moved"
       },
       {
-       "name": "match_story"
+       "name": "gaffers_gauge"
       },
       {
-       "name": "player_impact"
+       "name": "match_stats"
       }
      ],
-     "in": 7538,
-     "out": 314,
+     "in": 6793,
+     "out": 348,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 2251,
+     "ms": 1928,
      "ok": true,
      "stage": 2,
-     "start": 1792240824.776,
+     "start": 1792241944.212,
      "tools": [],
-     "in": 3139,
-     "out": 149,
+     "in": 3204,
+     "out": 139,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -11461,6 +11459,7 @@
     "no_dashes": true,
     "no_meta": true,
     "neutral": true,
+    "shots_right": true,
     "full_names": true,
     "rise_consistent": true,
     "no_season_mixup": true,
@@ -11747,16 +11746,16 @@
     "motm": true
    },
    "status": 200,
-   "answer": "Player of the match was Adam Penke. He scored the 82nd-minute winner and stayed influential before being subbed. Eastholme Rangers still played with ten after Kofi Lorford’s red card.",
+   "answer": "Adam Penke was man of the match. He scored the decisive 82nd-minute goal that stood after VAR and changed the game while Eastholme played with ten. Penke’s goal turned an underdog finish into a famous win.",
    "source": "agents",
-   "latency_ms": 7030,
+   "latency_ms": 5864,
    "trace": [
     {
      "agent": "scout",
-     "ms": 5253,
+     "ms": 4296,
      "ok": true,
      "stage": 1,
-     "start": 1792240817.069,
+     "start": 1792241937.919,
      "tools": [
       {
        "name": "player_impact"
@@ -11765,27 +11764,24 @@
        "name": "match_stats"
       },
       {
-       "name": "recent_events",
-       "args": {
-        "limit": 12
-       }
+       "name": "match_story"
       }
      ],
-     "in": 6511,
-     "out": 279,
+     "in": 6808,
+     "out": 288,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "presser",
-     "ms": 1705,
+     "ms": 1516,
      "ok": true,
      "stage": 2,
-     "start": 1792240822.323,
+     "start": 1792241942.217,
      "tools": [],
-     "in": 2741,
-     "out": 87,
+     "in": 2788,
+     "out": 89,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
@@ -11925,7 +11921,7 @@
  ],
  "stories": [
   {
-   "moment_id": "S5-MD07-03-m30",
+   "moment_id": "S5-MD07-03-m32",
    "match_id": "S5-MD07-03",
    "trigger": "goal",
    "minute": 1,
@@ -11971,35 +11967,35 @@
     1
    ],
    "headline": {
-    "en": "Calstead's opener puts Brackenford in front",
-    "es": "Calstead adelanta a Brackenford pronto",
-    "pt": "Calstead abre o placar cedo para Brackenford",
-    "fr": "Calstead ouvre le score pour Brackenford"
+    "en": "Calstead's early strike puts Brackenford ahead",
+    "es": "Calstead adelanta pronto a Brackenford",
+    "pt": "Calstead marca cedo e Brackenford na frente",
+    "fr": "Calstead ouvre le score très tôt pour Brackenford"
    },
    "story": {
-    "en": "Lars Calstead scores in the 1st minute to put Brackenford ahead 1-0. Brackenford's chance of winning rises from 29% to 51%.",
-    "es": "Lars Calstead marca en el minuto 1 y pone a Brackenford por delante 0-1. Las opciones de Brackenford de ganar suben de 29% a 51%.",
-    "pt": "Lars Calstead marca aos 1 minuto e coloca o Brackenford na frente 0-1. A chance do Brackenford de vencer sobe de 29% para 51%.",
-    "fr": "Lars Calstead marque à la 1re minute et donne l'avantage à Brackenford 0-1. Les chances de Brackenford de gagner passent de 29 % à 51 %."
+    "en": "Lars Calstead scores in the 1st minute to make it 0-1. Brackenford City now have a 51% chance of winning, up from 29%.",
+    "es": "Lars Calstead marca en el minuto 1 para poner el 0-1. Brackenford City tiene ahora un 51% de opciones de ganar, frente al 29% anterior.",
+    "pt": "Lars Calstead marca aos 1 minuto para fazer 0-1. O Brackenford City tem agora 51% de chance de vencer, acima dos 29% anteriores.",
+    "fr": "Lars Calstead marque à la 1re minute pour faire 0-1. Brackenford City a désormais 51 % de chances de gagner, contre 29 % auparavant."
    },
    "analyst": {
-    "en": "xG is 0.16 for Brackenford, 0.00 for Eastholme. Field tilt is massive, Brackenford with 78% possession. The 1st minute goal is the main driver, adding the 22 point swing in win probability.",
-    "es": "xG es 0,16 para Brackenford, 0,00 para Eastholme. Gran inclinación del campo, Brackenford con 78% de posesión. El gol en el minuto 1 es el factor principal, sumando el giro de 22 puntos en la probabilidad de victoria.",
-    "pt": "xG é 0,16 para Brackenford, 0,00 para Eastholme. Forte inclinação do campo, Brackenford com 78% de posse. O gol no minuto 1 é o motor principal, adicionando a mudança de 22 pontos na probabilidade de vitória.",
-    "fr": "xG est 0,16 pour Brackenford, 0,00 pour Eastholme. Forte basculement de terrain, Brackenford avec 78 % de possession. Le but à la 1re minute est le moteur principal, ajoutant la bascule de 22 points de probabilité de victoire."
+    "en": "Brackenford up 0-1 after 1 minute, xG 0.16 v 0.00, possession 82% to 18%. The 1 minute goal was the main driver, moving win probability from 29% to 51%.",
+    "es": "Brackenford 0-1 tras 1 minuto, xG 0,16 frente a 0,00, posesión 82% a 18%. El gol al minuto uno fue el factor principal, subiendo la probabilidad de victoria de 29% a 51%.",
+    "pt": "Brackenford 0-1 aos 1 minuto, xG 0,16 contra 0,00, posse 82% a 18%. O gol do minuto um foi o principal impulsionador, elevando a chance de vitória de 29% para 51%.",
+    "fr": "Brackenford 0-1 après 1 minute, xG 0,16 contre 0,00, possession 82% à 18%. Le but à la 1re minute est le principal moteur, faisant passer la probabilité de victoire de 29% à 51%."
    },
    "club_lines": {
     "home": {
-     "en": "Fans, stay with the Rangers. Forty-four minutes to dig in, keep belief and press for an equalizer.",
-     "es": "Afición, seguid con los Rangers. Cuarenta y cuatro minutos para apretar, creer y buscar el empate.",
-     "pt": "Torcida, fiquem com os Rangers. Quarenta e quatro minutos para lutar, acreditar e buscar o empate.",
-     "fr": "Supporters, restez derrière les Rangers. Quarante-quatre minutes pour pousser, garder foi et viser l égalisation."
+     "en": "Keep the faith, Rangers fans. Still early, press on and make them work for it.",
+     "es": "Mantén la fe, aficionados del Rangers. Aún es pronto, presionad y hacedles sudar.",
+     "pt": "Mantenham a fé, torcedores do Rangers. Ainda é cedo, pressionem e façam-nos trabalhar.",
+     "fr": "Gardez la foi, supporters des Rangers. C est tôt, pressez-les et faites-les travailler."
     },
     "away": {
-     "en": "Brackenford fans, savour it but stay humble. Keep control, protect the lead and finish the job.",
-     "es": "Afición de Brackenford, disfrutad pero con humildad. Mantener el control, proteger la ventaja y rematarlo.",
-     "pt": "Torcida do Brackenford, aproveitem com humildade. Mantenham o controle, protejam a vantagem e completem o trabalho.",
-     "fr": "Supporters de Brackenford, savourez sans excès. Gardez le contrôle, protégez l avance et concluez le travail."
+     "en": "Lovely start, Brackenford. Stay sharp, defend the lead and keep it simple.",
+     "es": "Qué comienzo, Brackenford. Estad atentos, defended la ventaja y jugad sencillo.",
+     "pt": "Que começo, Brackenford. Mantenham atenção, defendam a vantagem e joguem simples.",
+     "fr": "Quel début, supporters de Brackenford. Restez concentrés, défendez l avance et jouez simple."
     }
    },
    "source": "agents",
@@ -12007,10 +12003,10 @@
    "agent_trace": [
     {
      "agent": "stats",
-     "ms": 6939,
+     "ms": 7090,
      "ok": true,
      "stage": 1,
-     "start": 1792240390.493,
+     "start": 1792241511.853,
      "tools": [
       {
        "name": "match_stats"
@@ -12018,22 +12014,22 @@
       {
        "name": "recent_events",
        "args": {
-        "limit": 6
+        "limit": 12
        }
       }
      ],
-     "in": 2914,
-     "out": 204,
+     "in": 2928,
+     "out": 192,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "gaffer",
-     "ms": 7064,
+     "ms": 5938,
      "ok": true,
      "stage": 1,
-     "start": 1792240390.562,
+     "start": 1792241511.927,
      "tools": [
       {
        "name": "why_it_moved"
@@ -12042,57 +12038,57 @@
        "name": "gaffers_gauge"
       }
      ],
-     "in": 3516,
-     "out": 183,
+     "in": 3502,
+     "out": 155,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "narrator",
-     "ms": 2905,
+     "ms": 2703,
      "ok": true,
      "stage": 2,
-     "start": 1792240397.629,
+     "start": 1792241518.946,
      "tools": [],
-     "in": 2059,
-     "out": 248,
+     "in": 2033,
+     "out": 273,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "persona",
-     "ms": 5010,
+     "ms": 4882,
      "ok": true,
      "stage": 2,
-     "start": 1792240397.631,
+     "start": 1792241518.948,
      "tools": [],
-     "in": 915,
-     "out": 567,
+     "in": 889,
+     "out": 461,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "game_master",
-     "ms": 3529,
+     "ms": 5045,
      "ok": true,
      "stage": 2,
-     "start": 1792240397.632,
+     "start": 1792241518.949,
      "tools": [
       {
        "name": "candidate_challenges"
       }
      ],
-     "in": 3530,
-     "out": 132,
+     "in": 3509,
+     "out": 137,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     }
    ],
-   "latency_ms": 12285,
+   "latency_ms": 12266,
    "checks": {
     "four_languages": true,
     "languages_match": true,
@@ -12103,7 +12099,6 @@
     "brazilian_portuguese": true,
     "states_the_change": true,
     "no_dashes": true,
-    "headline_matches_numbers": true,
     "goal_minutes_right": true,
     "leader_score_first": true,
     "no_real_clubs": true,
@@ -12115,7 +12110,7 @@
    }
   },
   {
-   "moment_id": "S5-MD07-03-m32",
+   "moment_id": "S5-MD07-03-m34",
    "match_id": "S5-MD07-03",
    "trigger": "red_card",
    "minute": 5,
@@ -12161,35 +12156,35 @@
     1
    ],
    "headline": {
-    "en": "Red card hands Brackenford the upper hand",
-    "es": "La roja da la ventaja a Brackenford",
-    "pt": "Cartão vermelho favorece o Brackenford",
-    "fr": "Carton rouge, avantage pour Brackenford"
+    "en": "Lorford sent off hands Brackenford control",
+    "es": "La expulsión de Lorford da control a Brackenford",
+    "pt": "Expulsão de Lorford deixa Brackenford no controle",
+    "fr": "L'expulsion de Lorford donne le contrôle à Brackenford"
    },
    "story": {
-    "en": "Kofi Lorford is sent off for Eastholme Rangers in the 5th minute, leaving Brackenford leading 1-0. Brackenford City now have a 77% chance of winning, up from 51%.",
-    "es": "Kofi Lorford es expulsado del Eastholme Rangers en el minuto 5, y Brackenford manda 1-0. Brackenford City tiene ahora un 77% de probabilidad de ganar, frente al 51% anterior.",
-    "pt": "Kofi Lorford é expulso do Eastholme Rangers aos 5 minutos, deixando o Brackenford a vencer 1-0. O Brackenford City tem agora 77% de chance de vencer, subida dos 51% anteriores.",
-    "fr": "Kofi Lorford est exclu pour Eastholme Rangers à la 5e minute, Brackenford mène 1-0. Brackenford City a maintenant 77 % de chances de gagner, contre 51 % auparavant."
+    "en": "Kofi Lorford is sent off in the 5th minute, leaving Eastholme down to ten and Brackenford leading 1-0. Brackenford's chance of winning rises from 51% to 77%.",
+    "es": "Kofi Lorford es expulsado en el minuto 5, dejando a Eastholme con diez y Brackenford mandando 1-0. La probabilidad de victoria de Brackenford sube del 51% al 77%.",
+    "pt": "Kofi Lorford é expulso aos 5 minutos, deixando o Eastholme com dez e o Brackenford a vencer 1-0. A chance de vitória do Brackenford sobe de 51% para 77%.",
+    "fr": "Kofi Lorford est expulsé à la 5e minute, laissant Eastholme à dix et Brackenford mener 1-0. Les chances de victoire de Brackenford passent de 51 % à 77 %."
    },
    "analyst": {
-    "en": "xG low but control. Brackenford 0.16 xG, 73% possession. Red card at 5' drove the 51 to 77 point swing, clock barely moved the odds.",
-    "es": "xG bajo pero control. Brackenford 0,16 xG, 73% de posesión. Roja al 5' provocó el salto de 51 a 77 puntos, el reloj casi no cambió las probabilidades.",
-    "pt": "xG baixo mas controle. Brackenford 0,16 xG, 73% de posse. Cartão vermelho aos 5' impulsionou de 51 para 77 pontos, o tempo pouco alterou as odds.",
-    "fr": "xG faible mais maîtrise. Brackenford 0,16 xG, 73 % de possession. Carton rouge à la 5e a fait passer 51 à 77 points, le temps a peu affecté les chances."
+    "en": "Brackenford lead 1-0, 73% possession, 0.16 xG. The red card at five minutes drove the win chance from 51% to 77%, the main cause of the swing.",
+    "es": "Brackenford gana 0-1, 73% de posesión, xG 0.16. La tarjeta roja a los cinco minutos impulsó la probabilidad de victoria del 51% al 77%, la causa principal del cambio.",
+    "pt": "Brackenford vence 0-1, 73% de posse, xG 0.16. O cartão vermelho aos cinco minutos elevou a chance de vitória de 51% para 77%, principal motivo da mudança.",
+    "fr": "Brackenford mène 0-1, 73 % de possession, xG 0.16. Le carton rouge à la cinquième minute a fait passer la probabilité de victoire de 51 % à 77 %, principal moteur du changement."
    },
    "club_lines": {
     "home": {
-     "en": "Stay brave, Eastholme fans. Ten men, still in this. Keep the noise and belief.",
-     "es": "Mantened la fe, aficionados de Eastholme. Con diez, seguimos vivos. Haced ruido, creed hasta el final.",
-     "pt": "Força, torcedores do Eastholme. Com dez, ainda há luta. Gritem e acreditem até o fim.",
-     "fr": "Restez courageux, supporters d'Eastholme. À dix, tout est encore possible. Faites du bruit, gardez la foi."
+     "en": "Eastholme fans, stay loud. Down to ten, keep belief, fight for every ball.",
+     "es": "Afición de Eastholme, manteneos ruidosos. Con diez, manteneos en la lucha, pelead cada balón.",
+     "pt": "Torcida do Eastholme, façam barulho. Com dez, acreditem, lutem por cada bola.",
+     "fr": "Supporters d'Eastholme, faites du bruit. À dix, gardez foi, luttez sur chaque ballon."
     },
     "away": {
-     "en": "Nice start, Brackenford fans. One up and controlling it, stay sharp and humble.",
-     "es": "Buen inicio, aficionados de Brackenford. Uno arriba y controlando, mantened la calma y la humildad.",
-     "pt": "Bom começo, torcedores do Brackenford. Um a frente, controlando o jogo, mantenham o foco e a humildade.",
-     "fr": "Beau début, supporters de Brackenford. Un but et la maîtrise, restez concentrés et modestes."
+     "en": "Brackenford faithful, well done. Protect the lead, stay smart, finish the job.",
+     "es": "Afición de Brackenford, bien hecho. Proteged la ventaja, sed inteligentes, rematad el partido.",
+     "pt": "Torcida do Brackenford, bom trabalho. Protejam a vantagem, joguem com cabeça, concluam o trabalho.",
+     "fr": "Supporters de Brackenford, bravo. Protégez l'avance, restez malins, concluez le travail."
     }
    },
    "source": "agents",
@@ -12197,10 +12192,10 @@
    "agent_trace": [
     {
      "agent": "stats",
-     "ms": 4654,
+     "ms": 4674,
      "ok": true,
      "stage": 1,
-     "start": 1792240405.059,
+     "start": 1792241526.427,
      "tools": [
       {
        "name": "match_stats"
@@ -12213,17 +12208,17 @@
       }
      ],
      "in": 3048,
-     "out": 221,
+     "out": 223,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "gaffer",
-     "ms": 3343,
+     "ms": 3681,
      "ok": true,
      "stage": 1,
-     "start": 1792240405.064,
+     "start": 1792241526.432,
      "tools": [
       {
        "name": "why_it_moved"
@@ -12233,56 +12228,56 @@
       }
      ],
      "in": 3806,
-     "out": 194,
+     "out": 199,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "narrator",
-     "ms": 3219,
+     "ms": 2854,
      "ok": true,
      "stage": 2,
-     "start": 1792240409.715,
+     "start": 1792241531.104,
      "tools": [],
-     "in": 2104,
-     "out": 281,
+     "in": 2105,
+     "out": 288,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "persona",
-     "ms": 3596,
+     "ms": 3935,
      "ok": true,
      "stage": 2,
-     "start": 1792240409.717,
+     "start": 1792241531.106,
      "tools": [],
-     "in": 960,
-     "out": 448,
+     "in": 961,
+     "out": 501,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "game_master",
-     "ms": 3809,
+     "ms": 3969,
      "ok": true,
      "stage": 2,
-     "start": 1792240409.719,
+     "start": 1792241531.108,
      "tools": [
       {
        "name": "candidate_challenges"
       }
      ],
      "in": 3562,
-     "out": 141,
+     "out": 145,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     }
    ],
-   "latency_ms": 8488,
+   "latency_ms": 8669,
    "checks": {
     "four_languages": true,
     "languages_match": true,
@@ -12303,7 +12298,190 @@
    }
   },
   {
-   "moment_id": "S5-MD07-03-m37",
+   "moment_id": "S5-MD07-03-m36",
+   "match_id": "S5-MD07-03",
+   "trigger": "var_overturned",
+   "minute": 8,
+   "period": 1,
+   "focus": 0,
+   "since_minute": 5,
+   "before": {
+    "home": 0.08003602667984834,
+    "draw": 0.15130928053788878,
+    "away": 0.768654692782263
+   },
+   "after": {
+    "home": 0.10110695681107877,
+    "draw": 0.16801389400015365,
+    "away": 0.7308791491887677
+   },
+   "drivers": [
+    {
+     "component": "chances",
+     "delta": 2,
+     "label": {
+      "en": "Chances: xG 0.47 v 0.00",
+      "es": "Ocasiones: xG 0.47 a 0.00",
+      "pt": "Chances: xG 0.47 x 0.00",
+      "fr": "Occasions : xG 0.47 - 0.00"
+     },
+     "team": 0
+    }
+   ],
+   "score": [
+    0,
+    1
+   ],
+   "headline": {
+    "en": "Yarola's goal ruled out by VAR for offside",
+    "es": "El gol de Yarola anulado por el VAR por fuera de juego",
+    "pt": "Gol de Yarola anulado pelo VAR por fora de jogo",
+    "fr": "But de Yarola annulé par le VAR pour hors-jeu"
+   },
+   "story": {
+    "en": "VAR rules out Victor Yarola's goal for offside. Eastholme Rangers' chance of winning stays at 10%, not the 23% it would have been.",
+    "es": "El VAR anula el gol de Victor Yarola por fuera de juego. La probabilidad de victoria de Eastholme Rangers se queda en el 10%, en vez del 23% que habría tenido.",
+    "pt": "O VAR anula o gol de Victor Yarola por impedimento. A chance de vitória do Eastholme Rangers fica em 10%, em vez dos 23% que teria.",
+    "fr": "La VAR refuse le but de Victor Yarola pour hors-jeu. Pour Eastholme Rangers, les chances de victoire restent à 10 %, au lieu de 23 %."
+   },
+   "analyst": {
+    "en": "Eastholme briefly climbed to 10% win probability after a 0.47 to 0.16 xG swing, the overturned 0.10 Yarola chance was the biggest driver.",
+    "es": "Eastholme subió brevemente al 10% de victoria tras un cambio de xG de 0,47 a 0,16, la oportunidad anulada de Yarola de 0,10 fue la mayor influencia.",
+    "pt": "Eastholme subiu brevemente para 10% de chance de vitória após uma troca de xG de 0,47 para 0,16, o lance anulado de Yarola de 0,10 foi o maior motor.",
+    "fr": "Eastholme est monté brièvement à 10 % de victoire après un basculement de xG de 0,47 à 0,16, l occasion annulée de Yarola à 0,10 xG a été le principal moteur."
+   },
+   "club_lines": {
+    "home": {
+     "en": "Keep believing, ten men fighting, that 0.47 xG shows chances will come, stay loud.",
+     "es": "Sigan creyendo, diez hombres peleando, ese 0,47 de xG muestra que llegan oportunidades, mantengan el ánimo.",
+     "pt": "Continuem acreditando, dez em campo lutando, 0,47 de xG mostra oportunidades, incentivem sem parar.",
+     "fr": "Gardez foi, dix joueurs se battent, 0,47 xG montre des occasions, restez bruyants."
+    },
+    "away": {
+     "en": "Nice start, calm heads, a 1-0 lead and the sending off are useful, keep it steady.",
+     "es": "Buen inicio, mantengan la calma, 1-0 y la expulsión ayudan, jueguen con cabeza.",
+     "pt": "Bom começo, mantenham a calma, 1 a 0 e a expulsão ajudam, joguem com juízo.",
+     "fr": "Beau départ, têtes froides, 1-0 et l exclusion sont précieux, restez sereins."
+    }
+   },
+   "source": "agents",
+   "player": "Victor Yarola",
+   "var": {
+    "reason": "offside",
+    "player": "Victor Yarola",
+    "stands_pct": 23
+   },
+   "agent_trace": [
+    {
+     "agent": "stats",
+     "ms": 4690,
+     "ok": true,
+     "stage": 1,
+     "start": 1792241549.845,
+     "tools": [
+      {
+       "name": "match_stats"
+      },
+      {
+       "name": "recent_events",
+       "args": {
+        "limit": 12
+       }
+      }
+     ],
+     "in": 3361,
+     "out": 203,
+     "reasoning": 0,
+     "turns": 3,
+     "model": "gpt-5-mini"
+    },
+    {
+     "agent": "gaffer",
+     "ms": 5463,
+     "ok": true,
+     "stage": 1,
+     "start": 1792241549.85,
+     "tools": [
+      {
+       "name": "why_it_moved"
+      },
+      {
+       "name": "gaffers_gauge"
+      }
+     ],
+     "in": 3975,
+     "out": 197,
+     "reasoning": 0,
+     "turns": 3,
+     "model": "gpt-5-mini"
+    },
+    {
+     "agent": "narrator",
+     "ms": 3456,
+     "ok": true,
+     "stage": 2,
+     "start": 1792241555.316,
+     "tools": [],
+     "in": 2117,
+     "out": 247,
+     "reasoning": 0,
+     "turns": 1,
+     "model": "gpt-5-mini"
+    },
+    {
+     "agent": "persona",
+     "ms": 5177,
+     "ok": true,
+     "stage": 2,
+     "start": 1792241555.319,
+     "tools": [],
+     "in": 973,
+     "out": 501,
+     "reasoning": 0,
+     "turns": 1,
+     "model": "gpt-5-mini"
+    },
+    {
+     "agent": "game_master",
+     "ms": 3786,
+     "ok": true,
+     "stage": 2,
+     "start": 1792241555.321,
+     "tools": [
+      {
+       "name": "candidate_challenges"
+      }
+     ],
+     "in": 3614,
+     "out": 145,
+     "reasoning": 0,
+     "turns": 3,
+     "model": "gpt-5-mini"
+    }
+   ],
+   "latency_ms": 10676,
+   "checks": {
+    "four_languages": true,
+    "languages_match": true,
+    "real_win_chances": true,
+    "no_flat_change": true,
+    "clean_numbers": true,
+    "no_english_words": true,
+    "brazilian_portuguese": true,
+    "states_the_change": true,
+    "no_dashes": true,
+    "leader_score_first": true,
+    "no_real_clubs": true,
+    "minutes_as_numbers": true,
+    "names_the_player": true,
+    "neutral": true,
+    "length": true,
+    "reads_naturally": true,
+    "var_what_if": true
+   }
+  },
+  {
+   "moment_id": "S5-MD07-03-m39",
    "match_id": "S5-MD07-03",
    "trigger": "goal",
    "minute": 14,
@@ -12338,35 +12516,35 @@
     1
    ],
    "headline": {
-    "en": "Belwell's equalizer stuns the crowd",
-    "es": "El empate de Belwell sorprende a todos",
-    "pt": "Empate de Belwell surpreende a torcida",
-    "fr": "Belwell égalise et relance tout le monde"
+    "en": "Belwell's equalizer brings Eastholme back",
+    "es": "El empate de Belwell devuelve la vida a Eastholme",
+    "pt": "Empate de Belwell relança o Eastholme",
+    "fr": "Belwell égalise et relance Eastholme"
    },
    "story": {
     "en": "Reuben Belwell scores in the 14th minute to make it 1-1. Eastholme Rangers' chance of winning rises from 10% to 24%.",
-    "es": "Reuben Belwell marca en el minuto 14 y empata 1-1. Las opciones del Eastholme Rangers suben del 10% al 24%.",
-    "pt": "Reuben Belwell marca aos 14 minutos e deixa 1-1. As chances do Eastholme Rangers sobem de 10% para 24%.",
-    "fr": "Reuben Belwell marque à la 14e minute pour égaliser 1-1. Les chances d'Eastholme Rangers passent de 10 % à 24 %."
+    "es": "Reuben Belwell marca en el minuto 14 y pone el 1-1. Las opciones de victoria del Eastholme Rangers suben del 10% al 24%.",
+    "pt": "Reuben Belwell marca aos 14 minutos para deixar o jogo 1-1. As chances do Eastholme Rangers de vencer sobem de 10% para 24%.",
+    "fr": "Reuben Belwell marque à la 14e minute et remet les deux équipes à 1-1. Les chances de victoire d'Eastholme Rangers passent de 10 % à 24 %."
    },
    "analyst": {
-    "en": "xG shifted to 0.55 for Eastholme versus 0.16 for Brackenford, possession still 17% to 83%, the equalizer and Belwell's shot quality drove the home win chance from 10% to 24%.",
-    "es": "xG cambió a 0,55 para Eastholme frente a 0,16 para Brackenford, posesión sigue 17% contra 83%, el gol de Belwell y la calidad del disparo llevaron la probabilidad local de 10% a 24%.",
-    "pt": "xG subiu para 0,55 do Eastholme contra 0,16 do Brackenford, posse continua 17% para 83%, o gol de Belwell e a qualidade da finalização fizeram a chance do time da casa passar de 10% para 24%.",
-    "fr": "xG est passé à 0,55 pour Eastholme contre 0,16 pour Brackenford, possession encore 17% à 83%, l'égalisation et la qualité du tir de Belwell ont fait grimper la chance des locaux de 10% à 24%."
+    "en": "Eastholme up to 24% win probability after Belwell's 14' equalizer, draw now 27%. Home have just 17% possession, xG 0.55; Brackenford dominate possession at 83% but xG only 0.16. Biggest drivers: Belwell's goal (+14 points) neutralised some damage from the early red card.",
+    "es": "Eastholme sube a 24% de probabilidad de victoria tras el empate de Belwell en el 14, empate ahora 27%. Locales tienen solo 17% de posesión, xG 0,55; Brackenford dominan la posesión con 83% pero xG solo 0.16. Factores clave: el gol de Belwell (+14 puntos) compensó parte del daño por la expulsión temprana.",
+    "pt": "Eastholme sobe para 24% de chance de vitória depois do empate de Belwell aos 14, empate agora 27%. Mandantes têm apenas 17% de posse, xG 0,55; Brackenford domina a posse com 83% mas xG só 0.16. Principais motores: o gol de Belwell (+14 pontos) reverteu parte do prejuízo da expulsão cedo.",
+    "fr": "Eastholme monte à 24 % de probabilité de victoire après l'égalisation de Belwell à la 14e, match nul maintenant 27 %. Les locaux n'ont que 17 % de possession, xG 0,55 ; Brackenford domine la possession à 83 % mais xG seulement 0,16. Principaux moteurs : le but de Belwell (+14 points) a en partie annulé les dégâts causés par le carton rouge."
    },
    "club_lines": {
     "home": {
-     "en": "That goal matters. Stay loud, ten men but alive, we can build on this.",
-     "es": "Ese gol cuenta. Seguid animando, somos diez pero vivos, podemos seguir construyendo.",
-     "pt": "Esse gol importa. Continuem barulhentos, somos dez mas vivos, dá para crescer a partir daqui.",
-     "fr": "Ce but compte. Restez bruyants, nous sommes à dix mais vivants, on peut construire là-dessus."
+     "en": "That is the spirit, fans. Down to ten, level now. Keep the faith, press on.",
+     "es": "Eso es, aficionados. Con uno menos, nivelados ahora. Mantengan la fe, sigan empujando.",
+     "pt": "Isso é coragem, torcedores. Com um a menos, agora empatados. Mantenham a fé, vamos em frente.",
+     "fr": "Quelle volonté, supporters. À dix, on est à égalité maintenant. Gardez la foi, continuons."
     },
     "away": {
-     "en": "Keep your heads. Still favorites, stay patient, defend the lead with calm grit.",
-     "es": "Manteneos tranquilos. Seguimos favoritos, paciencia, defendamos la ventaja con calma y garra.",
-     "pt": "Mantenham a calma. Ainda favoritos, paciência, defendam a vantagem com fibra serena.",
-     "fr": "Gardez la tête froide. Toujours favoris, patience, défendons l'avance avec calme et courage."
+     "en": "Heads up, supporters. Still leading, stay composed and keep controlling the match.",
+     "es": "Ánimo, seguidores. Seguimos por delante, manténganse serenos y sigan controlando el partido.",
+     "pt": "Força, torcedores. Ainda na frente, mantenham a calma e controlem o jogo.",
+     "fr": "Tenez bon, supporters. Toujours en tête, restez calme et continuez à contrôler le match."
     }
    },
    "source": "agents",
@@ -12374,10 +12552,10 @@
    "agent_trace": [
     {
      "agent": "stats",
-     "ms": 5004,
+     "ms": 4437,
      "ok": true,
      "stage": 1,
-     "start": 1792240454.225,
+     "start": 1792241575.589,
      "tools": [
       {
        "name": "match_stats"
@@ -12389,18 +12567,18 @@
        }
       }
      ],
-     "in": 3420,
-     "out": 237,
+     "in": 3424,
+     "out": 220,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "gaffer",
-     "ms": 7031,
+     "ms": 4198,
      "ok": true,
      "stage": 1,
-     "start": 1792240454.23,
+     "start": 1792241575.594,
      "tools": [
       {
        "name": "why_it_moved"
@@ -12409,57 +12587,57 @@
        "name": "gaffers_gauge"
       }
      ],
-     "in": 3792,
-     "out": 169,
+     "in": 3810,
+     "out": 211,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "narrator",
-     "ms": 2665,
+     "ms": 3589,
      "ok": true,
      "stage": 2,
-     "start": 1792240461.263,
+     "start": 1792241580.028,
      "tools": [],
-     "in": 2116,
-     "out": 226,
+     "in": 2130,
+     "out": 243,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "persona",
-     "ms": 3870,
+     "ms": 4650,
      "ok": true,
      "stage": 2,
-     "start": 1792240461.265,
+     "start": 1792241580.031,
      "tools": [],
-     "in": 972,
-     "out": 512,
+     "in": 986,
+     "out": 646,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "game_master",
-     "ms": 3747,
+     "ms": 4290,
      "ok": true,
      "stage": 2,
-     "start": 1792240461.268,
+     "start": 1792241580.033,
      "tools": [
       {
        "name": "candidate_challenges"
       }
      ],
-     "in": 3457,
-     "out": 157,
+     "in": 3463,
+     "out": 126,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     }
    ],
-   "latency_ms": 10929,
+   "latency_ms": 9108,
    "checks": {
     "four_languages": true,
     "languages_match": true,
@@ -12481,7 +12659,7 @@
    }
   },
   {
-   "moment_id": "S5-MD07-03-m41",
+   "moment_id": "S5-MD07-03-m45",
    "match_id": "S5-MD07-03",
    "trigger": "pulse",
    "minute": 29,
@@ -12505,44 +12683,44 @@
    ],
    "headline": {
     "en": "The draw is creeping back in",
-    "es": "El empate gana terreno",
-    "pt": "O empate aparece de novo",
-    "fr": "Le match tend vers le nul"
+    "es": "El empate vuelve a asechar",
+    "pt": "O empate chega mais perto",
+    "fr": "Le nul revient dans la partie"
    },
    "story": {
-    "en": "It's 1-1 in the 29th minute and the draw is becoming likelier as time passes. The draw rises from 27% to 32%.",
-    "es": "Está 1-1 en el minuto 29 y el empate se hace más probable conforme pasa el tiempo. El empate sube del 27% al 32%.",
-    "pt": "Está 1-1 aos 29 minutos e o empate fica mais provável com o passar do tempo. O empate sobe de 27% para 32%.",
-    "fr": "C'est 1-1 à la 29e minute et le match bascule un peu plus vers le nul au fil du temps. Le nul monte de 27 % à 32 %."
+    "en": "A quiet spell, with not much changing. Eastholme Rangers' chance of winning holds at 24%.",
+    "es": "Un rato tranquilo, sin grandes cambios. La probabilidad de victoria de Eastholme Rangers se mantiene en el 24%.",
+    "pt": "Um momento tranquilo, sem grandes mudanças. A chance de vitória do Eastholme Rangers segue em 24%.",
+    "fr": "Un moment calme, sans grand changement. Pour Eastholme Rangers, les chances de victoire restent à 24 %."
    },
    "analyst": {
-    "en": "xG has been tight, chances and possession roughly even, draw probability rose from 27% to 32% as the VAR overturn and Belwell’s equalizer balanced things. Biggest drivers: Eastholme’s goal at 14 added about +14 points to their chance, Brackenford’s post-red-card underlying chance advantage kept them slightly ahead.",
-    "es": "El xG ha estado ajustado, posesión y oportunidades más o menos iguales, la probabilidad de empate subió de 27% a 32% porque el VAR anuló una ocasión y el gol de Belwell equilibró el partido. Factores clave: el gol de Eastholme al 14 sumó alrededor de +14 puntos a sus opciones, la superioridad subyacente de Brackenford tras la expulsión los mantiene algo por delante.",
-    "pt": "O xG tem sido apertado, posse e oportunidades mais ou menos iguais, a probabilidade de empate subiu de 27% para 32% já que o VAR anulou uma chance e o gol de Belwell equilibrou o jogo. Principais impulsionadores: o gol do Eastholme aos 14 adicionou cerca de +14 pontos às suas chances, a vantagem subjacente do Brackenford após o cartão vermelho mantém eles ligeiramente à frente.",
-    "fr": "Le xG est serré, possession et occasions à peu près semblables, la probabilité de match nul est passée de 27% à 32% car l&#39;action annulée par VAR et le but de Belwell ont rééquilibré la rencontre. Principaux facteurs: le but d&#39;Eastholme à la 14e a ajouté environ +14 points à leurs chances, l&#39;avantage d&#39;occasions de Brackenford après le carton rouge les garde légèrement devant."
+    "en": "Eastholme xG 0.63, Brackenford xG 0.18. Possession tilt Brackenford 71% to 29%. Biggest driver: Belwell's 14' goal boosted Eastholme probability by 14 points, keeping the draw rising.",
+    "es": "Eastholme xG 0,63, Brackenford xG 0.18. Inclinación de posesión Brackenford 71% a 29%. Mayor impulsor: el gol de Belwell en el minuto 14 aumentó la probabilidad de Eastholme en 14 puntos, elevando el empate.",
+    "pt": "Eastholme xG 0,63, Brackenford xG 0.18. Inclinação de posse Brackenford 71% a 29%. Maior motor: o gol de Belwell aos 14 minutos aumentou a probabilidade do Eastholme em 14 pontos, fazendo o empate subir.",
+    "fr": "Eastholme xG 0,63, Brackenford xG 0.18. Inclinaison de possession Brackenford 71 % à 29 %. Principal moteur: le but de Belwell à la 14e minute a augmenté la probabilité d'Eastholme de 14 points, faisant monter le nul."
    },
    "club_lines": {
     "home": {
-     "en": "Stay loud, we equalized and still in this. Keep pressing for the winner.",
-     "es": "Sigan animando, empatamos y seguimos en esto. Presionen para el gol ganador.",
-     "pt": "Continuem a apoiar, empatamos e ainda estamos na luta. Pressionem pelo gol da vitória.",
-     "fr": "Restez bruyants, on a égalisé et on y est encore. Poussez pour le but victorieux."
+     "en": "You kept faith with ten men and pulled level, stay loud, we can finish this.",
+     "es": "Mantuvistéis la fe con diez y empatasteis, seguid fuertes, podemos rematar esto.",
+     "pt": "Vocês acreditaram com dez e empataram, continuem barulhentos, podemos virar isso.",
+     "fr": "Vous avez tenu avec dix et égalisé, restez bruyants, on peut conclure cela."
     },
     "away": {
-     "en": "Keep calm, a red card is handled. Stay smart, close it out with care.",
-     "es": "Mantengan la calma, la expulsión está gestionada. Sean prudentes, ciérrenlo con cabeza.",
-     "pt": "Mantenham a calma, o cartão vermelho está a ser gerido. Sejam espertos, fechem o jogo com cuidado.",
-     "fr": "Restez calmes, le carton rouge est géré. Soyez malins, concluez le match proprement."
+     "en": "Red card made it messy, you still lead momentum, stay patient and keep pressing.",
+     "es": "La roja complicó todo, seguís dominando el impulso, paciencia y seguid presionando.",
+     "pt": "O vermelho bagunçou, vocês ainda têm o impulso, mantenham a calma e pressionem.",
+     "fr": "Le carton rouge a embrouillé le match, vous gardez l'ascendant, restez patients et pressez."
     }
    },
    "source": "agents",
    "agent_trace": [
     {
      "agent": "stats",
-     "ms": 10234,
-     "ok": false,
+     "ms": 5913,
+     "ok": true,
      "stage": 1,
-     "start": 1792240513.468,
+     "start": 1792241634.749,
      "tools": [
       {
        "name": "match_stats"
@@ -12554,18 +12732,18 @@
        }
       }
      ],
-     "in": 3316,
-     "out": 240,
+     "in": 3322,
+     "out": 222,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "gaffer",
-     "ms": 5861,
+     "ms": 8033,
      "ok": true,
      "stage": 1,
-     "start": 1792240513.473,
+     "start": 1792241634.754,
      "tools": [
       {
        "name": "why_it_moved"
@@ -12574,57 +12752,57 @@
        "name": "gaffers_gauge"
       }
      ],
-     "in": 3535,
-     "out": 222,
+     "in": 3541,
+     "out": 216,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "narrator",
-     "ms": 2737,
+     "ms": 2762,
      "ok": true,
      "stage": 2,
-     "start": 1792240523.704,
+     "start": 1792241642.789,
      "tools": [],
-     "in": 1954,
-     "out": 208,
+     "in": 2078,
+     "out": 289,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "persona",
-     "ms": 5161,
+     "ms": 4753,
      "ok": true,
      "stage": 2,
-     "start": 1792240523.706,
+     "start": 1792241642.791,
      "tools": [],
-     "in": 810,
-     "out": 662,
+     "in": 934,
+     "out": 542,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "game_master",
-     "ms": 4755,
+     "ms": 3131,
      "ok": true,
      "stage": 2,
-     "start": 1792240523.709,
+     "start": 1792241642.793,
      "tools": [
       {
        "name": "candidate_challenges"
       }
      ],
-     "in": 3352,
-     "out": 154,
+     "in": 3359,
+     "out": 149,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     }
    ],
-   "latency_ms": 15417,
+   "latency_ms": 12813,
    "checks": {
     "four_languages": true,
     "languages_match": true,
@@ -12635,7 +12813,6 @@
     "brazilian_portuguese": true,
     "states_the_change": true,
     "no_dashes": true,
-    "draw_talk_gives_draw": true,
     "leader_score_first": true,
     "no_real_clubs": true,
     "minutes_as_numbers": true,
@@ -12646,7 +12823,7 @@
    }
   },
   {
-   "moment_id": "S5-MD07-03-m45",
+   "moment_id": "S5-MD07-03-m49",
    "match_id": "S5-MD07-03",
    "trigger": "pulse",
    "minute": 44,
@@ -12693,9 +12870,9 @@
    ],
    "headline": {
     "en": "One minute left and the draw looks likelier",
-    "es": "Queda un minuto y el empate gana peso",
+    "es": "Queda un minuto y el empate gana fuerza",
     "pt": "Falta um minuto e o empate fica mais provável",
-    "fr": "Il reste une minute et le nul se renforce"
+    "fr": "Il reste une minute, le nul semble plus probable"
    },
    "story": {
     "en": "It's level and the minutes are ticking away, so a draw is getting likelier. The chance of a draw rises from 32% to 38%.",
@@ -12704,33 +12881,33 @@
     "fr": "C'est toujours à égalité et le temps file, alors le nul se rapproche. Les chances de match nul passent de 32 % à 38 %."
    },
    "analyst": {
-    "en": "xG split 0.63 to 0.30, possession 31% to 69% favor Brackenford. Biggest drivers: clock running down, and Brackenford late xG 0.12 reducing Eastholme's win chance.",
-    "es": "xG 0,63 frente a 0,30, posesión 31% frente a 69% a favor de Brackenford. Factores clave: se agota el tiempo, y el xG tardío de Brackenford 0,12 reduce la victoria de Eastholme.",
-    "pt": "xG 0,63 contra 0,30, posse 31% contra 69% a favor do Brackenford. Principais motores: tempo quase no fim, e o xG tardio do Brackenford 0,12 reduzindo a chance do Eastholme.",
-    "fr": "xG 0,63 contre 0,30, possession 31% contre 69% en faveur de Brackenford. Principaux moteurs: le temps s’écoule, et le xG tardif de Brackenford 0,12 diminue les chances d’Eastholme."
+    "en": "Eastholme's win chance fell to 23%, draw rose to 38%, away 39%. The clock running down cost roughly one point, and the live xG swing, 0.00 to 0.12, trimmed Eastholme's edge.",
+    "es": "La victoria de Eastholme bajó al 23%, el empate subió al 38%, visitante 39%. El reloj restó alrededor de un punto, y el xG en vivo, 0,00 a 0,12, redujo la ventaja de Eastholme.",
+    "pt": "A vitória do Eastholme caiu para 23%, o empate subiu para 38%, visitante 39%. O tempo correndo custou cerca de um ponto, e o xG ao vivo, 0,00 para 0,12, diminuiu a vantagem do Eastholme.",
+    "fr": "La victoire d'Eastholme est passée à 23 %, le match nul à 38 %, l'extérieur 39 %. Le temps qui s'ecoule a coûté environ un point, et le xG en direct, 0,00 à 0,12, a réduit l'avantage d'Eastholme."
    },
    "club_lines": {
     "home": {
-     "en": "One minute left. Hold tight, ten men showed guts. Keep the faith, biscuits on us.",
-     "es": "Un minuto. Aguantad, diez hombres dieron la cara. Manteneos firmes, galletas por nuestra cuenta.",
-     "pt": "Um minuto. Aguentem, dez homens deram tudo. Mantenham a fé, biscoitos por nossa conta.",
-     "fr": "Une minute. Tenez bon, dix joueurs ont tout donné. Gardez foi, biscuits offerts."
+     "en": "Stay loud, you fought back to 1-1 with ten men, believe in one last push.",
+     "es": "Manteneos fuertes, empatasteis 1-1 con diez, creed en un último empujón.",
+     "pt": "Continuem a apoiar, empataram 1-1 com dez, acreditem num último esforço.",
+     "fr": "Restez bruyants, vous avez égalisé à 1-1 à dix, croyez en une dernière poussée."
     },
     "away": {
-     "en": "Good position, sit steady now. See it out, stay calm and proud.",
-     "es": "Buena posición, ahora tranquilos. Seguid así, serenos y orgullosos.",
-     "pt": "Boa posição, agora tranquilos. Aguentem, fiquem calmos e orgulhosos.",
-     "fr": "Bonne position, restez concentrés maintenant. Tenez bon, calmes et fiers."
+     "en": "Nice position, 1-1 and edging it with most of the play, stay composed.",
+     "es": "Buena posición, 1-1 y dominando el juego, manteneos serenos.",
+     "pt": "Boa posição, 1-1 e controlando o jogo, mantenham a calma.",
+     "fr": "Belle position, 1-1 en dominant le jeu, restez calmes."
     }
    },
    "source": "agents",
    "agent_trace": [
     {
      "agent": "stats",
-     "ms": 4342,
+     "ms": 4055,
      "ok": true,
      "stage": 1,
-     "start": 1792240573.161,
+     "start": 1792241694.525,
      "tools": [
       {
        "name": "match_stats"
@@ -12738,22 +12915,22 @@
       {
        "name": "recent_events",
        "args": {
-        "limit": 6
+        "limit": 12
        }
       }
      ],
-     "in": 3378,
-     "out": 193,
+     "in": 3384,
+     "out": 244,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "gaffer",
-     "ms": 6853,
+     "ms": 4172,
      "ok": true,
      "stage": 1,
-     "start": 1792240573.166,
+     "start": 1792241694.53,
      "tools": [
       {
        "name": "why_it_moved"
@@ -12762,57 +12939,57 @@
        "name": "gaffers_gauge"
       }
      ],
-     "in": 3679,
-     "out": 187,
+     "in": 3685,
+     "out": 201,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "narrator",
-     "ms": 2908,
+     "ms": 2301,
      "ok": true,
      "stage": 2,
-     "start": 1792240580.021,
+     "start": 1792241698.705,
      "tools": [],
-     "in": 2077,
-     "out": 216,
+     "in": 2139,
+     "out": 226,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "persona",
-     "ms": 5284,
+     "ms": 4493,
      "ok": true,
      "stage": 2,
-     "start": 1792240580.023,
+     "start": 1792241698.707,
      "tools": [],
-     "in": 933,
-     "out": 520,
+     "in": 995,
+     "out": 518,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "game_master",
-     "ms": 2952,
+     "ms": 4153,
      "ok": true,
      "stage": 2,
-     "start": 1792240580.025,
+     "start": 1792241698.71,
      "tools": [
       {
        "name": "candidate_challenges"
       }
      ],
-     "in": 3431,
-     "out": 136,
+     "in": 3436,
+     "out": 147,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     }
    ],
-   "latency_ms": 12173,
+   "latency_ms": 8703,
    "checks": {
     "four_languages": true,
     "languages_match": true,
@@ -12834,7 +13011,7 @@
    }
   },
   {
-   "moment_id": "S5-MD07-03-m46",
+   "moment_id": "S5-MD07-03-m52",
    "match_id": "S5-MD07-03",
    "trigger": "half_time",
    "minute": 48,
@@ -12857,45 +13034,45 @@
     1
    ],
    "headline": {
-    "en": "Still all square at the break",
-    "es": "Todavía igualados al descanso",
-    "pt": "Ainda empatados no intervalo",
-    "fr": "Toujours à égalité à la mi-temps"
+    "en": "Half-time draw keeps things finely balanced",
+    "es": "El empate al descanso deja todo muy ajustado",
+    "pt": "Intervalo com empate mantém tudo em aberto",
+    "fr": "Le nul à la mi-temps laisse tout serré"
    },
    "story": {
-    "en": "Score is 1-1 at half-time after Belwell's 14th minute equalizer. Eastholme Rangers' chance of winning holds at 23% while the draw rises from 38% to 39%.",
-    "es": "El marcador es 1-1 al descanso tras el empate de Belwell en el minuto 14. Las posibilidades de Eastholme Rangers se mantienen en 23% y el empate sube del 38% al 39%.",
-    "pt": "Está 1-1 no intervalo depois do empate de Belwell aos 14 minutos. A chance do Eastholme Rangers permanece em 23% e o empate sobe de 38% para 39%.",
-    "fr": "Le score est 1-1 à la mi-temps après l'égalisation de Belwell à la 14e minute. Les chances d'Eastholme Rangers tiennent à 23% et le match nul passe de 38% à 39%."
+    "en": "It's 1-1 at half-time after goals from Calstead and Belwell. Eastholme Rangers' chance of winning holds at 23%, while the draw rises from 38% to 39%.",
+    "es": "Hay 1-1 al descanso tras los goles de Calstead y Belwell. La posibilidad de victoria del Eastholme Rangers se mantiene en 23%, y el empate sube de 38% a 39%.",
+    "pt": "Está 1-1 ao intervalo após os gols de Calstead e Belwell. A chance de vitória do Eastholme Rangers se mantém em 23%, e o empate sobe de 38% para 39%.",
+    "fr": "C'est 1-1 à la mi-temps après les buts de Calstead et Belwell. Les chances de victoire d'Eastholme Rangers tiennent à 23 %, et le match nul passe de 38 % à 39 %."
    },
    "analyst": {
-    "en": "xG favors Eastholme, 0.68 to 0.30, despite being a man down. Possession tilt is huge, Brackenford 67% to 33%, and the clock running down lifted the draw by one point.",
-    "es": "xG favorece a Eastholme, 0,68 frente a 0,30, a pesar de jugar con uno menos. El control del balón es enorme, Brackenford 67% frente a 33%, y el paso del tiempo elevó el empate un punto.",
-    "pt": "xG favorece o Eastholme, 0,68 contra 0,30, apesar de jogar com um a menos. A posse é grande, Brackenford 67% contra 33%, e o tempo fez o empate subir um ponto.",
-    "fr": "xG favorise Eastholme, 0,68 contre 0,30, malgré un joueur en moins. L'avantage de possession est net, Brackenford 67% contre 33%, et le temps qui passe a fait monter le nul d'un point."
+    "en": "Eastholme have 33% possession, Brackenford 67%, live xG Eastholme 0.68, Brackenford 0.30. Biggest drivers: red card cutting Eastholme to ten, Brackenford territorial control, clock nudging the draw up one point.",
+    "es": "Eastholme tiene 33% de posesión, Brackenford 67%, xG en vivo Eastholme 0,68, Brackenford 0.30. Factores clave: tarjeta roja que deja a Eastholme con diez, control territorial de Brackenford, el tiempo subiendo un punto el empate.",
+    "pt": "Eastholme tem 33% de posse, Brackenford 67%, xG ao vivo Eastholme 0,68, Brackenford 0.30. Principais motores: cartão vermelho que deixa Eastholme com dez, controle territorial do Brackenford, o relógio empurrando o empate um ponto.",
+    "fr": "Eastholme a 33 % de possession, Brackenford 67 %, xG live Eastholme 0,68, Brackenford 0.30. Principaux moteurs: carton rouge qui réduit Eastholme à dix, domination territoriale de Brackenford, l horloge qui fait grimper le match nul d un point."
    },
    "club_lines": {
     "home": {
-     "en": "Half-time, hearts up. We are level, it is tight. Keep the faith, come roaring back.",
-     "es": "Descanso, ánimos arriba. Estamos empatados, todo muy igualado. Mantén la fe, volvamos con fuerza.",
-     "pt": "Intervalo, ânimo lá em cima. Estamos empatados, tudo muito apertado. Mantenha a fé, voltemos com força.",
-     "fr": "Mi-temps, courage. On est à égalité, tout est serré. Gardez la foi, revenons plus forts."
+     "en": "Half done. We are ten men, level, play our hearts out for the win, fans stay loud and proud.",
+     "es": "Medio tiempo. Somos diez, empate, jueguen con el corazón para ganar, afición, manteneos fuertes y ruidosos.",
+     "pt": "Intervalo. Estamos com dez, empate, joguem com alma pela vitória, torcedores, mantenham o barulho e orgulho.",
+     "fr": "Mi-temps. Nous sommes à dix, à égalité, jouez avec le cœur pour gagner, supporters, restez bruyants et fiers."
     },
     "away": {
-     "en": "Half-time team talk. Draw on the board, we lead possession. Stay patient, finish the job in the second half.",
-     "es": "Charla de medio tiempo. Empate en el marcador, dominamos la posesión. Mantén la paciencia, finiquémoslo en la segunda parte.",
-     "pt": "Papo de intervalo. Empate no placar, dominamos a posse. Mantenha a calma, concluamos no segundo tempo.",
-     "fr": "Temps de pause. Egalité au score, nous maîtrisons la possession. Restez patients, concluons en seconde période."
+     "en": "Good half. You had the ball most, stay patient, finish the job, modest and hungry for the second half.",
+     "es": "Buen primer tiempo. Tuvisteis la pelota, sed pacientes, rematadlo, modestos y con hambre en la segunda parte.",
+     "pt": "Bom primeiro tempo. Vocês tiveram a posse, mantenham a paciência, concluam, modestos e famintos para o segundo tempo.",
+     "fr": "Bon premier acte. Vous avez tenu le ballon, restez patients, terminez le travail, modestes et affamés pour la seconde mi-temps."
     }
    },
    "source": "agents",
    "agent_trace": [
     {
      "agent": "stats",
-     "ms": 4241,
+     "ms": 7990,
      "ok": true,
      "stage": 1,
-     "start": 1792240589.431,
+     "start": 1792241710.815,
      "tools": [
       {
        "name": "match_stats"
@@ -12907,18 +13084,18 @@
        }
       }
      ],
-     "in": 3350,
-     "out": 234,
+     "in": 3366,
+     "out": 241,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "gaffer",
-     "ms": 5997,
+     "ms": 4212,
      "ok": true,
      "stage": 1,
-     "start": 1792240589.436,
+     "start": 1792241710.82,
      "tools": [
       {
        "name": "why_it_moved"
@@ -12927,57 +13104,57 @@
        "name": "gaffers_gauge"
       }
      ],
-     "in": 3506,
-     "out": 184,
+     "in": 3508,
+     "out": 168,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "narrator",
-     "ms": 2508,
+     "ms": 2695,
      "ok": true,
      "stage": 2,
-     "start": 1792240595.437,
+     "start": 1792241718.808,
      "tools": [],
-     "in": 2069,
-     "out": 264,
+     "in": 2034,
+     "out": 267,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "persona",
-     "ms": 4513,
+     "ms": 4704,
      "ok": true,
      "stage": 2,
-     "start": 1792240595.439,
+     "start": 1792241718.811,
      "tools": [],
-     "in": 925,
-     "out": 498,
+     "in": 890,
+     "out": 608,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "game_master",
-     "ms": 3527,
+     "ms": 5754,
      "ok": true,
      "stage": 2,
-     "start": 1792240595.441,
+     "start": 1792241718.814,
      "tools": [
       {
        "name": "candidate_challenges"
       }
      ],
-     "in": 3347,
-     "out": 140,
+     "in": 3349,
+     "out": 149,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     }
    ],
-   "latency_ms": 10539,
+   "latency_ms": 13781,
    "checks": {
     "four_languages": true,
     "languages_match": true,
@@ -12989,7 +13166,6 @@
     "states_the_change": true,
     "no_dashes": true,
     "draw_talk_gives_draw": true,
-    "goal_minutes_right": true,
     "leader_score_first": true,
     "no_real_clubs": true,
     "minutes_as_numbers": true,
@@ -13000,7 +13176,7 @@
    }
   },
   {
-   "moment_id": "S5-MD07-03-m54",
+   "moment_id": "S5-MD07-03-m57",
    "match_id": "S5-MD07-03",
    "trigger": "swing_draw",
    "minute": 56,
@@ -13035,45 +13211,45 @@
     1
    ],
    "headline": {
-    "en": "The draw just crept closer",
-    "es": "El empate se acerca",
-    "pt": "O empate ficou mais perto",
-    "fr": "Le nul se rapproche"
+    "en": "The draw is gaining ground",
+    "es": "El empate gana terreno",
+    "pt": "O empate fica mais provável",
+    "fr": "Le match nul prend de l'ampleur"
    },
    "story": {
-    "en": "It's 1-1 in the 56th minute as the clock winds down. Brackenford City's chance of winning slips from 38% to 32% while the draw rises from 39% to 47%.",
-    "es": "Hay 1-1 en el minuto 56 y el tiempo avanza. La opción de victoria del Brackenford City baja de 38% a 32% y la probabilidad de empate sube de 39% a 47%.",
-    "pt": "Está 1-1 aos 56 minutos e o tempo corre. A chance do Brackenford City vencer cai de 38% para 32% e a probabilidade de empate sobe de 39% para 47%.",
-    "fr": "C'est 1-1 à la 56e minute et le temps file. Les chances que Brackenford City gagne glissent de 38% à 32% et la probabilité du nul monte de 39% à 47%."
+    "en": "No clear chance developed by the 56th minute, leaving it 1-1. Brackenford City's chance of winning slips from 38% to 32% and the draw rises from 39% to 47%.",
+    "es": "No hubo claridad hasta el minuto 56 y sigue 1-1. La opción de Brackenford City para ganar cae del 38% al 32% y el empate sube del 39% al 47%.",
+    "pt": "Nada decisivo aconteceu até os 56 minutos e permanece 1-1. A chance do Brackenford City de vencer cai de 38% para 32% e o empate sobe de 39% para 47%.",
+    "fr": "Rien de décisif d'ici la 56e minute, le score reste 1-1. Les chances de Brackenford City de l'emporter chutent de 38 % à 32 % et le match nul monte de 39 % à 47 %."
    },
    "analyst": {
-    "en": "Brackenford have 63% possession, xG Brackenford 0.30, Eastholme 0.74. Biggest driver: running clock knocked Brackenford from 38% to 32%.",
-    "es": "Brackenford tienen 63% de posesión, xG Brackenford 0,30, Eastholme 0.74. Factor clave: el reloj restó a Brackenford del 38% al 32%.",
-    "pt": "Brackenford têm 63% de posse de bola, xG Brackenford 0,30, Eastholme 0.74. Principal motor: o relógio reduziu Brackenford de 38% para 32%.",
-    "fr": "Brackenford tiennent 63 % de possession, xG Brackenford 0,30, Eastholme 0.74. Principal moteur: le temps qui passe a fait chuter Brackenford de 38 % à 32%."
+    "en": "xG: Eastholme 0.74, Brackenford 0.30. Brackenford has 63% possession, the biggest driver was time running down, which cut Brackenford from 38% to 32% and lifted the draw to 47%.",
+    "es": "xG: Eastholme 0,74, Brackenford 0,30. Brackenford tiene 63% de posesión, el principal motor fue el tiempo que pasa, que redujo a Brackenford del 38% al 32% y elevó el empate al 47%.",
+    "pt": "xG: Eastholme 0,74, Brackenford 0,30. Brackenford tem 63% de posse, o maior fator foi o tempo correndo, que cortou Brackenford de 38% para 32% e elevou o empate para 47%.",
+    "fr": "xG: Eastholme 0,74, Brackenford 0,30. Brackenford a 63 % de possession, le principal moteur est le temps qui s’écoule, il a fait passer Brackenford de 38 % à 32 % et a porté le nul à 47 %."
    },
    "club_lines": {
     "home": {
-     "en": "Keep believing, Rangers. Level game, stay compact, nick a late biscuit.",
-     "es": "Creed hasta el final, Rangers. Partido igualado, manteneos compactos, buscad la galleta tardía.",
-     "pt": "Continuem acreditando, Rangers. Jogo empatado, mantenham-se compactos, busquem o biscoito tardio.",
-     "fr": "Croyez jusqu au bout, Rangers. Match serré, restez compacts, prenez le biscuit en fin de jogo."
+     "en": "Keep at it, Rangers. Still all to play for, stay compact and nick one late.",
+     "es": "Sigue así, Rangers. Todo por decidir, manteneos compactos y buscad uno al final.",
+     "pt": "Força, Rangers. Ainda está em aberto, fiquem compactos e tentem um gol no fim.",
+     "fr": "Allez Rangers. Tout est encore possible, restons compacts et cherchons un but tardif."
     },
     "away": {
-     "en": "Heads up, Brackenford. You control the ball, calm and patient, draw odds climbed but we can win.",
-     "es": "Ánimo, Brackenford. Controláis el balón, tranquilos y pacientes, subió la probabilidad del empate pero podemos ganar.",
-     "pt": "Cabeças erguidas, Brackenford. Vocês controlam a bola, calmos e pacientes, o empate subiu mas podemos vencer.",
-     "fr": "Tenez bon, Brackenford. Vous contrôlez le ballon, calmes et patients, le nul a monté mais on peut gagner."
+     "en": "Good control, City. Hold possession, stay calm, see this through to grind out a result.",
+     "es": "Buen control, City. Manteneos en posesión, con calma, llevad esto hasta un buen resultado.",
+     "pt": "Bom controle, City. Mantenham a posse, com calma, levem isto até garantir o resultado.",
+     "fr": "Bon contrôle, City. Gardez la possession, restez calmes, tenez pour décrocher un résultat."
     }
    },
    "source": "agents",
    "agent_trace": [
     {
      "agent": "stats",
-     "ms": 5907,
+     "ms": 4979,
      "ok": true,
      "stage": 1,
-     "start": 1792240649.363,
+     "start": 1792241770.722,
      "tools": [
       {
        "name": "match_stats"
@@ -13085,18 +13261,18 @@
        }
       }
      ],
-     "in": 3386,
-     "out": 216,
+     "in": 3388,
+     "out": 235,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "gaffer",
-     "ms": 3334,
+     "ms": 5103,
      "ok": true,
      "stage": 1,
-     "start": 1792240649.368,
+     "start": 1792241770.727,
      "tools": [
       {
        "name": "why_it_moved"
@@ -13105,57 +13281,57 @@
        "name": "gaffers_gauge"
       }
      ],
-     "in": 3601,
-     "out": 172,
+     "in": 3603,
+     "out": 189,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "narrator",
-     "ms": 2978,
+     "ms": 3994,
      "ok": true,
      "stage": 2,
-     "start": 1792240655.273,
+     "start": 1792241775.833,
      "tools": [],
-     "in": 2044,
-     "out": 292,
+     "in": 2082,
+     "out": 266,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "persona",
-     "ms": 4477,
+     "ms": 5942,
      "ok": true,
      "stage": 2,
-     "start": 1792240655.275,
+     "start": 1792241775.835,
      "tools": [],
-     "in": 900,
-     "out": 458,
+     "in": 938,
+     "out": 547,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "game_master",
-     "ms": 4204,
+     "ms": 5277,
      "ok": true,
      "stage": 2,
-     "start": 1792240655.277,
+     "start": 1792241775.838,
      "tools": [
       {
        "name": "candidate_challenges"
       }
      ],
-     "in": 3378,
-     "out": 157,
+     "in": 3373,
+     "out": 152,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     }
    ],
-   "latency_ms": 10405,
+   "latency_ms": 11071,
    "checks": {
     "four_languages": true,
     "languages_match": true,
@@ -13167,6 +13343,7 @@
     "states_the_change": true,
     "no_dashes": true,
     "draw_talk_gives_draw": true,
+    "headline_matches_numbers": true,
     "leader_score_first": true,
     "no_real_clubs": true,
     "minutes_as_numbers": true,
@@ -13177,7 +13354,7 @@
    }
   },
   {
-   "moment_id": "S5-MD07-03-m58",
+   "moment_id": "S5-MD07-03-m63",
    "match_id": "S5-MD07-03",
    "trigger": "swing_draw",
    "minute": 71,
@@ -13212,45 +13389,45 @@
     1
    ],
    "headline": {
-    "en": "The draw is tightening as time runs out",
-    "es": "El empate se acerca con el tiempo en contra",
-    "pt": "O empate fica mais provável com o tempo esgotando",
-    "fr": "Le match tend vers le nul à mesure que le temps passe"
+    "en": "The draw just keeps creeping up",
+    "es": "El empate sigue ganando terreno",
+    "pt": "O empate segue ficando mais provável",
+    "fr": "Le match bascule vers le nul"
    },
    "story": {
-    "en": "Nothing decisive happened in the 71st minute, it's still 1-1. The draw rises from 47% to 60%, while Brackenford's chance falls from 32% to 24%.",
-    "es": "No hubo acción decisiva en el minuto 71, sigue 1-1. El empate sube del 47% al 60% y las opciones del Brackenford caen del 32% al 24%.",
-    "pt": "Nada decisivo aconteceu no minuto 71, continua 1-1. O empate sobe de 47% para 60% e as chances do Brackenford caem de 32% para 24%.",
-    "fr": "Rien de décisif à la 71e minute, c'est toujours 1-1. Le nul passe de 47 % à 60 % et les chances de Brackenford chutent de 32 % à 24 %."
+    "en": "Play resumes 1-1 in the 71st minute and the clock is taking its toll. The draw rises from 47% to 60%.",
+    "es": "Se reanuda el juego 1-1 en el minuto 71 y el tiempo pasa factura. El empate sube del 47% al 60%.",
+    "pt": "O jogo recomeça 1-1 aos 71 minutos e o tempo pesa para ambos. O empate sobe de 47% para 60%.",
+    "fr": "Le match reprend 1-1 à la 71e minute et le temps joue contre les deux équipes. Le match nul passe de 47 % à 60 %."
    },
    "analyst": {
-    "en": "xG sits even, Brackenford have 65% possession and a clear field tilt. The biggest driver of the points swing was the clock running down, eroding Brackenford's win chance from 32% to 24% and boosting the draw to 60%.",
-    "es": "xG está parejo, Brackenford tienen 65% de posesión y control claro del campo. El mayor impulsor del cambio fue el reloj que corre, reduciendo la probabilidad de victoria de Brackenford de 32% a 24% y elevando el empate a 60%.",
-    "pt": "xG está equilibrado, Brackenford têm 65% de posse e domínio do campo. O maior motor da mudança foi o relógio correndo, reduzindo a chance de vitória do Brackenford de 32% para 24% e elevando o empate para 60%.",
-    "fr": "xG est équilibré, Brackenford ont 65 % de possession et une domination du terrain. Le principal facteur du basculement a été le temps qui s’écoule, faisant chuter la victoire de Brackenford de 32 % à 24 % et portant le match nul à 60 %."
+    "en": "xG barely moved, possession 65% for Brackenford drove pressure. Biggest driver was time running down, shifting points toward a draw.",
+    "es": "xG apenas cambió, posesión 65% para Brackenford impulsó la presión. El mayor factor fue que el tiempo corre, empujando puntos hacia el empate.",
+    "pt": "xG quase não mudou, posse 65% para Brackenford gerou pressão. O maior motor foi o tempo se esgotando, puxando pontos para o empate.",
+    "fr": "xG a peu près stable, possession 65% pour Brackenford qui a dicté la pression. Le facteur principal est le temps qui passe, faisant basculer les points vers le nul."
    },
    "club_lines": {
     "home": {
-     "en": "Keep the belief, Rangers fought hard with ten men. Stick with them for a late twist.",
-     "es": "Manteneos firmes, Rangers lucharon mucho con diez. Seguid con ellos para una sorpresa final.",
-     "pt": "Mantenham a fé, Rangers lutaram com dez. Continuem com eles para uma reviravolta tardia.",
-     "fr": "Gardez la foi, Rangers ont tenu courageusement à dix. Restez avec eux pour une surprise en fin de match."
+     "en": "Keep the faith, Rangers. Fight for one last chance, biscuits for effort.",
+     "es": "Manteneos firmes, Rangers. Pelead por la última oportunidad, galletas por el esfuerzo.",
+     "pt": "Mantenham a fé, Rangers. Lutem pela última chance, biscoitos pelo esforço.",
+     "fr": "Gardez confiance, Rangers. Combattez pour une ultime occasion, biscuits pour l effort."
     },
     "away": {
-     "en": "Solid control from Brackenford, protect possession and press the gaps, the win chance fell but it is still there.",
-     "es": "Control sólido de Brackenford, protegé la posesión y buscad espacios, la victoria bajó pero sigue posible.",
-     "pt": "Controle sólido do Brackenford, protejam a posse e busquem os espaços, a vitória caiu mas ainda existe.",
-     "fr": "Contrôle net de Brackenford, protégez la possession et cherchez les espaces, la victoire a baissé mais reste possible."
+     "en": "Smart work, Brackenford. Hold shape, patience wins this draw or better.",
+     "es": "Buen trabajo, Brackenford. Manteneos firmes, la paciencia trae el empate o algo más.",
+     "pt": "Bom trabalho, Brackenford. Mantenham a organização, paciência rende o empate ou algo mais.",
+     "fr": "Bon travail, Brackenford. Restez organisés, la patience vaut le nul ou mieux."
     }
    },
    "source": "agents",
    "agent_trace": [
     {
      "agent": "stats",
-     "ms": 3788,
+     "ms": 5180,
      "ok": true,
      "stage": 1,
-     "start": 1792240706.651,
+     "start": 1792241828.007,
      "tools": [
       {
        "name": "match_stats"
@@ -13263,76 +13440,76 @@
       }
      ],
      "in": 3750,
-     "out": 196,
+     "out": 182,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "gaffer",
-     "ms": 5295,
+     "ms": 6537,
      "ok": true,
      "stage": 1,
-     "start": 1792240706.656,
+     "start": 1792241828.012,
      "tools": [
       {
-       "name": "gaffers_gauge"
+       "name": "why_it_moved"
       },
       {
-       "name": "why_it_moved"
+       "name": "gaffers_gauge"
       }
      ],
      "in": 3521,
-     "out": 172,
+     "out": 170,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "narrator",
-     "ms": 4446,
+     "ms": 2662,
      "ok": true,
      "stage": 2,
-     "start": 1792240711.953,
+     "start": 1792241834.552,
      "tools": [],
-     "in": 2014,
-     "out": 270,
+     "in": 1995,
+     "out": 206,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "persona",
-     "ms": 5140,
+     "ms": 4333,
      "ok": true,
      "stage": 2,
-     "start": 1792240711.955,
+     "start": 1792241834.555,
      "tools": [],
-     "in": 870,
-     "out": 564,
+     "in": 851,
+     "out": 411,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "game_master",
-     "ms": 4058,
+     "ms": 5876,
      "ok": true,
      "stage": 2,
-     "start": 1792240711.957,
+     "start": 1792241834.557,
      "tools": [
       {
        "name": "candidate_challenges"
       }
      ],
      "in": 3370,
-     "out": 143,
+     "out": 131,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     }
    ],
-   "latency_ms": 10477,
+   "latency_ms": 12450,
    "checks": {
     "four_languages": true,
     "languages_match": true,
@@ -13354,7 +13531,7 @@
    }
   },
   {
-   "moment_id": "S5-MD07-03-m62",
+   "moment_id": "S5-MD07-03-m67",
    "match_id": "S5-MD07-03",
    "trigger": "goal",
    "minute": 82,
@@ -13412,34 +13589,34 @@
    ],
    "headline": {
     "en": "Penke's late strike turns it on its head",
-    "es": "El gol de Penke lo cambia todo",
-    "pt": "O gol de Penke vira o jogo",
+    "es": "El gol de Penke da la vuelta al partido",
+    "pt": "Gol de Penke vira o jogo nos instantes finais",
     "fr": "Le but de Penke renverse la situation"
    },
    "story": {
-    "en": "Adam Penke scores in the 82nd minute to put Eastholme ahead 2-1. Eastholme Rangers now have an 83% chance of winning, up from 16%.",
-    "es": "Adam Penke marca en el minuto 82 para poner a Eastholme por delante 2-1. Eastholme Rangers ahora tienen un 83% de posibilidades de ganar, frente al 16% anterior.",
-    "pt": "Adam Penke marca aos 82 minutos e deixa o Eastholme à frente 2-1. O Eastholme Rangers agora tem 83% de chance de vencer, acima dos 16% anteriores.",
-    "fr": "Adam Penke marque à la 82e minute pour donner l’avantage 2-1 à Eastholme. Eastholme Rangers ont maintenant 83 % de chances de l’emporter, contre 16 % auparavant."
+    "en": "Adam Penke scores in the 82nd minute to put Eastholme ahead 2-1, the goal stood after VAR. Eastholme now have an 83% chance of winning, up from 16%.",
+    "es": "Adam Penke marca en el minuto 82 y deja a Eastholme por delante 2-1; el gol resistió la revisión del VAR. Eastholme tienen ahora un 83% de opciones de ganar, frente al 16% anterior.",
+    "pt": "Adam Penke marca aos 82 minutos e põe o Eastholme na frente 2-1; o gol foi confirmado pelo VAR. O Eastholme tem agora 83% de chance de vencer, contra 16% antes.",
+    "fr": "Adam Penke marque à la 82e minute et donne l'avantage 2-1 à Eastholme; le but a été confirmé après VAR. Eastholme ont maintenant 83 % de chances de gagner, contre 16 % auparavant."
    },
    "analyst": {
-    "en": "xG split moved in Eastholme's favor, their xG 1.25 to Brackenford 0.46. Possession favored Brackenford 63% to 37%, but the 82nd minute goal is the biggest driver, lifting points from 16% to 83%.",
-    "es": "La xG se inclinó a favor de Eastholme, xG de Eastholme 1,25 frente a Brackenford 0.46. La posesión favoreció a Brackenford 63% frente a 37%, pero el gol del minuto 82 fue el mayor impulsor, subiendo las probabilidades de 16% a 83%.",
-    "pt": "A xG virou a favor do Eastholme, xG do Eastholme 1,25 contra Brackenford 0.46. A posse esteve com Brackenford 63% contra 37%, mas o gol aos 82 minutos foi o maior motor, elevando as chances de 16% para 83%.",
-    "fr": "La xG a basculé en faveur d'Eastholme, xG Eastholme 1,25 contre Brackenford 0.46. La possession privilégiait Brackenford 63% contre 37%, mais le but à la 82e minute est le principal moteur, faisant monter les chances de 16% à 83%."
+    "en": "xG has been 1.25 to 0.46, Brackenford owned 63% possession but Eastholme converted key chances. The 82nd minute goal flipped win probability from 16% to 83%, the biggest driver was the goal, clock and chance differences mattered little.",
+    "es": "xG ha sido 1,25 frente a 0,46, Brackenford tuvo 63% de posesión pero Eastholme aprovechó las ocasiones clave. El gol del minuto 82 cambió la probabilidad de victoria de 16% a 83%, el mayor impulso fue el gol, el reloj y las diferencias de oportunidades importaron poco.",
+    "pt": "xG foi 1,25 contra 0,46, Brackenford teve 63% de posse mas Eastholme aproveitou as chances cruciais. O gol aos 82 minutos virou a probabilidade de vitória de 16% para 83%, o maior motor foi o gol, o relógio e as diferenças de chances pouco importaram.",
+    "fr": "xG est de 1,25 contre 0,46, Brackenford a eu 63 % de possession mais Eastholme a converti les occasions clés. Le but à la 82e minute a fait passer la probabilité de victoire de 16 % à 83 %, le principal moteur fut le but, l horloge et les différences d occasions ont peu compté."
    },
    "club_lines": {
     "home": {
-     "en": "Hold tight, favorites, Adam Penke has us ahead. Play smart, protect the lead, biscuits for everyone.",
-     "es": "Aguantad con confianza, favoritos, Adam Penke nos puso por delante. Jugad con cabeza, protegemos la ventaja, galletas para todos.",
-     "pt": "Aguentem firmes, favoritos, Adam Penke colocou-nos na frente. Joguem com calma, protejam a vantagem, biscoitos para todos.",
-     "fr": "Tenez bon, favoris, Adam Penke nous a mis devant. Jouez malin, protégez l'avance, biscuits pour tous."
+     "en": "Hold tight, favorites. Adam Penke sealed it, keep the heads cool for eight minutes.",
+     "es": "Aguantad, favoritos. Adam Penke remató, manteneos fríos durante ocho minutos.",
+     "pt": "Segurem firme, favoritos. Adam Penke decidiu, mantenham a calma pelos oito minutos.",
+     "fr": "Tenez bon, favoris. Adam Penke a tranché, gardez la tête froide pour huit minutes."
     },
     "away": {
-     "en": "Keep belief, Brackenford. Eight minutes to push, stay brave and force a chance.",
-     "es": "Confiad, Brackenford. Ocho minutos para empujar, sed valientes y buscad una oportunidad.",
-     "pt": "Acreditem, Brackenford. Oito minutos para pressionar, sejam corajosos e forcem uma oportunidade.",
-     "fr": "Gardez foi, Brackenford. Huit minutes pour pousser, soyez courageux et créez une occasion."
+     "en": "Keep believing, brave lot. Fight to the end, a late surprise is still possible.",
+     "es": "Seguid creyendo, valientes. Luchad hasta el final, una sorpresa tardía sigue siendo posible.",
+     "pt": "Continuem acreditando, corajosos. Lutem até o fim, uma reviravolta tardia ainda é possível.",
+     "fr": "Continuez d y croire, courageux. Battez vous jusqu au bout, une surprise tardive reste possible."
     }
    },
    "source": "agents",
@@ -13450,10 +13627,10 @@
    "agent_trace": [
     {
      "agent": "stats",
-     "ms": 3993,
+     "ms": 4755,
      "ok": true,
      "stage": 1,
-     "start": 1792240763.253,
+     "start": 1792241884.653,
      "tools": [
       {
        "name": "match_stats"
@@ -13465,18 +13642,18 @@
        }
       }
      ],
-     "in": 3929,
-     "out": 229,
+     "in": 3925,
+     "out": 234,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "gaffer",
-     "ms": 6275,
+     "ms": 5229,
      "ok": true,
      "stage": 1,
-     "start": 1792240763.258,
+     "start": 1792241884.658,
      "tools": [
       {
        "name": "why_it_moved"
@@ -13485,57 +13662,57 @@
        "name": "gaffers_gauge"
       }
      ],
-     "in": 4073,
-     "out": 191,
+     "in": 4036,
+     "out": 208,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "narrator",
-     "ms": 3010,
+     "ms": 3452,
      "ok": true,
      "stage": 2,
-     "start": 1792240769.535,
+     "start": 1792241889.889,
      "tools": [],
-     "in": 2161,
-     "out": 254,
+     "in": 2193,
+     "out": 287,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "persona",
-     "ms": 4672,
+     "ms": 4522,
      "ok": true,
      "stage": 2,
-     "start": 1792240769.537,
+     "start": 1792241889.891,
      "tools": [],
-     "in": 1017,
-     "out": 603,
+     "in": 1049,
+     "out": 569,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "game_master",
-     "ms": 3536,
+     "ms": 4687,
      "ok": true,
      "stage": 2,
-     "start": 1792240769.539,
+     "start": 1792241889.893,
      "tools": [
       {
        "name": "candidate_challenges"
       }
      ],
-     "in": 3681,
-     "out": 138,
+     "in": 3678,
+     "out": 145,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     }
    ],
-   "latency_ms": 10982,
+   "latency_ms": 9956,
    "checks": {
     "four_languages": true,
     "languages_match": true,
@@ -13557,7 +13734,7 @@
    }
   },
   {
-   "moment_id": "S5-MD07-03-m64",
+   "moment_id": "S5-MD07-03-m69",
    "match_id": "S5-MD07-03",
    "trigger": "swing",
    "minute": 89,
@@ -13592,45 +13769,45 @@
     1
    ],
    "headline": {
-    "en": "Almost there for Eastholme",
-    "es": "A punto para Eastholme",
-    "pt": "Quase lá para o Eastholme",
-    "fr": "Presque fini pour Eastholme"
+    "en": "Eastholme closing it out with a minute left",
+    "es": "Eastholme lo está cerrando con un minuto",
+    "pt": "Eastholme fechando com um minuto sobrando",
+    "fr": "Eastholme verrouille avec une minute restante"
    },
    "story": {
-    "en": "Eastholme Rangers still lead 2-1 with one minute left. Eastholme now have a 91% chance of winning, up from 83%.",
-    "es": "Eastholme Rangers siguen ganando 2-1 a un minuto del final. Eastholme tienen ahora un 91% de posibilidades de ganar, frente al 83% anterior.",
-    "pt": "Eastholme Rangers seguem vencendo 2-1 com um minuto restante. O Eastholme tem agora 91% de chance de vencer, acima dos 83% anteriores.",
-    "fr": "Eastholme Rangers mènent toujours 2-1 avec une minute restante. Eastholme ont maintenant 91 % de chances de gagner, contre 83 % auparavant."
+    "en": "One minute left and Eastholme lead 2-1 after Adam Penke's 82nd-minute goal. Eastholme Rangers' chance of winning rises from 83% to 91%.",
+    "es": "Queda un minuto y Eastholme mandan 2-1 tras el gol de Adam Penke en el minuto 82. Las posibilidades de victoria de Eastholme Rangers suben del 83% al 91%.",
+    "pt": "Falta um minuto e Eastholme lideram 2-1 depois do gol de Adam Penke aos 82 minutos. A chance de vitória do Eastholme Rangers sobe de 83% para 91%.",
+    "fr": "Il reste une minute et Eastholme mènent 2-1 après le but d'Adam Penke à la 82e minute. Les chances de victoire d'Eastholme Rangers passent de 83 % à 91 %."
    },
    "analyst": {
-    "en": "xG: Penke added 0.51 xG on his goal, home have 35% possession, the clock running down added eight points to the win probability.",
-    "es": "xG: Penke aportó 0,51 xG en su gol, el local tiene 35% de posesión, el tiempo que se acaba añadió ocho puntos a la probabilidad de victoria.",
-    "pt": "xG: Penke somou 0,51 xG no gol, o time da casa tem 35% de posse, o fim do tempo adicionou oito pontos à chance de vitória.",
-    "fr": "xG : Penke a ajouté 0,51 xG sur son but, le domicile a 35 % de possession, le temps qui s’écoule a ajouté huit points à la probabilité de victoire."
+    "en": "Eastholme Rangers up to 91% from 83% on 0.51 xG for Penke, Brackenford 65% possession but no time. Biggest driver was clock running down, worth eight points to the swing.",
+    "es": "Eastholme Rangers suben a 91% desde 83% con 0,51 xG para Penke, Brackenford tiene 65% de posesión pero no hay tiempo. El mayor motor fue el reloj acabando, ocho puntos del cambio.",
+    "pt": "Eastholme Rangers sobem para 91% de 83% com 0,51 xG para Penke, Brackenford tem 65% posse mas sem tempo. O maior motor foi o relógio a acabar, oito pontos da mudança.",
+    "fr": "Eastholme Rangers à 91% contre 83% avec 0,51 xG pour Penke, Brackenford a 65 % de possession mais plus de temps. Le principal moteur est la fin du match, huit points dans la bascule."
    },
    "club_lines": {
     "home": {
-     "en": "Hold tight, favorites. One minute left, defense steady, biscuits for everyone after.",
-     "es": "Aguantad, favoritos. Un minuto queda, defensa firme, galletas para todos después.",
-     "pt": "Aguentem, favoritos. Um minuto resta, defesa firme, biscoitos para todos depois.",
-     "fr": "Tenez bon, favoris. Une minute, défense solide, biscuits pour tous ensuite."
+     "en": "Stick with them, favorites. One minute left, defense tight, biscuits for everyone if we hold on.",
+     "es": "Apoya al favorito. Un minuto queda, defensa cerrada, galletas gratis para todos si aguantamos.",
+     "pt": "Apoia os favoritos. Um minuto resta, defesa firme, biscoitos grátis para todos se segurarmos.",
+     "fr": "Soutenez les favoris. Il reste une minute, défense solide, biscuits gratuits si on tient."
     },
     "away": {
-     "en": "Keep the belief, fans. Time is against us, stay loud and proud.",
-     "es": "Mantened la fe, aficionados. El tiempo no está a nuestro favor, seguid ruidosos y orgullosos.",
-     "pt": "Mantenham a fé, torcedores. O tempo não está a nosso favor, continuem barulhentos e orgulhosos.",
-     "fr": "Gardez la foi, supporters. Le temps joue contre nous, restez bruyants et fiers."
+     "en": "Keep believing till the final whistle, Brackenford. One minute is short, press hard and stay loud.",
+     "es": "Sigue creyendo hasta el pitido final, Brackenford. Un minuto es poco, presionad y gritad fuerte.",
+     "pt": "Acreditem até o apito final, Brackenford. Um minuto é pouco, pressionem e façam barulho.",
+     "fr": "Croyez-y jusqu’au coup de sifflet, Brackenford. Une minute, pressez fort et restez bruyants."
     }
    },
    "source": "agents",
    "agent_trace": [
     {
      "agent": "stats",
-     "ms": 3604,
+     "ms": 3964,
      "ok": true,
      "stage": 1,
-     "start": 1792240791.53,
+     "start": 1792241912.922,
      "tools": [
       {
        "name": "match_stats"
@@ -13642,18 +13819,18 @@
        }
       }
      ],
-     "in": 3761,
-     "out": 174,
+     "in": 3769,
+     "out": 212,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "gaffer",
-     "ms": 4305,
+     "ms": 9108,
      "ok": true,
      "stage": 1,
-     "start": 1792240791.535,
+     "start": 1792241912.927,
      "tools": [
       {
        "name": "why_it_moved"
@@ -13662,57 +13839,57 @@
        "name": "gaffers_gauge"
       }
      ],
-     "in": 3942,
-     "out": 173,
+     "in": 3935,
+     "out": 175,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "narrator",
-     "ms": 2641,
+     "ms": 2769,
      "ok": true,
      "stage": 2,
-     "start": 1792240795.842,
+     "start": 1792241922.037,
      "tools": [],
-     "in": 2025,
-     "out": 254,
+     "in": 2047,
+     "out": 271,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "persona",
-     "ms": 3503,
+     "ms": 3655,
      "ok": true,
      "stage": 2,
-     "start": 1792240795.844,
+     "start": 1792241922.04,
      "tools": [],
-     "in": 881,
-     "out": 442,
+     "in": 903,
+     "out": 460,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "game_master",
-     "ms": 3717,
+     "ms": 3912,
      "ok": true,
      "stage": 2,
-     "start": 1792240795.847,
+     "start": 1792241922.042,
      "tools": [
       {
        "name": "candidate_challenges"
       }
      ],
-     "in": 3518,
-     "out": 129,
+     "in": 3510,
+     "out": 148,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     }
    ],
-   "latency_ms": 8058,
+   "latency_ms": 13048,
    "checks": {
     "four_languages": true,
     "languages_match": true,
@@ -13735,7 +13912,7 @@
    }
   },
   {
-   "moment_id": "S5-MD07-03-m66",
+   "moment_id": "S5-MD07-03-m72",
    "match_id": "S5-MD07-03",
    "trigger": "full_time",
    "minute": 95,
@@ -13770,10 +13947,10 @@
     1
    ],
    "headline": {
-    "en": "Penke's late strike seals the win",
+    "en": "Penke's late strike seals it",
     "es": "El gol de Penke sella la victoria",
-    "pt": "Gol de Penke confirma a vitória",
-    "fr": "Le but de Penke scelle la victoire"
+    "pt": "Gol de Penke no final garante a vitória",
+    "fr": "Le but tardif de Penke scelle la victoire"
    },
    "story": {
     "en": "Full time, and it's a 2-1 win for Eastholme Rangers. Their chance of a top-four finish is now 9%, up from 7% before kickoff.",
@@ -13782,23 +13959,23 @@
     "fr": "C'est terminé, Eastholme Rangers s'impose 2-1. Ils ont désormais 9 % de chances de finir dans les quatre premiers, contre 7 % avant le match."
    },
    "analyst": {
-    "en": "Eastholme had 35% possession, 1.26 xG. Brackenford led possession 65% but only 0.46 xG. Penke's 0.51 xG goal and the red card were the biggest drivers lifting Eastholme from 7% to 9% in the top four race.",
-    "es": "Eastholme tuvo 35% de posesión, 1,26 xG. Brackenford dominó con 65% pero solo 0,46 xG. El gol de Penke de 0,51 xG y la tarjeta roja impulsaron a Eastholme del 7% al 9% en la lucha por el cuarto puesto.",
-    "pt": "Eastholme teve 35% de posse, 1,26 xG. Brackenford dominou com 65% mas apenas 0,46 xG. O gol de Penke de 0,51 xG e o cartão vermelho foram os maiores fatores que levaram Eastholme de 7% para 9% na briga pelo quarto lugar.",
-    "fr": "Eastholme a eu 35% de possession, 1,26 xG. Brackenford a dominé avec 65% mais seulement 0,46 xG. Le but de Penke à 0,51 xG et le carton rouge ont été les principaux moteurs faisant passer Eastholme de 7% à 9% pour la place dans le top quatre."
+    "en": "Eastholme had 35% possession and 1.26 xG to Brackenford's 0.46. Penke's 0.51 xG strike and the late clock swing were the biggest drivers of the points change.",
+    "es": "Eastholme tuvo 35% de posesión y 1,26 xG frente a 0,46 de Brackenford. El gol de Penke, con 0,51 xG, y el tiempo final fueron los mayores impulsores del cambio de puntos.",
+    "pt": "Eastholme teve 35% de posse e 1,26 xG contra 0,46 do Brackenford. O gol de Penke, 0,51 xG, e o relógio no final foram os maiores motores da mudança de pontos.",
+    "fr": "Eastholme a eu 35% de possession et 1,26 xG contre 0,46 pour Brackenford. Le but de Penke, 0,51 xG, et la fin du temps ont été les principaux moteurs du changement de points."
    },
    "club_lines": {
     "home": {
-     "en": "What a scrap, favorites. Penke’s late strike sealed it, keep believing for the top four.",
-     "es": "Qué pelea, favoritos. El gol de Penke lo aseguró, sigan creyendo en el cuarto puesto.",
-     "pt": "Que batalha, favoritos. O gol de Penke selou, continuem acreditando no quarto lugar.",
-     "fr": "Quel combat, favoris. Le but tardif de Penke a scellé tout, continuez à croire au top quatre."
+     "en": "That late strike sealed it, hold your heads high, biscuits tonight in the app.",
+     "es": "Ese gol al final lo confirmó, manteneos orgullosos, galletas gratis en la app.",
+     "pt": "Esse gol no final selou, cabeça erguida, biscoitos grátis no app.",
+     "fr": "Ce but tardif a scellé tout ça, tenez-vous fiers, biscuits gratuits dans l'app."
     },
     "away": {
-     "en": "Tough night, supporters. You owned the ball but we fell short. Heads up for next time.",
-     "es": "Noche dura, aficionados. Ustedes dominaron la pelota pero no bastó. Cabezas arriba para la próxima.",
-     "pt": "Noite difícil, torcedores. Vocês tiveram a posse, não alcançou. Cabeças erguidas para a próxima.",
-     "fr": "Soirée dure, supporters. Vous avez eu la possession, cela n'a pas suffi. Tenez bon pour la prochaine."
+     "en": "Tough night after leading the stats, keep the faith, we rebuild from this.",
+     "es": "Noche dura pese a los números, manteneos con fe, reconstruiremos desde aquí.",
+     "pt": "Noite difícil apesar das estatísticas, mantenham a fé, vamos reconstruir daqui.",
+     "fr": "Soirée dure malgré les chiffres, gardez la foi, on reconstruit à partir d'ici."
     }
    },
    "source": "agents",
@@ -13812,10 +13989,10 @@
    "agent_trace": [
     {
      "agent": "stats",
-     "ms": 4034,
+     "ms": 5215,
      "ok": true,
      "stage": 1,
-     "start": 1792240815.682,
+     "start": 1792241937.049,
      "tools": [
       {
        "name": "match_stats"
@@ -13827,18 +14004,18 @@
        }
       }
      ],
-     "in": 3722,
-     "out": 227,
+     "in": 3728,
+     "out": 235,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "gaffer",
-     "ms": 5506,
+     "ms": 5328,
      "ok": true,
      "stage": 1,
-     "start": 1792240815.688,
+     "start": 1792241937.055,
      "tools": [
       {
        "name": "why_it_moved"
@@ -13847,57 +14024,57 @@
        "name": "gaffers_gauge"
       }
      ],
-     "in": 3869,
-     "out": 178,
+     "in": 3875,
+     "out": 177,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     },
     {
      "agent": "narrator",
-     "ms": 3252,
+     "ms": 3030,
      "ok": true,
      "stage": 2,
-     "start": 1792240821.197,
+     "start": 1792241942.387,
      "tools": [],
-     "in": 2066,
-     "out": 293,
+     "in": 2071,
+     "out": 291,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "persona",
-     "ms": 5169,
+     "ms": 4180,
      "ok": true,
      "stage": 2,
-     "start": 1792240821.2,
+     "start": 1792241942.389,
      "tools": [],
-     "in": 922,
-     "out": 547,
+     "in": 927,
+     "out": 484,
      "reasoning": 0,
      "turns": 1,
      "model": "gpt-5-mini"
     },
     {
      "agent": "game_master",
-     "ms": 3798,
+     "ms": 4631,
      "ok": true,
      "stage": 2,
-     "start": 1792240821.202,
+     "start": 1792241942.392,
      "tools": [
       {
        "name": "candidate_challenges"
       }
      ],
-     "in": 2881,
-     "out": 156,
+     "in": 2887,
+     "out": 143,
      "reasoning": 0,
      "turns": 3,
      "model": "gpt-5-mini"
     }
    ],
-   "latency_ms": 10724,
+   "latency_ms": 10004,
    "checks": {
     "four_languages": true,
     "languages_match": true,
