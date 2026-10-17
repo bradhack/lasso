@@ -15,31 +15,21 @@ Run on 2026-10-17 against the live app. The same 27 questions, at the same minut
 
 ## Where they differ
 
+Failures per check:
+
 | Check | Press Room (2 agents) | One agent alone |
 |---|---|---|
-| answered | 27/27 | 26/27 |
-| clean numbers | 27/27 | 26/26 |
-| fact red card | 1/1 |  |
-| full names | 27/27 | 26/26 |
-| language | 27/27 | 25/26 |
-| leader right | 3/3 |  |
-| length | 27/27 | 26/26 |
-| neutral | 27/27 | 26/26 |
-| next goal consistent | 4/4 | 2/2 |
-| no dashes | 27/27 | 26/26 |
-| no english words | 11/11 | 10/11 |
-| no invented penalty | 27/27 | 26/26 |
-| no meta | 27/27 | 26/26 |
-| no real clubs | 27/27 | 26/26 |
-| no season mixup | 15/15 | 14/14 |
-| no trailing questions | 27/27 | 26/26 |
-| nothing certain | 25/25 | 24/24 |
-| pcts match teams | 27/27 | 26/26 |
-| plain | 18/18 | 17/17 |
-| real minutes | 27/27 | 26/26 |
-| real percentages | 27/27 | 26/26 |
-| rise consistent | 16/16 | 15/15 |
-| shots right | 2/2 | 1/1 |
+| answered | 0 | 1 |
+| language | 0 | 1 |
+| no english words | 0 | 1 |
+
+## Answers that failed a check
+
+**Press Room (2 agents):** none.
+
+**One agent alone:** 
+- 8' en fan, "When was the red card, and who got it?" (answered): I can't take questions right now, but here's where it stands at 17': Eastholme Rangers 1-1 Brackenford City. My numbers: Eastholme Rangers 24%, draw 28%, Brackenford City 48%.
+- 36' es fan, "¿Puede remontar Eastholme?" (language, no english words): Sí. Aunque Eastholme van con diez, están level 1-1 and still have a 24% opción to win; Brackenford lead the probabilities at 41% and are likelier to score next, 47% to Eastholme's 32%.
 
 ## Every answer, side by side
 

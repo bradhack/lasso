@@ -722,17 +722,25 @@ def compare(out: Path) -> str:
               f"| Slowest (p95) | {a['p95'] / 1000:.1f}s | {b['p95'] / 1000:.1f}s |",
               f"| Tokens per answer | {a['toks']:,} | {b['toks']:,} |",
               f"| Tool calls per answer | {a['tools']} | {b['tools']} |", ""]
+    # Checks one side failed more often than the other (an unanswered question has no other checks, so
+    # it's counted once, as "answered").
     names = sorted({k for v in runs.values() for x in v for k in x["checks"]})
     diff = []
     for k in names:
-        cells = []
-        for v in runs.values():
-            has = [x for x in v if k in x["checks"]]
-            cells.append(f"{sum(x['checks'][k] for x in has)}/{len(has)}" if has else "")
-        if cells[0] != cells[1]:
-            diff.append(f"| {k.replace('_', ' ')} | {cells[0]} | {cells[1]} |")
+        fails = [sum(1 for x in v if k in x["checks"] and not x["checks"][k]) for v in runs.values()]
+        if fails[0] != fails[1]:
+            diff.append(f"| {k.replace('_', ' ')} | {fails[0]} | {fails[1]} |")
     if diff:
-        lines += ["## Where they differ", "", "| Check | " + " | ".join(runs) + " |", "|---|---|---|", *diff, ""]
+        lines += ["## Where they differ", "", "Failures per check:", "",
+                  "| Check | " + " | ".join(runs) + " |", "|---|---|---|", *diff, ""]
+    lines += ["## Answers that failed a check", ""]
+    for label, v in runs.items():
+        bad = [x for x in v if not all(x["checks"].values())]
+        lines.append(f"**{label}:** " + ("none." if not bad else ""))
+        for x in bad:
+            failed = ", ".join(k.replace("_", " ") for k, ok in x["checks"].items() if not ok)
+            lines.append(f"- {x['minute']}' {x['lang']} {x['persona']}, \"{x['question']}\" ({failed}): {x['answer']}")
+        lines.append("")
     lines += ["## Every answer, side by side", ""]
     solo = {x["id"]: x for x in runs["One agent alone"]}
     for x in runs["Press Room (2 agents)"]:

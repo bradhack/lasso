@@ -168,6 +168,7 @@ Here's how the code covers the brief's five stages:
 - The fast Laplace posterior matches full NUTS MCMC (posterior means correlate at 0.99996)
 - **2.2M** synthetic events across 1,900 matches and five seasons, with a hidden truth to evaluate against
 - **27 of 27** Ask the Gaffer answers and **12 of 12** match stories pass every automated check against the match data, in four languages (see the [agent evaluation](docs/agent-eval.md))
+- **25 of 27** for one agent doing both of the Press Room's jobs, on the same questions: it once answered a Spanish fan half in English and once ran out of time ([two agents or one?](docs/agent-comparison.md))
 
 ### The league
 
