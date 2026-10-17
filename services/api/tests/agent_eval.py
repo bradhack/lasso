@@ -35,6 +35,8 @@ FANS = [("en_fan", "en", "fan", "home"), ("en_analyst", "en", "analyst", None), 
 QUESTIONS = [
     ("fr_why", 7, "fr_fan", "Pourquoi les chances ont bougé ?", {}),
     ("red_when", 8, "en_fan", "When was the red card, and who got it?", {"red_card": True}),
+    # A follow-up from the same fan: "his" is the player from their last question (Lorford, sent off).
+    ("red_sub", 12, "en_fan", "Who's his sub?", {"cant_replace": True}),
     ("replace", 12, "en_analyst", "Who replaces Lorford?", {"cant_replace": True}),
     ("scorer", 17, "en_fan", "Who scored Eastholme's goal?", {"scorer_of": ("home", 14)}),
     ("es_why", 18, "es_fan", "¿Por qué cambiaron las opciones?", {}),

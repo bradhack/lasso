@@ -10,7 +10,7 @@ import os
 import re
 import time
 import uuid
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from pathlib import Path
 
 from fastapi import FastAPI, Header, HTTPException, Query, Request, WebSocket
@@ -540,6 +540,9 @@ def text_fingerprint(text: str) -> str:
     return f"{h:08x}"
 
 
+# Ask the Gaffer remembers a fan's last few questions in a match, for follow-ups.
+CHAT_MEMORY = 3
+_chats: "OrderedDict[tuple[str, str], deque]" = OrderedDict()
 _story_versions: OrderedDict[str, dict] = OrderedDict()  # moment id -> its instant wording, once replaced
 
 
@@ -1051,7 +1054,8 @@ async def ask(match_id: str, body: AskIn) -> dict:
         if sent_off:
             brief["sent_off"] = sent_off
             rules.append("A sent-off player cannot be replaced by a substitute; that team plays the rest of the "
-                         "match a man short.")
+                         "match a man short. If the fan asks who replaced, came on for or subbed in for a sent-off "
+                         "player, say nobody can; never offer a different substitution as his replacement.")
         if room.status == "finished":
             # The result is settled: no live chances to quote (they'd read "a 100% chance to win").
             brief.pop("chances_pct", None)
@@ -1060,6 +1064,9 @@ async def ask(match_id: str, body: AskIn) -> dict:
             rules.append("The match is over and the result is final: never quote a current chance of winning (no "
                          "100% or 0%). Talk about the result; quote a chance only as it was at a moment during the "
                          "match, for example before the winner.")
+        # This fan's last questions here, so a follow-up ("who's his sub?") knows who "he" is.
+        if earlier := list(_chats.get((body.user_id, match_id), [])):
+            brief["earlier_in_this_chat"] = earlier
         if rules:
             brief["rules"] = " ".join(rules)
         pkg = await agents.produce(brief)
@@ -1084,6 +1091,11 @@ async def ask(match_id: str, body: AskIn) -> dict:
         answer = _ask_fallback(room, lang)
     log.info("ask %s %s source=%s %dms", match_id, ask_id, source, int((time.time() - t0) * 1000))
     _answers[ask_id] = (lang, answer)
+    chat = _chats.setdefault((body.user_id, match_id), deque(maxlen=CHAT_MEMORY))
+    chat.append({"minute": room.minute(), "question": question, "answer": answer})
+    _chats.move_to_end((body.user_id, match_id))
+    while len(_chats) > 5000:
+        _chats.popitem(last=False)
     while len(_answers) > 1000:
         _answers.popitem(last=False)
     room.fans.add(body.user_id)

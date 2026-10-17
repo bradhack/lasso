@@ -83,7 +83,7 @@ Design choices worth a look:
 - **The right amount of thinking.** Short, structured jobs use the model's fastest setting, which cut a story from about 30 seconds to under 15.
 - **One shared toolbox.** The Gaffer's eleven tools are the only way any agent reaches live data. Any other MCP client, GitHub Copilot for example, can use the same tools.
 - **Nothing hidden.** Every agent run records what it looked up, how long it took and how many tokens it used. Fans can see this in the app (**Under the hood**), and it's also sent to Azure Application Insights for monitoring.
-- **Measured, not assumed.** An evaluation script replays the showcase match on the live app, asks the agents 26 set questions at set minutes from five test fans (four languages, fan and analyst), and checks every answer and every story automatically against the match's own data. See "How good are the agents?" below.
+- **Measured, not assumed.** An evaluation script replays the showcase match on the live app, asks the agents 27 set questions at set minutes (including a follow-up that only makes sense with the question before it) from five test fans (four languages, fan and analyst), and checks every answer and every story automatically against the match's own data. See "How good are the agents?" below.
 
 ### How good are the agents?
 

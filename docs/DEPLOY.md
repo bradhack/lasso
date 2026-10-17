@@ -78,7 +78,7 @@ az containerapp secret show -n <that name> -g $rg --secret-name admin-key --quer
 python services/api/tests/agent_eval.py "$LASSO_APP_URL" --key <admin key>
 ```
 
-It replays the showcase match (about 8 minutes), asks 26 set questions from five test fans in four languages, checks every answer and every agent-written story against the match data, and writes `docs/agent-eval.md`. It restarts that match for anyone watching, so run it when no one is judging, and wait a minute after a deploy so the new version is serving. Standard library only.
+It replays the showcase match (about 8 minutes), asks 27 set questions from five test fans in four languages, checks every answer and every agent-written story against the match data, and writes `docs/agent-eval.md`. It restarts that match for anyone watching, so run it when no one is judging, and wait a minute after a deploy so the new version is serving. Standard library only.
 
 ## Run locally (no Azure needed)
 
