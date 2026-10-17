@@ -51,8 +51,8 @@ SCENES = [
              "the Gaffer, our AI, doesn't fancy their chances."},
     {"id": "why", "title": "Why it moved",
      "show": "Why it moved glows: the agents' latest story, in plain words.",
-     "line": "Wondering why? AI agents explain it in plain English, Spanish, Portuguese or French, with every "
-             "number straight from the Gaffer's model."},
+     "line": "Wondering why? Why it moved tells you what changed the likelihood of each result, in plain English, "
+             "Spanish, Portuguese or French, with every number straight from the Gaffer's model."},
     {"id": "ask", "title": "Ask the Gaffer",
      "show": "Typing \"Can Eastholme still win this?\" into Ask the Gaffer; the answer arrives with its AI agents chip.",
      "line": "Got a question? Just ask. One agent digs up the facts through MCP, and another writes your answer, "
