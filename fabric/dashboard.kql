@@ -18,7 +18,7 @@ LassoEvents
 // 3. Each agent's time, in seconds (Bar chart)
 LassoEvents
 | where ts between (_startTime .. _endTime) and event_kind == "agent_run" and ok
-| summarize typical = percentile(ms, 50) / 1000.0, slowest_p95 = percentile(ms, 95) / 1000.0, runs = count() by agent
+| summarize typical = percentile(ms, 50) / 1000.0, slowest_p95 = percentile(ms, 95) / 1000.0 by agent
 | order by typical desc
 
 // 4. Tokens per story and per answer (Table)
@@ -60,7 +60,7 @@ LassoEvents
 LassoEvents
 | where ts between (_startTime .. _endTime) and event_kind == "answer"
 | summarize answers = count(), needed_a_fix = countif(fix_count > 0), typical_s = percentile(latency_ms, 50) / 1000.0,
-    typical_tokens = percentile(tokens, 50), tool_calls = avg(tool_calls)
+    typical_tokens = percentile(tokens, 50), tool_calls = round(avg(tool_calls), 1)
     by mode
 
 // 10. Questions by language (Pie chart)
@@ -68,9 +68,10 @@ LassoEvents
 | where ts between (_startTime .. _endTime) and event_kind == "answer"
 | summarize count() by lang
 
-// 11. The Gaffer's Gauge, story by story, for the latest match (Time chart)
+// 11. The Gaffer's Gauge, story by story, for the latest replay (Time chart): from its latest kickoff on
 LassoEvents
 | where ts between (_startTime .. _endTime) and event_kind == "story"
 | where match_id == toscalar(LassoEvents | where event_kind == "story" | top 1 by ts desc | project match_id)
+| where ts >= toscalar(LassoEvents | where event_kind == "story" and minute <= 2 | summarize max(ts))
 | project ts, home_win = p_home, draw = p_draw, away_win = p_away
 | render timechart

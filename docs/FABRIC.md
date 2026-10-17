@@ -11,6 +11,10 @@ Lasso API ──(every story, answer and agent run)──> Eventstream ──> E
 - **Off by default:** nothing is sent until `LASSO_FABRIC_CONNECTION` is set. The connection string is a Container Apps secret, never in the repo.
 - **Fabric pieces:** the table and its mapping (`fabric/setup.kql`) and the dashboard's tiles (`fabric/dashboard.kql`).
 
+![The Lasso agents dashboard in Fabric: stories and answers over time, answer times, each agent's time, tokens, what the code checks caught, how the agents recovered, the MCP tools chosen, the biggest swings, languages, two agents against one, and the Gaffer's Gauge](img/fabric-dashboard.png)
+
+*The dashboard after two evaluation runs on the live app (the Press Room, then the single-agent baseline).*
+
 ## Set it up (about 30 minutes)
 
 You need a Fabric workspace on a Fabric capacity (the 60-day Fabric trial works) and a work or school account in Microsoft Entra ID. A personal Microsoft account can't use Fabric; a user created in your Azure subscription's own directory (`you@yourdirectory.onmicrosoft.com`) can.
