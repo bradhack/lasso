@@ -240,10 +240,20 @@ _A_AN = re.compile(r"\b([Aa]) (?=(?:early|earlier|extra|equali[sz]er|own goal|un
                    r"85th|86th|87th|88th|89th)\b|(?:8\d?|11|18) ?%)")
 
 
+# "put Brackenford ahead 0-1": whoever leads, the leader's score comes first ("ahead 1-0").
+_LEAD_SCORE = re.compile(r"\b(ahead|lead|leads|leading|in front)( by)? (\d{1,2})-(\d{1,2})\b", re.IGNORECASE)
+
+
+def _leader_first(m: re.Match) -> str:
+    a, b = int(m.group(3)), int(m.group(4))
+    return f"{m.group(1)}{m.group(2) or ''} {max(a, b)}-{min(a, b)}"
+
+
 def _localize(lang: str, text: str) -> str:
-    """Deterministic fixes for what models still slip on: US spelling, and English left in translations."""
+    """Deterministic fixes for what models still slip on: US spelling, the leader's score first, and English
+    left in translations."""
     if lang == "en":
-        return _A_AN.sub(lambda m: m.group(1) + "n ", _US_RE.sub(_us, text))
+        return _A_AN.sub(lambda m: m.group(1) + "n ", _US_RE.sub(_us, _LEAD_SCORE.sub(_leader_first, text)))
     if fmt := _FROM_TO_LANG.get(lang):
         text = _FROM_TO.sub(lambda m: fmt.format(m.group(1), m.group(2)), text)
     for pat, rep in _FIXES.get(lang, []):
@@ -310,6 +320,8 @@ async def enrich(room: MatchRoom, moment: dict) -> None:
     brief["focus_team"] = room.names[moment["focus"]]
     h, a = moment["score"]
     brief["score_text"] = f"{room.names[0]} {h}-{a} {room.names[1]}"
+    # Time left in normal time, so "nine minutes left" at 89' can't happen (stoppage time comes on top).
+    brief["minutes_left"] = max(0, (90 if moment.get("period", 1) == 2 or moment["minute"] > 45 else 45) - moment["minute"])
     reds = list(room.state.reds)
     red_drives = any(d.get("component") == "red_cards" for d in moment.get("drivers") or [])
     if any(reds) and (moment["trigger"] in ("red_card", "goal", "full_time", "var_overturned") or red_drives):

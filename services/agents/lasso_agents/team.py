@@ -59,6 +59,7 @@ Write naturally:
   out ("fifty-six minutes", "ochenta y dos"). Time left is a number too: "20 minutes left".
 - In a goal story, name the scorer (the brief's player). In a red card story, name the player sent off.
 - When you say who leads, give the score from the leader's side: "Brackenford lead 1-0", never "lead 0-1".
+- If you mention time left, use the brief's minutes_left (time left in this half, before stoppage time).
 - Don't open with the score line ("Eastholme Rangers 2-1."); weave the score into a sentence if it helps.
 - No possession, xG or shot counts in the story; analysts get those elsewhere.
 - Mention a red card or "ten men" only when this moment is the red card, or when the brief's drivers name the

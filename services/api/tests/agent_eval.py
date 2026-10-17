@@ -436,6 +436,14 @@ def check_story(m: dict) -> dict[str, bool]:
     said = [int(x.group(1) or x.group(2)) for x in GOAL_AT.finditer(en)]
     if said:  # "Belwell scores ... in the 29th minute" when it was the 14th
         c["goal_minutes_right"] = all(any(abs(n - g) <= 1 for g in goals) for n in said)
+    # "ahead 0-1": the leader's score comes first.
+    c["leader_score_first"] = not any(int(x.group(2)) < int(x.group(3)) for x in
+                                      re.finditer(r"\b(ahead|lead|leads|leading|in front)(?: by)? (\d{1,2})-(\d{1,2})\b", en, re.I))
+    left = re.search(r"\b(\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten) minutes?(?: plus stoppage(?: time)?)? (?:left|to go|remaining)", en, re.I)
+    if left:  # "nine minutes left" at 89'
+        words = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}
+        n = int(left.group(1)) if left.group(1).isdigit() else words[left.group(1).lower()]
+        c["time_left_right"] = abs(n - max(0, (90 if m["minute"] > 45 else 45) - m["minute"])) <= 2
     if leads_wrong(en, m.get("score") or [0, 0], NAMES):
         c["leader_right"] = False
     elif LEAD_SCORE.search(en):
