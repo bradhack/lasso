@@ -80,6 +80,14 @@ python services/api/tests/agent_eval.py "$LASSO_APP_URL" --key <admin key>
 
 It replays the showcase match (about 8 minutes), asks 27 set questions from five test fans in four languages, checks every answer and every agent-written story against the match data, and writes `docs/agent-eval.md`. It restarts that match for anyone watching, so run it when no one is judging, and wait a minute after a deploy so the new version is serving. Standard library only.
 
+To compare the Press Room with one agent doing both jobs, run it again with `--solo` after a normal run:
+
+```bash
+python services/api/tests/agent_eval.py "$LASSO_APP_URL" --key <admin key> --solo
+```
+
+It asks the same questions of the single-agent baseline (only the admin key can request it), writes `docs/agent-eval-solo.md`, and then `docs/agent-comparison.md`, the side-by-side of both runs.
+
 ## Run locally (no Azure needed)
 
 ```bash

@@ -49,7 +49,8 @@ You don't have to wait for the loop. **Watch the big moments**, at the top of th
 - **VAR, priced both ways.** When VAR reviews a goal, the Gaffer prices both futures at once (the goal stands, or it's ruled out), opens a quick call on the decision, and settles it when the ruling arrives. A disallowed goal gets its own story with what it would have meant. The Match Feed adds the checks to the synthetic replay with realistic timing. *Where:* `services/api/lasso_api/matchroom.py` (`_var_event`), `feed.py` (`var_plan`), `web/src/components/VarCheck.tsx`.
 - **Stories you can hear.** Listen reads stories and answers aloud with Azure AI Speech neural voices, on the same Foundry account and identity (no keys). The server supplies the text, so it can't be used to read anything else, and each clip is made once and cached. Text is rewritten for the ear before it's spoken (minutes, "versus", scores, abbreviations). *Where:* `services/api/lasso_api/speech.py`, `web/src/components/Listen.tsx`.
 - **One command to deploy everything.** All the Azure resources are defined as code (Bicep) and deployed with `azd up`. Services sign in to each other with Azure identities, so there are no passwords or keys to leak. *Where:* `infra/`, [deploy guide](DEPLOY.md).
-- **Tested on every change.** GitHub Actions runs the model tests, the AI agent workflows (with a scripted stand-in for the AI model), the app build and the infrastructure check on every push. Separate scripts test the live system end to end and play the app in a phone-sized browser. *Where:* `.github/workflows/ci.yml`, `services/api/tests/`, `web/e2e/play.py`.
+- **Tested on every change.** GitHub Actions runs the model tests, the AI agent workflows (with a scripted stand-in for the AI model), 45 cases for the code checks, the app build and the infrastructure check on every push. Every check case is a real slip from an evaluation run ("Gané con diez", "Brackenford mène 2-1" when they trailed), replayed against the showcase match at the minute it happened, so a fixed slip can't come back unnoticed. Separate scripts test the live system end to end and play the app in a phone-sized browser. A security workflow (Microsoft Security DevOps) scans the code, templates and dependencies. *Where:* `.github/workflows/`, `services/api/tests/test_guards.py`, `web/e2e/play.py`, [security](SECURITY.md).
+- **Ready for GitHub Copilot.** Open the repo in VS Code and Copilot Agent Mode gets the Gaffer's eleven live tools and the Azure MCP Server (`.vscode/mcp.json`), plus two prompt files: one answers a match question with the agents' own tools, the other triages an evaluation into guards, tests and checks (`.github/prompts/`).
 
 **How good is the model?** Tested on a full season (380 matches) it never saw. Details in the [model report](model-report.md):
 
@@ -82,6 +83,7 @@ Design choices worth a look:
 - **The app never waits on AI.** Every story appears instantly from a template, and the agents' version replaces it when ready. Each agent has a time limit, and if one fails, only its own part is skipped.
 - **The right amount of thinking.** Short, structured jobs use the model's fastest setting, which cut a story from about 30 seconds to under 15.
 - **One shared toolbox.** The Gaffer's eleven tools are the only way any agent reaches live data. Any other MCP client, GitHub Copilot for example, can use the same tools.
+- **Checked by code, in the open.** Before a fan sees an answer, up to 19 code checks run on it: the right club for every percentage and lead, who's likelier to score next, real minutes and players' full names, neutral wording, no talk of notes or tools. A story that gets a fact wrong keeps its exact instant version. Under the hood shows what the checks fixed, and how each agent recovered (a second try when one was slow, a retry after an unusable reply, an answer from the match facts when the Scout ran out of time).
 - **Nothing hidden.** Every agent run records what it looked up, how long it took and how many tokens it used. Fans can see this in the app (**Under the hood**), and it's also sent to Azure Application Insights for monitoring.
 - **Measured, not assumed.** An evaluation script replays the showcase match on the live app, asks the agents 27 set questions at set minutes (including a follow-up that only makes sense with the question before it) from five test fans (four languages, fan and analyst), and checks every answer and every story automatically against the match's own data. See "How good are the agents?" below.
 
@@ -124,14 +126,12 @@ Both numbers come from the same run, on the live app, with every feature in plac
 
 ## 5. Category: Best Multi-Agent System
 
-**In short:** a real team of specialists, not one chatbot.
+**In short:** a real team of specialists, not one chatbot. The rules name four things judges look for; here's each one.
 
-- **Specialists:** seven agents, each with one job, its own instructions and only the tools it needs.
-- **Teamwork:** in the Match Director, agents work at the same time in two rounds, then their work is combined (fan-out and fan-in). In the Press Room, one agent hands its research to the next.
-- **A standard way to talk:** the app reaches the agents over A2A, and one front door routes each request to the right team.
-- **A shared toolbox:** eleven tools over MCP, used by four of the agents. Ask "how would this result change the standings?" and the Scout picks `season_outlook`; ask who's playing best and it picks `player_impact`.
-- **Safe and reliable:** each agent has a time limit, there's always a fallback, and a fan's question can't make the agents do anything, because the agent that answers has no tools at all. Daily limits keep costs in check.
-- **Visible:** **Under the hood** shows every run in the app, so the multi-agent system is something a fan can actually see.
+- **Specialized agents with distinct roles.** Seven agents, each with one job, its own instructions and only the tools it needs. The agent that writes answers has no tools at all, so a fan's question can't make it do anything.
+- **Coordination through shared state and handoffs.** In the Match Director, Stats and the Gaffer work at the same time on the same brief, their findings are merged into one shared context, and the Narrator, Persona and Game Master write from it at the same time (fan-out, fan-in). In the Press Room, the Scout hands its research to the Gaffer. Every number comes from one shared toolbox (eleven MCP tools over the Gaffer's model), so the agents can't disagree about the facts. The app reaches both teams over A2A, through one front door.
+- **Recovery from failures.** Every agent has a time limit, and a failed agent only costs its own part: the story's instant version stays, or the Gaffer answers from the match facts it always gets. A slow Gaffer gets a second try alongside it (the first to answer wins), an unusable reply gets one firm retry, and a malformed one is recovered. Then up to 19 code checks catch factual slips. All of it shows in **Under the hood**.
+- **A result one agent can't match.** We measured it: the same 27 questions, answered by the Press Room and by one agent with the same tools, rules and time, scored by the same checks. See [Two agents or one?](agent-comparison.md).
 
 ## How it was built
 

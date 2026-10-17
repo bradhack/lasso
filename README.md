@@ -185,7 +185,9 @@ Twenty fictional clubs, each with an original crest designed as one set: a disti
 | `web/` | React + TypeScript phone app (installable PWA) and broadcast overlay |
 | `infra/` | Bicep for the whole stack, deployed with `azd up`. Keyless managed identity throughout |
 | `data/demo/` | The held-out season the app replays, plus the trained model |
-| `docs/` | [Lasso for judges](docs/JUDGING.md), [model report](docs/model-report.md), [agent evaluation](docs/agent-eval.md), [deploy guide](docs/DEPLOY.md), [security](docs/SECURITY.md) |
+| `.github/` | CI, the security workflow, Copilot instructions and prompt files |
+| `.vscode/mcp.json` | GitHub Copilot Agent Mode: the Gaffer's live MCP tools and the Azure MCP Server |
+| `docs/` | [Lasso for judges](docs/JUDGING.md), [two agents or one?](docs/agent-comparison.md), [model report](docs/model-report.md), [agent evaluation](docs/agent-eval.md), [deploy guide](docs/DEPLOY.md), [security](docs/SECURITY.md) |
 
 ## Quick start
 
@@ -199,6 +201,18 @@ pip install -e engine -r services/api/requirements.txt
 
 To deploy to Azure, see [docs/DEPLOY.md](docs/DEPLOY.md). The short version: `azd up`.
 
+To run the tests (the same ones CI runs):
+
+```bash
+(cd engine && pytest -q)
+(cd services/agents && python -m pytest -q)
+(cd services/api && LASSO_DATA_DIR=../../data/demo python -m pytest -q tests/test_guards.py)
+```
+
+## Use the Gaffer's tools in GitHub Copilot
+
+Open the repo in VS Code with GitHub Copilot. `.vscode/mcp.json` connects Copilot Agent Mode to two MCP servers: **lasso**, the Gaffer's eleven read-only tools on the live app (the same ones the agents use), and the **Azure MCP Server**, for the Azure resources behind it. Ask "who's likelier to score next in the live match?", or run the `ask-the-gaffer` prompt (`.github/prompts/`). The `triage-evaluation` prompt turns a new evaluation into fixes, tests and checks, the way this repo was built.
+
 To regenerate the league and retrain the model:
 
 ```bash
@@ -209,6 +223,15 @@ python -m lasso_engine.evaluate --data ../data/league --model ../data/model --do
 python -m lasso_engine.export_demo
 cd .. && python docs/charts/render_meter.py   # the showcase Gaffer's Gauge chart
 ```
+
+## Running at scale
+
+Today one API copy holds the live matches in memory, which keeps every fan's Gauge exactly in step and costs little. The path to many concurrent matches is already in the design:
+
+- **Fans:** connections go to Azure Web PubSub, not the API, so the number of fans doesn't depend on the API's size.
+- **Matches:** events are keyed by match on Event Hubs, so matches can be split across API copies, each owning its matches' partitions. A restarted copy already catches up a match from the feed.
+- **Agents:** the agents service holds no state and already scales from one to three copies; Foundry model capacity is the limit to raise.
+- **Fan data** (biscuits, calls, stickers, leagues) is in Cosmos DB, which scales on its own.
 
 ## Responsible design
 
