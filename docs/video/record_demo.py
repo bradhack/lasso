@@ -59,8 +59,8 @@ SCENES = [
              "in a few seconds."},
     {"id": "callit", "title": "Call it",
      "show": "Call it: \"Eastholme Rangers score before 89'?\" Yes, then Lasso it.",
-     "line": "Feeling brave? Call it. Eastholme to score is a long shot, so it pays big. No money, just biscuits "
-             "and bragging rights."},
+     "line": "Feeling brave? Call it. Biscuit rewards are set by the Gaffer's own calculated odds, so a long shot "
+             "like Eastholme scoring pays big. No money, just biscuits and bragging rights."},
     {"id": "goal", "title": "Penke's winner",
      "show": "82': Penke scores, the Gauge jumps, Called it! pays out, and the agents' story replaces the instant one.",
      "line": "And Penke scores! The Gauge jumps, your call pays off, and a few seconds later the agents tell the "
