@@ -17,7 +17,7 @@ You need a Fabric workspace on a Fabric capacity (the 60-day Fabric trial works)
 
 1. **Workspace.** In [Fabric](https://app.fabric.microsoft.com), create a workspace named **Lasso** on the Fabric trial (or a Fabric capacity).
 2. **Eventhouse.** In the workspace, choose **New item**, then **Eventhouse**, named `lasso`. It comes with a KQL database named `lasso`.
-3. **The table.** Open the `lasso` KQL database, choose **Query with code** (or open its queryset), paste all of `fabric/setup.kql`, select it all and choose **Run**. That creates the `LassoEvents` table and its JSON mapping.
+3. **The table.** Open the `lasso` KQL database, choose **Query with code** (or open its queryset), paste all of `fabric/setup.kql`, click anywhere inside the command (below the comment lines) and choose **Run**. It's one script that creates the `LassoEvents` table and its JSON mapping.
 4. **Eventstream.** Choose **New item**, then **Eventstream**, named `lasso-insights`.
    - **Add source**, then **Custom endpoint**, named `lasso-api`. Choose **Publish**.
    - Select the `lasso-api` source. On **Event Hub**, under **SAS Key Authentication**, copy **Connection string-primary key**.
