@@ -247,12 +247,15 @@ def speech_account(resource_group: str | None) -> tuple[str, str]:
     return acct["id"], acct["location"]
 
 
+PITCH = "+0%"  # --pitch: a little higher sounds livelier on voices without an excited style
+
+
 def ssml_for(text: str, voice: str, style: str | None, rate: str) -> str:
     for a, b in SAY:
         text = text.replace(a, b)
     text = text.replace("&", "and").replace("<", "").replace(">", "")
-    if rate and rate not in ("0%", "+0%"):
-        text = f"<prosody rate='{rate}'>{text}</prosody>"
+    if (rate and rate not in ("0%", "+0%")) or PITCH not in ("0%", "+0%"):
+        text = f"<prosody rate='{rate or '+0%'}' pitch='{PITCH}'>{text}</prosody>"
     if style:
         text = f"<mstts:express-as style='{style}'>{text}</mstts:express-as>"
     return (f"<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' "
@@ -730,6 +733,7 @@ if __name__ == "__main__":
                     help="the voice's speaking style, for voices that have one (default excited; also newscast, "
                          "cheerful; none for no style)")
     ap.add_argument("--rate", default="+14%", help="speaking rate, e.g. +10%% or -5%% (default +14%%)")
+    ap.add_argument("--pitch", default="+0%", help="voice pitch, e.g. +6%% for a livelier read (default +0%%)")
     ap.add_argument("--sample-voices", nargs="?", const="us", choices=["us", "uk"],
                     help="say the opening and the VAR moment in about twenty voices, into docs/video/out/voices, and stop")
     ap.add_argument("--preview", action="store_true",
@@ -737,6 +741,7 @@ if __name__ == "__main__":
     ap.add_argument("--resource-group", help="where Lasso's Foundry account is (default: from azd)")
     ap.add_argument("--script-only", action="store_true", help="write docs/video/SCRIPT.md and stop")
     a = ap.parse_args()
+    PITCH = a.pitch
     if a.style and a.style.lower() == "none":
         a.style = None
     write_script(HERE / "SCRIPT.md")
