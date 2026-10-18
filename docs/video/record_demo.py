@@ -50,7 +50,7 @@ WORDS_PER_SECOND = 2.9  # Azure AI Speech at the recorder's default rate
 
 # The script: one entry per scene, in order. "line" is what you say; the scene lasts at least as long as it takes.
 SCENES = [
-    {"id": "intro", "title": "Lasso",
+    {"id": "intro", "title": "Lasso", "slower": 8,
      "show": "Slide: the Lasso cover, while the showcase match restarts underneath.",
      "line": "This is Lasso. It's a team of AI agents that watches live football with you, explains every shift in "
              "momentum, answers your questions, and lets you predict what happens next."},
@@ -158,6 +158,7 @@ OVERLAY_CSS = """
 #demo-slide .eyebrow { font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 600; font-size: 28px;
   letter-spacing: .12em; color: #C9A45C; }
 .toast:not(.win):not(.goal) { display: none !important; }
+body:not(.demo-confetti) > canvas { display: none !important; }  /* confetti only when the calls pay out */
 .toasts { top: auto !important; bottom: 96px; left: auto !important; right: 48px; transform: none !important; }
 .demo-big .sheet { align-items: center; }
 .demo-big .sheet-inner.uth { max-width: 700px; zoom: 1.42; max-height: calc(92dvh / 1.42); border-radius: 28px; }
@@ -650,6 +651,7 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: float | None, n
             print("    (the goal hadn't stood within a minute)")
         page.wait_for_timeout(300)  # the page gets the goal a moment after the API
         s = rec.scene("goal")
+        page.evaluate("() => document.body.classList.add('demo-confetti')")
         page.evaluate("() => window.scrollTo({ top: 0, behavior: 'smooth' })")
         glow(rec, ".app.wide section.card")
         rec.wait(min(3.0, s["min"] / 2))
@@ -663,6 +665,7 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: float | None, n
             print("    (the agents' story for the goal hadn't arrived after 30 seconds; using the latest one)")
 
         s = rec.scene("hood")
+        page.evaluate("() => document.body.classList.remove('demo-confetti')")
         glow(rec, None)
         page.evaluate("() => document.body.classList.add('demo-big')")
         chip = page.locator(".card.why .chip.agents")
