@@ -315,7 +315,11 @@ def synthesize(lines: list[str], voice: str, resource_id: str, region: str, fold
             if e.code == 400:
                 if skip_unknown:
                     return []
-                sys.exit(f"Azure AI Speech rejected the voice {voice!r} (or the style {style!r}); pick another.")
+                bad = folder / f"rejected-{i + 1:02d}.ssml"
+                bad.write_text(ssml, encoding="utf-8")
+                body = e.read().decode("utf-8", "replace")[:300]
+                sys.exit(f"Azure AI Speech rejected line {i + 1} ({caption(line)[:60]}...) for {voice!r}, style "
+                         f"{style!r}: {body or 'no details'}\nWhat was sent: {bad}")
             raise
         path = folder / (names[i] if names else f"{i + 1:02d}.mp3")
         path.write_bytes(audio)
