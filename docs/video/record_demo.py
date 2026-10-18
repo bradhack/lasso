@@ -61,12 +61,13 @@ SCENES = [
              "odds aren't great: they've been down to ten men since a red card in the fifth minute."},
     {"id": "why", "title": "Why it moved",
      "show": "Why it moved glows: the agents' latest story, in plain words.",
-     "line": "When the odds swing, Why it moved is the place to look. It explains each big shift in momentum and "
-             "what caused it, in English, Spanish, Portuguese or French. [pause 150] Pick yours in your profile."},
+     "line": "When the odds swing, Why it moved is the place to look. It explains every shift in momentum and what "
+             "caused it, for fans or analysts, in English, Spanish, Portuguese or French. [pause 150] Pick yours in "
+             "your profile."},
     {"id": "ask", "title": "Ask the Gaffer",
      "show": "Typing \"Can Eastholme still win this?\" into Ask the Gaffer; the answer arrives with its AI agents chip.",
-     "line": "Ask any question, at any time. One agent gathers the facts through the Model Context Protocol, and "
-             "another writes your answer."},
+     "line": "Ask anything, any time. One agent gathers the facts through the Model Context Protocol, and another "
+             "writes your answer."},
     {"id": "callit", "title": "Call your shot",
      "show": "Call it: \"Eastholme Rangers score before 89'?\" Yes, then Lasso it.",
      "line": "Want to predict what happens next? If you're feeling brave, call your shot. Biscuit rewards follow "
@@ -118,7 +119,7 @@ def write_script(path: Path) -> None:
     out = ["# Lasso demo video: the script", "",
            f"About {total:.0f} seconds of narration (the recording runs a little longer while the live match plays). "
            "Generated from `docs/video/record_demo.py`, which records the video to match. With `--voice` it narrates "
-           "these lines itself with an Azure AI Speech voice (Jane, excited, by default; `--sample-voices` says the "
+           "these lines itself with an Azure AI Speech voice (Jane, excited, a little lower, by default; `--sample-voices` says the "
            "opening and the VAR moment in about twenty voices so you can pick one, and `--style` and `--rate` change the "
            "delivery); without it, read them over the video, using `out/narration.md` for each scene's exact start "
            "time. The video must stay under two minutes.", "",
@@ -260,7 +261,7 @@ def speech_account(resource_group: str | None) -> tuple[str, str]:
     return acct["id"], acct["location"]
 
 
-PITCH = "+0%"  # --pitch: a little higher sounds livelier on voices without an excited style
+PITCH = "-10%"  # --pitch: a little higher sounds livelier on voices without an excited style
 
 
 def ssml_for(text: str, voice: str, style: str | None, rate: str) -> str:
@@ -767,7 +768,8 @@ if __name__ == "__main__":
                     help="the voice's speaking style, for voices that have one (default excited; also newscast, "
                          "cheerful; none for no style)")
     ap.add_argument("--rate", default="+14%", help="speaking rate, e.g. +10%% or -5%% (default +14%%)")
-    ap.add_argument("--pitch", default="+0%", help="voice pitch, e.g. -4 for a calmer read or 6 for a livelier one (default 0)")
+    ap.add_argument("--pitch", default="-10%", help="voice pitch, e.g. -6 for a brighter read or 0 for Jane's own "
+                    "(default -10, a little lower and calmer)")
     ap.add_argument("--sample-voices", nargs="?", const="us", choices=["us", "uk"],
                     help="say the opening and the VAR moment in about twenty voices, into docs/video/out/voices, and stop")
     ap.add_argument("--preview", action="store_true",
