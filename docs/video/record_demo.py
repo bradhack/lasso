@@ -53,7 +53,7 @@ SCENES = [
     {"id": "intro", "title": "Lasso",
      "show": "Slide: the Lasso cover, while the showcase match restarts underneath.",
      "line": "This is Lasso. It's a team of AI agents that watches live football with you, explains every shift in "
-             "momentum, answers your questions, and lets you call what happens next."},
+             "momentum, answers your questions, and lets you predict what happens next."},
     {"id": "gauge", "title": "The Gaffer's Gauge",
      "show": "The live match: Eastholme Rangers 1-1 Brackenford City in the second half, Eastholme down to ten. "
              "The score and the Gauge glow.",
@@ -70,7 +70,8 @@ SCENES = [
     {"id": "callit", "title": "Call your shot",
      "show": "Call it: \"Eastholme Rangers score before 89'?\" Yes, then Lasso it.",
      "line": "Want to predict what happens next? If you're feeling brave, call your shot. Biscuit rewards follow "
-             "the Gaffer's calculated odds, so long shots pay big. No money. [pause 250] Just bragging rights."},
+             "the Gaffer's calculated odds, so long shots pay big. [neutral]No money.[/neutral] [pause 250] Just "
+             "bragging rights."},
     {"id": "var", "title": "VAR check",
      "show": "82': Eastholme scores and VAR checks it. The VAR card shows the Gauge both ways; Call it asks "
              "\"Will the goal stand?\" and the fan picks It stands.",
@@ -96,7 +97,7 @@ SCENES = [
      "show": "Slide: the Lasso cover.",
      "line": "That's Lasso. Watch smarter, call it first, and believe your call."},
 ]
-MARKUP = re.compile(r"\[(?:pause \d+|/?up|/?fast)\]")
+MARKUP = re.compile(r"\[(?:pause \d+|/?up|/?fast|/?neutral)\]")
 
 
 def caption(text: str) -> str:
@@ -267,10 +268,13 @@ def ssml_for(text: str, voice: str, style: str | None, rate: str) -> str:
     text = re.sub(r"\[pause (\d+)\]", r"<break time='\1ms'/>", text)
     text = (text.replace("[up]", "<prosody pitch='+8%' volume='+15%'>").replace("[/up]", "</prosody>")
             .replace("[fast]", "<prosody rate='+30%'>").replace("[/fast]", "</prosody>"))
-    if (rate and rate not in ("0%", "+0%")) or PITCH not in ("0%", "+0%"):
-        text = f"<prosody rate='{rate or '+0%'}' pitch='{PITCH}'>{text}</prosody>"
-    if style:
-        text = f"<mstts:express-as style='{style}'>{text}</mstts:express-as>"
+    pros = f"<prosody rate='{rate or '+0%'}' pitch='{PITCH}'>"
+    if style:  # [neutral]...[/neutral]: those words in the voice's plain style, then back
+        text = (text.replace("[neutral]", f"</prosody></mstts:express-as>{pros}")
+                .replace("[/neutral]", f"</prosody><mstts:express-as style='{style}'>{pros}"))
+        text = f"<mstts:express-as style='{style}'>{pros}{text}</prosody></mstts:express-as>"
+    else:
+        text = f"{pros}{text.replace('[neutral]', '').replace('[/neutral]', '')}</prosody>"
     return (f"<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' "
             f"xmlns:mstts='https://www.w3.org/2001/mstts' xml:lang='en-US'><voice name='{voice}'>{text}</voice></speak>")
 

@@ -4,7 +4,7 @@ About 100 seconds of narration (the recording runs a little longer while the liv
 
 | # | Scene | On screen | Say | At least |
 |---|---|---|---|---|
-| 1 | Lasso | Slide: the Lasso cover, while the showcase match restarts underneath. | This is Lasso. It's a team of AI agents that watches live football with you, explains every shift in momentum, answers your questions, and lets you call what happens next. | 11s |
+| 1 | Lasso | Slide: the Lasso cover, while the showcase match restarts underneath. | This is Lasso. It's a team of AI agents that watches live football with you, explains every shift in momentum, answers your questions, and lets you predict what happens next. | 11s |
 | 2 | The Gaffer's Gauge | The live match: Eastholme Rangers 1-1 Brackenford City in the second half, Eastholme down to ten. The score and the Gauge glow. | We're following our team, Eastholme Rangers. They're all square with Brackenford City, but their odds aren't great: they've been down to ten men since a red card in the fifth minute. | 11s |
 | 3 | Why it moved | Why it moved glows: the agents' latest story, in plain words. | When the odds swing, Why it moved is the place to look. It explains each big shift in momentum and what caused it, in English, Spanish, Portuguese or French. Pick yours in your profile. | 13s |
 | 4 | Ask the Gaffer | Typing "Can Eastholme still win this?" into Ask the Gaffer; the answer arrives with its AI agents chip. | Ask any question, at any time. One agent gathers the facts through the Model Context Protocol, and another writes your answer. | 8s |
