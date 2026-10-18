@@ -258,6 +258,7 @@ export interface Market {
   kind: string;
   copy: string | Localized | null;
   params?: { team?: string; until?: number };
+  featured?: boolean; // opened on purpose (the demo recorder): shown first
 }
 
 /** One ball action for the Pitch view. Home attacks left to right; pitch is 105 x 68 m. */

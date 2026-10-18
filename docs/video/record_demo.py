@@ -450,12 +450,13 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: float | None, n
     if not shutil.which("ffmpeg"):
         sys.exit("ffmpeg isn't on the PATH. On Windows: winget install Gyan.FFmpeg (then open a new terminal).")
     out.mkdir(parents=True, exist_ok=True)
-    try:  # the short VAR check needs the API from October 17 or later
-        spec = http(app, "GET", "/openapi.json")
-        params = spec["paths"][f"/api/admin/matches/{{match_id}}/restart"]["post"].get("parameters", [])
-        if not any(prm.get("name") == "var_seconds" for prm in params):
-            sys.exit("The app's API is older than this recorder: its VAR check would hold the video for 30 seconds. "
-                     "Run `azd deploy api`, then record again.")
+    try:  # the short VAR check and the demo's call need the API from October 18 or later
+        paths = http(app, "GET", "/openapi.json")["paths"]
+        params = paths["/api/admin/matches/{match_id}/restart"]["post"].get("parameters", [])
+        if not any(prm.get("name") == "var_seconds" for prm in params) \
+                or "/api/admin/matches/{match_id}/call" not in paths:
+            sys.exit("The app's API is older than this recorder (it needs the short VAR check and the demo's own "
+                     "Call your shot). Run `azd deploy api`, then record again.")
     except (KeyError, urllib.error.URLError):
         pass
     clips: list[Path] = []
@@ -546,12 +547,15 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: float | None, n
 
         s = rec.scene("callit")
         glow(rec, "section.callit")
-        try:  # the call that matters: Eastholme to score before the 85th to 89th minute
-            page.wait_for_function("() => /score before 8[5-9]/.test(document.querySelector('section.callit')?.innerText"
-                                   " || '') && /Eastholme/.test(document.querySelector('section.callit')?.innerText || '')",
-                                   timeout=30000)
+        try:  # the call the script is about, opened now (the Game Master may have picked another)
+            http(app, "POST", f"/api/admin/matches/{MATCH}/call?team=0", {}, key)
+        except Exception as e:  # noqa: BLE001
+            print(f"    (couldn't open the Eastholme-to-score call: {e})")
+        try:
+            page.wait_for_function("() => { const t = document.querySelector('section.callit')?.innerText || '';"
+                                   " return /Eastholme/.test(t) && /score before/i.test(t); }", timeout=5000)
         except Exception:  # noqa: BLE001
-            print("    (no Eastholme-to-score call yet; using the one open now)")
+            print("    (no Eastholme-to-score call on screen; using the one open now)")
         callit = page.locator("section.callit")
         callit.scroll_into_view_if_needed()
         rec.wait(0.6)
@@ -563,10 +567,15 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: float | None, n
                 cursor_to(rec, lasso)
         rec.hold(s)
 
-        try:  # the goal goes in and VAR checks it
-            page.wait_for_selector(".card.var.checking", timeout=90000)
-        except Exception:  # noqa: BLE001
-            print("    (no VAR check within 90 seconds: check the replay pace)")
+        deadline = time.monotonic() + 90  # the goal goes in and VAR checks it
+        while time.monotonic() < deadline and not page.locator(".card.var.checking").count():
+            try:
+                if (http(app, "GET", f"/api/matches/{MATCH}").get("score") or [0, 0])[0] >= 2:
+                    print("    (the VAR check had already ended: the goal stood before Call your shot finished)")
+                    break
+            except Exception:  # noqa: BLE001
+                pass
+            rec.wait(0.3)
         s = rec.scene("var")
         page.evaluate("() => { const v = document.querySelector('.card.var'); if (v) window.scrollTo({ top: "
                       "Math.max(0, v.getBoundingClientRect().top + window.scrollY - 90), behavior: 'smooth' }); }")

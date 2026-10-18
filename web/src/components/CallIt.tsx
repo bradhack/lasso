@@ -21,7 +21,8 @@ export function CallIt({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
   const market: Market | undefined = useMemo(() => {
     const open = snap.markets.filter((m) => m.status === "open");
     // A VAR check is the moment: its question jumps the queue.
-    return open.find((m) => m.kind === "var" && !calls[m.market_id]) ?? open.find((m) => !calls[m.market_id]) ??
+    return open.find((m) => m.kind === "var" && !calls[m.market_id]) ??
+      open.find((m) => m.featured && !calls[m.market_id]) ?? open.find((m) => !calls[m.market_id]) ??
       open[open.length - 1] ??
       [...snap.markets].reverse().find((m) => calls[m.market_id] && m.status !== "settled");
   }, [snap.markets, calls]);

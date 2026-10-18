@@ -1581,6 +1581,24 @@ async def restart(match_id: str, key: str = "", from_minute: float = 0.0, minute
     return {"ok": True}
 
 
+@app.post("/api/admin/matches/{match_id}/call")
+async def open_call(match_id: str, team: int = Query(0, ge=0, le=1), x_admin_key: str = Header("", max_length=200)):
+    """Admin: open "<team> score before ...?" now and show it first (the demo recorder's Call your shot)."""
+    if not settings.admin_key or not hmac.compare_digest(x_admin_key.encode(), settings.admin_key.encode()):
+        raise HTTPException(403, "bad key")
+    room = rooms.get(match_id)
+    if room is None or room.status != "live":
+        raise HTTPException(409, "the match isn't live")
+    cand = next((c for c in generate_markets(room.gaffer, room.state, *room.names)
+                 if c.market_id.startswith(f"score-{team}-")), None)
+    if cand is None:
+        raise HTTPException(409, "no call to open")
+    msgs = room.open_market(cand, featured=True)
+    for msg in msgs:
+        await publish(room, msg)
+    return {"ok": True, "market_id": msgs[0]["market"]["market_id"] if msgs else None}
+
+
 # ----------------------------------------------------------- web app (same origin)
 _dist: Path = settings.web_dist
 if _dist.exists():

@@ -74,12 +74,13 @@ class Market:
     result: str | None = None
     goals_at_open: tuple[int, int] = (0, 0)
     params: dict = field(default_factory=dict)  # what the app needs to phrase the question in any language
+    featured: bool = False  # opened on purpose (the demo recorder): the app shows it first
 
     def public(self) -> dict:
         return {"market_id": self.market_id, "match_id": self.match_id, "question": self.question,
                 "options": self.options, "closes": {"period": self.closes[0], "clock": self.closes[1]},
                 "status": self.status, "result": self.result, "kind": self.kind, "copy": self.copy,
-                "params": self.params}
+                "params": self.params, **({"featured": True} if self.featured else {})}
 
 
 class MatchRoom:
@@ -821,7 +822,7 @@ class MatchRoom:
         cands.sort(key=lambda c: interest(c) - (0.3 if c.market_id.split("-")[0] in recent else 0), reverse=True)
         return cands[0] if cands else None
 
-    def open_market(self, c, copy: dict | str | None = None) -> list[dict]:
+    def open_market(self, c, copy: dict | str | None = None, featured: bool = False) -> list[dict]:
         if c.market_id in self.markets:
             return []
         p, clock = self.state.period, self.state.clock
@@ -831,7 +832,7 @@ class MatchRoom:
         m = Market(market_id=f"{self.match_id}:{c.market_id}", match_id=self.match_id, question=c.question,
                    options=c.options, period=p, opened_clock=clock, closes=(p, closes_clock), settles=c.settles,
                    kind=c.market_id.split("-")[0], copy=copy, goals_at_open=tuple(self.state.goals),
-                   params=self._market_params(c.settles))
+                   params=self._market_params(c.settles), featured=featured)
         self.markets[m.market_id] = m
         self.last_market_min = self.minute()
         return [{"type": "market_open", "market": m.public()}]
