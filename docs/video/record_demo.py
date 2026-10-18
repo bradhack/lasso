@@ -32,6 +32,7 @@ from __future__ import annotations
 import argparse
 import base64
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -51,8 +52,8 @@ WORDS_PER_SECOND = 2.9  # Azure AI Speech at the recorder's default rate
 SCENES = [
     {"id": "intro", "title": "Lasso",
      "show": "Slide: the Lasso cover, while the showcase match restarts underneath.",
-     "line": "This is Lasso. A team of AI agents watches live football with you, explains every shift in momentum, "
-             "answers your questions, and lets you call what happens next."},
+     "line": "This is Lasso. It's a team of AI agents that watches live football with you, explains every shift in "
+             "momentum, answers your questions, and lets you call what happens next."},
     {"id": "gauge", "title": "The Gaffer's Gauge",
      "show": "The live match: Eastholme Rangers 1-1 Brackenford City in the second half, Eastholme down to ten. "
              "The score and the Gauge glow.",
@@ -61,29 +62,29 @@ SCENES = [
     {"id": "why", "title": "Why it moved",
      "show": "Why it moved glows: the agents' latest story, in plain words.",
      "line": "When the odds swing, Why it moved is the place to look. It explains each big shift in momentum and "
-             "what caused it, in English, Spanish, Portuguese or French."},
+             "what caused it, in English, Spanish, Portuguese or French. [pause 150] Pick yours in your profile."},
     {"id": "ask", "title": "Ask the Gaffer",
      "show": "Typing \"Can Eastholme still win this?\" into Ask the Gaffer; the answer arrives with its AI agents chip.",
      "line": "Ask any question, at any time. One agent gathers the facts through the Model Context Protocol, and "
              "another writes your answer."},
     {"id": "callit", "title": "Call your shot",
      "show": "Call it: \"Eastholme Rangers score before 89'?\" Yes, then Lasso it.",
-     "line": "Feeling brave? Call your shot. Biscuit rewards are set by the Gaffer's calculated odds, so long shots "
-             "pay big. No money, just bragging rights."},
+     "line": "Want to predict what happens next? If you're feeling brave, call your shot. Biscuit rewards follow "
+             "the Gaffer's calculated odds, so long shots pay big. No money. [pause 250] Just bragging rights."},
     {"id": "var", "title": "VAR check",
      "show": "82': Eastholme scores and VAR checks it. The VAR card shows the Gauge both ways; Call it asks "
              "\"Will the goal stand?\" and the fan picks It stands.",
-     "line": "Eastholme scores! But hold on, VAR is reviewing it. You can watch the review live, and take a guess: "
-             "will the goal stand? We say yes."},
+     "line": "Eastholme scores! But hold on, VAR is reviewing it. Watch it live, and take a guess: will the goal "
+             "stand? We say yes."},
     {"id": "goal", "title": "It stands",
      "show": "The goal stands: the Gauge jumps, both calls pay out, and the agents' story replaces the instant one.",
-     "line": "It stands! Eastholme's chances jump, and both our calls win biscuits: Eastholme to score, and the "
-             "goal to stand."},
-    {"id": "hood", "title": "Under the hood",
+     "line": "It stands. [pause 250] Eastholme's chances to win jump, and [up]both our calls win biscuits![/up] "
+             "[pause 550] We correctly predicted Eastholme would score, and that the VAR review would stand."},
+    {"id": "hood", "title": "Under the hood", "slower": 8,
      "show": "Under the hood for the goal's story, enlarged: round one (Stats, Gaffer), round two (Narrator, "
              "Persona, Game Master), then Checked by code, each highlighted in turn.",
      "line": "Let's look at how those agents wrote that story. Two agents work out what changed, three more write "
-             "it, and our code checks every fact before you see it."},
+             "it, and our code checks every fact."},
     {"id": "fabric", "title": "Microsoft Fabric",
      "show": "Slide: the Lasso agents dashboard in Microsoft Fabric, panning down.",
      "line": "Everything streams into Microsoft Fabric, so we can track the agents' speed, cost and mistakes."},
@@ -95,8 +96,17 @@ SCENES = [
      "show": "Slide: the Lasso cover.",
      "line": "That's Lasso. Watch smarter, call it first, and believe your call."},
 ]
+MARKUP = re.compile(r"\[(?:pause \d+|/?up|/?fast)\]")
+
+
+def caption(text: str) -> str:
+    """A line as captions show it: without the voice's markup ([pause 300], [up]...[/up], [fast]...[/fast])."""
+    return re.sub(r"\s{2,}", " ", MARKUP.sub("", text)).replace(" .", ".").strip()
+
+
 for s in SCENES:
-    s["min"] = round(len(s["line"].split()) / WORDS_PER_SECOND + 0.7, 1)
+    s["min"] = round(len(caption(s["line"]).split()) / WORDS_PER_SECOND + 0.7
+                     + sum(int(n) for n in re.findall(r"\[pause (\d+)\]", s["line"])) / 1000, 1)
 
 
 # ---------------------------------------------------------------- the script, as a document
@@ -112,8 +122,8 @@ def write_script(path: Path) -> None:
            "time. The video must stay under two minutes.", "",
            "| # | Scene | On screen | Say | At least |", "|---|---|---|---|---|"]
     for i, s in enumerate(SCENES, 1):
-        out.append(f"| {i} | {s['title']} | {s['show']} | {s['line']} | {s['min']:.0f}s |")
-    out += ["", f"{sum(len(s['line'].split()) for s in SCENES)} words in all."]
+        out.append(f"| {i} | {s['title']} | {s['show']} | {caption(s['line'])} | {s['min']:.0f}s |")
+    out += ["", f"{sum(len(caption(s['line']).split()) for s in SCENES)} words in all."]
     path.write_text("\n".join(out) + "\n", encoding="utf-8")
 
 
@@ -200,7 +210,7 @@ def slide_html(scene: str, seconds: float) -> str:
 # ---------------------------------------------------------------- the narration voice (Azure AI Speech)
 
 # How the voice should say what's written for readers.
-SAY = [("A2A", "A to A"), ("MCP", "M C P"), ("Cosmos DB", "Cosmos D B"), ("Web PubSub", "Web Pub Sub"),
+SAY = [("A2A", "[fast]A to A[/fast]"), ("MCP", "M C P"), ("Cosmos DB", "Cosmos D B"), ("Web PubSub", "Web Pub Sub"),
        ("AI ", "A I "), ("Lasso:", "Lasso."), ("27/27", "27 of 27"), ("1-1", "one all"), ("VAR", "V A R")]
 
 # Voices worth hearing for the narration, with a speaking style where the voice has one (--sample-voices).
@@ -254,6 +264,9 @@ def ssml_for(text: str, voice: str, style: str | None, rate: str) -> str:
     for a, b in SAY:
         text = text.replace(a, b)
     text = text.replace("&", "and").replace("<", "").replace(">", "")
+    text = re.sub(r"\[pause (\d+)\]", r"<break time='\1ms'/>", text)
+    text = (text.replace("[up]", "<prosody pitch='+8%' volume='+15%'>").replace("[/up]", "</prosody>")
+            .replace("[fast]", "<prosody rate='+30%'>").replace("[/fast]", "</prosody>"))
     if (rate and rate not in ("0%", "+0%")) or PITCH not in ("0%", "+0%"):
         text = f"<prosody rate='{rate or '+0%'}' pitch='{PITCH}'>{text}</prosody>"
     if style:
@@ -262,15 +275,21 @@ def ssml_for(text: str, voice: str, style: str | None, rate: str) -> str:
             f"xmlns:mstts='https://www.w3.org/2001/mstts' xml:lang='en-US'><voice name='{voice}'>{text}</voice></speak>")
 
 
+def adjust(rate: str, slower: int) -> str:
+    """A rate like +14% made `slower` points slower."""
+    n = int(rate.strip("%") or 0) - slower
+    return f"{n:+d}%"
+
+
 def synthesize(lines: list[str], voice: str, resource_id: str, region: str, folder: Path,
                style: str | None = None, rate: str = "+14%", names: list[str] | None = None,
-               skip_unknown: bool = False) -> list[Path]:
+               skip_unknown: bool = False, slower: list[int] | None = None) -> list[Path]:
     token = _cli("az", "account", "get-access-token", "--resource", "https://cognitiveservices.azure.com",
                  "--query", "accessToken", "-o", "tsv")
     folder.mkdir(parents=True, exist_ok=True)
     files = []
     for i, line in enumerate(lines):
-        ssml = ssml_for(line, voice, style, rate)
+        ssml = ssml_for(line, voice, style, adjust(rate, slower[i]) if slower else rate)
         req = urllib.request.Request(
             f"https://{region}.tts.speech.microsoft.com/cognitiveservices/v1", data=ssml.encode("utf-8"),
             method="POST", headers={"Authorization": f"Bearer aad#{resource_id}#{token}",
@@ -334,7 +353,8 @@ def preview_voice(out: Path, voice: str, style: str | None, rate: str, resource_
     tag = voice.replace(":", "-") + (f"-{style}" if style else "")
     folder = out / "preview" / tag
     shutil.rmtree(folder, ignore_errors=True)
-    clips = synthesize([s["line"] for s in SCENES], voice, resource_id, region, folder, style, rate)
+    clips = synthesize([s["line"] for s in SCENES], voice, resource_id, region, folder, style, rate,
+                       slower=[s.get("slower", 0) for s in SCENES])
     lst = folder / "list.txt"
     gap = folder / "gap.mp3"
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", "anullsrc=r=48000:cl=mono", "-t", "0.6",
@@ -478,7 +498,8 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: float | None, n
     if voice:  # the lines first: each scene then lasts as long as its voice
         resource_id, region = speech_account(resource_group)
         print(f"Narrating with {voice}{f' ({style})' if style else ''} (Azure AI Speech, {region})...")
-        clips = synthesize([s["line"] for s in SCENES], voice, resource_id, region, out / "voice", style, rate)
+        clips = synthesize([s["line"] for s in SCENES], voice, resource_id, region, out / "voice", style, rate,
+                           slower=[s.get("slower", 0) for s in SCENES])
         for s, clip in zip(SCENES, clips):
             s["min"] = round(duration(clip) + 0.5, 2)
         print(f"  {sum(s['min'] for s in SCENES):.0f} seconds of narration")
@@ -538,7 +559,7 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: float | None, n
         page.wait_for_selector(".card.why", timeout=30000)
         page.evaluate("() => window.scrollTo({ top: 0 })")
         hide_slide(rec)
-        rec.wait(0.8)  # a breath on the live match before the voice
+        rec.wait(0.5)  # a breath on the live match before the voice
 
         s = rec.scene("gauge")
         glow(rec, ".app.wide section.card")  # the score and the Gauge
@@ -711,8 +732,8 @@ def write_captions(rec: Recorder, end: float, out: Path) -> None:
     srt, md = [], ["# Narration, timed to lasso-demo.mp4", "", "| Starts | Scene | Say |", "|---|---|---|"]
     for i, (s, t) in enumerate(rec.starts):
         nxt = rec.starts[i + 1][1] if i + 1 < len(rec.starts) else end
-        srt += [str(i + 1), f"{stamp(t + 0.2)} --> {stamp(nxt - 0.2)}", s["line"], ""]
-        md.append(f"| {stamp(t, False)} | {s['title']} | {s['line']} |")
+        srt += [str(i + 1), f"{stamp(t + 0.2)} --> {stamp(nxt - 0.2)}", caption(s["line"]), ""]
+        md.append(f"| {stamp(t, False)} | {s['title']} | {caption(s['line'])} |")
     (out / "lasso-demo.srt").write_text("\n".join(srt), encoding="utf-8")
     (out / "narration.md").write_text("\n".join(md) + "\n", encoding="utf-8")
 
