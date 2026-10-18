@@ -14,8 +14,8 @@ Lasso is a live, multi-agent match companion for phones and broadcasts, built fo
 
 - It ingests synthetic football events in real time: a simulated league, replayed like a live broadcast through Azure Event Hubs. For a real league, only the feed changes ([where the matches come from](docs/JUDGING.md#where-the-matches-come-from)).
 - It updates a Bayesian win-probability model, **the Gaffer**, with every chance, card and goal. The model's output is the **Gaffer's Gauge**.
-- It explains every swing, so fans know *why* it moved.
-- **Fan or analyst:** fans get the story in plain English and their club's angle; analysts get every driver in points, xG and field tilt.
+- It explains every key activity and change in momentum, so fans know *why* it moved.
+- **Fan or analyst:** fans get the story in plain English and their club's angle; analysts get every driver in points, expected goals (xG) and field tilt.
 - **Ask the Gaffer:** fans ask anything about the match in their own words ("Why did our chances drop at 5'?") and get an answer in their language. A Scout agent picks the Gaffer's MCP tools that answer it, and the Gaffer replies from those facts alone.
 - **Touch the sign:** when a side falls behind, a BELIEVE sign goes up. Fans who still believe touch it, see how many others believe, and get a biscuit bonus if their side draws level.
 - **Season outlook:** the league table as it stands, moving live as goals go in, and what this match means for each club's season: their title, top-four or relegation chance now and if they win, draw or lose. The Gaffer plays out the rest of the season 10,000 times, and the odds blend with the live Gauge every second. At full time, the story says what the result did to the season.
