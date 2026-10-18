@@ -61,9 +61,9 @@ SCENES = [
              "odds aren't great: they've been down to ten men since a red card in the fifth minute."},
     {"id": "why", "title": "Why it moved",
      "show": "Why it moved glows: the agents' latest story, in plain words.",
-     "line": "When the odds swing, Why it moved is the place to look. It explains every shift in momentum and what "
-             "caused it, for fans or analysts, in English, Spanish, Portuguese or French. [pause 150] Pick yours in "
-             "your profile."},
+     "line": "When momentum shifts, Why it moved is the place to look: the plain story for fans, or every number "
+             "behind it for analysts, in English, Spanish, Portuguese or French. [pause 150] Pick yours in your "
+             "profile."},
     {"id": "ask", "title": "Ask the Gaffer",
      "show": "Typing \"Can Eastholme still win this?\" into Ask the Gaffer; the answer arrives with its AI agents chip.",
      "line": "Ask anything, any time. One agent gathers the facts through the Model Context Protocol, and another "
