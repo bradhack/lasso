@@ -70,7 +70,8 @@ SCENES = [
     {"id": "callit", "title": "Call your shot",
      "show": "Call it: \"Eastholme Rangers score before 89'?\" Yes, then Lasso it.",
      "line": "Want to predict what happens next? If you're feeling brave, call your shot. Biscuit rewards follow "
-             "the Gaffer's calculated odds, so long shots pay big. No money... [pause 150] just bragging rights."},
+             "the Gaffer's calculated odds, so long shots pay big. [down]No money,[/down] [pause 250] just bragging "
+             "rights."},
     {"id": "var", "title": "VAR check",
      "show": "82': Eastholme scores and VAR checks it: VAR CHECK over the Pitch, the VAR card shows the Gauge both "
              "ways, and Call it asks "
@@ -97,7 +98,7 @@ SCENES = [
      "show": "Slide: the Lasso cover.",
      "line": "That's Lasso. Watch smarter, call it first, and believe your call."},
 ]
-MARKUP = re.compile(r"\[(?:pause \d+|/?up|/?fast|/?neutral)\]")
+MARKUP = re.compile(r"\[(?:pause \d+|/?up|/?down|/?fast|/?neutral)\]")
 
 
 def caption(text: str) -> str:
@@ -268,6 +269,7 @@ def ssml_for(text: str, voice: str, style: str | None, rate: str) -> str:
     text = text.replace("&", "and").replace("<", "").replace(">", "")
     text = re.sub(r"\[pause (\d+)\]", r"<break time='\1ms'/>", text)
     text = (text.replace("[up]", "<prosody pitch='+8%' volume='+15%'>").replace("[/up]", "</prosody>")
+            .replace("[down]", "<prosody pitch='-5%' volume='-12%'>").replace("[/down]", "</prosody>")
             .replace("[fast]", "<prosody rate='+30%'>").replace("[/fast]", "</prosody>"))
     pros = f"<prosody rate='{rate or '+0%'}' pitch='{PITCH}'>"
     if style:  # [neutral]...[/neutral]: those words in the voice's plain style, then back
