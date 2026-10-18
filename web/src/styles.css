@@ -147,6 +147,12 @@ a { color: var(--silver); }
 .pitch .ball .halo { opacity: 0.22; }
 .pitch .goalflash circle { fill: none; stroke: var(--gold); stroke-width: 0.8; transform-box: fill-box; transform-origin: center; animation: ring 1.4s ease-out forwards; }
 .pitch .goalflash text { font-family: var(--num); font-weight: 700; font-size: 13px; letter-spacing: 0.12em; fill: var(--gold); animation: flashword 3.2s ease forwards; }
+.pitch .varflash .veil { fill: var(--bg); opacity: 0.62; animation: varveil 0.4s ease; }
+.pitch .varflash .screen { fill: none; stroke: var(--gold); stroke-width: 1; stroke-linejoin: round; stroke-dasharray: 80; stroke-dashoffset: 80; animation: varscreen 1.1s ease-out 0.2s forwards; }
+.pitch .varflash .rec { fill: var(--gold); animation: pulse 1.2s ease-in-out infinite; }
+.pitch .varflash text { font-family: var(--num); font-weight: 700; font-size: 7px; letter-spacing: 0.14em; fill: var(--gold); animation: pulse 1.6s ease-in-out infinite; }
+@keyframes varveil { from { opacity: 0; } to { opacity: 0.62; } }
+@keyframes varscreen { to { stroke-dashoffset: 0; } }
 .pitch-foot { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; margin-top: 8px; font-size: 12px; color: var(--muted); }
 .pitch-foot .dir { display: flex; align-items: center; gap: 5px; font-weight: 700; color: var(--text-2); }
 .pitch-foot .dir b { color: var(--muted); font-weight: 400; }
@@ -155,7 +161,10 @@ a { color: var(--silver); }
 @keyframes pop { 0% { transform: scale(0.2); } 100% { transform: scale(1); } }
 @keyframes ring { 0% { transform: scale(0.3); opacity: 1; } 100% { transform: scale(2.6); opacity: 0; } }
 @keyframes flashword { 0% { opacity: 0; } 10% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .pitch .shot.now, .pitch .goalflash circle { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .pitch .shot.now, .pitch .goalflash circle, .pitch .varflash .rec, .pitch .varflash text { animation: none; }
+  .pitch .varflash .screen { animation: none; stroke-dashoffset: 0; }
+}
 .winline { margin-top: 14px; }
 .winline .eyebrow { font-size: 11px; }
 .callit-link { display: flex; align-items: center; gap: 4px; color: var(--gold); font-weight: 700; font-size: 13px; }

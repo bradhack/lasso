@@ -173,6 +173,15 @@ export function Pitch({ snap, lang }: { snap: MatchSnapshot; lang: Lang }) {
                 <circle cx={x.x} cy={x.y} r="4.5" className="hit" />
               </g>
             ))}
+            {snap.var?.status === "checking" && view === "live" && (
+              // VAR is reviewing a goal: the referee's screen, drawn in the air, over the live pitch.
+              <g key={`var-${snap.var.minute}`} className="varflash" role="img" aria-label={t("varCheck", lang)}>
+                <rect className="veil" x={-3} y={-3} width={W + 6} height={H + 6} />
+                <rect className="screen" x={W / 2 - 12} y={H / 2 - 17} width={24} height={15} rx={1.2} />
+                <circle className="rec" cx={W / 2 + 8.5} cy={H / 2 - 13.5} r={1.1} />
+                <text x={W / 2} y={H / 2 + 9} textAnchor="middle">{t("varCheck", lang).toUpperCase()}</text>
+              </g>
+            )}
             {flash && view === "live" && (
               <g key={`goal-${flash.s}`} className="goalflash">
                 <circle cx={flash.k === 0 ? W : 0} cy={H / 2} r="6" />

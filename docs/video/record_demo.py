@@ -73,7 +73,8 @@ SCENES = [
              "the Gaffer's calculated odds, so long shots pay big. [neutral]No money.[/neutral] [pause 250] Just "
              "bragging rights."},
     {"id": "var", "title": "VAR check",
-     "show": "82': Eastholme scores and VAR checks it. The VAR card shows the Gauge both ways; Call it asks "
+     "show": "82': Eastholme scores and VAR checks it: VAR CHECK over the Pitch, the VAR card shows the Gauge both "
+             "ways, and Call it asks "
              "\"Will the goal stand?\" and the fan picks It stands.",
      "line": "Eastholme scores! But hold on, VAR is reviewing it. Watch it live, and take a guess: will the goal "
              "stand? We say yes."},
