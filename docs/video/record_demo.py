@@ -294,7 +294,21 @@ def synthesize(lines: list[str], voice: str, resource_id: str, region: str, fold
     return files
 
 
-def sample_voices(out: Path, resource_group: str | None, rate: str) -> None:
+# British and Irish women's voices (--sample-voices uk). Azure has no Scottish voice.
+SAMPLE_VOICES_UK = [
+    ("en-GB-SoniaNeural", "cheerful"),            # the liveliest: Sonia has a cheerful style
+    ("en-GB-SoniaNeural", None),
+    ("en-GB-LibbyNeural", None),
+    ("en-GB-AbbiNeural", None),
+    ("en-GB-BellaNeural", None),
+    ("en-GB-HollieNeural", None),
+    ("en-GB-OliviaNeural", None),
+    ("en-GB-AdaMultilingualNeural", None),
+    ("en-IE-EmilyNeural", None),                  # Irish
+]
+
+
+def sample_voices(out: Path, resource_group: str | None, rate: str, which: str = "us") -> None:
     """Say the opening and the VAR moment in each voice in SAMPLE_VOICES, to pick one by ear."""
     resource_id, region = speech_account(resource_group)
     folder = out / "voices"
@@ -303,7 +317,7 @@ def sample_voices(out: Path, resource_group: str | None, rate: str) -> None:
              next(s["line"] for s in SCENES if s["id"] == "var")]
     text = " ".join(lines)
     print(f"Voice samples ({region}), in {folder}:")
-    for voice, style in SAMPLE_VOICES:
+    for voice, style in (SAMPLE_VOICES_UK if which == "uk" else SAMPLE_VOICES):
         name = voice.replace(":", "-") + (f"-{style}" if style else "") + ".mp3"
         made = synthesize([text], voice, resource_id, region, folder, style, rate, [name], skip_unknown=True)
         print(f"  {name:48s}" + ("" if made else "  (not available in this region)"))
@@ -716,7 +730,7 @@ if __name__ == "__main__":
                     help="the voice's speaking style, for voices that have one (default excited; also newscast, "
                          "cheerful; none for no style)")
     ap.add_argument("--rate", default="+14%", help="speaking rate, e.g. +10%% or -5%% (default +14%%)")
-    ap.add_argument("--sample-voices", action="store_true",
+    ap.add_argument("--sample-voices", nargs="?", const="us", choices=["us", "uk"],
                     help="say the opening and the VAR moment in about twenty voices, into docs/video/out/voices, and stop")
     ap.add_argument("--preview", action="store_true",
                     help="say the whole script in the --voice (and --style) into docs/video/out, without recording")
@@ -730,7 +744,7 @@ if __name__ == "__main__":
         print(f"Wrote {HERE / 'SCRIPT.md'}")
         sys.exit(0)
     if a.sample_voices:
-        sample_voices(Path(a.out), a.resource_group, a.rate)
+        sample_voices(Path(a.out), a.resource_group, a.rate, a.sample_voices)
         sys.exit(0)
     if a.preview:
         preview_voice(Path(a.out), a.voice or "en-US-JaneNeural", a.style, a.rate, a.resource_group)
