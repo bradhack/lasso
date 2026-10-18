@@ -56,12 +56,12 @@ SCENES = [
     {"id": "gauge", "title": "The Gaffer's Gauge",
      "show": "The live match: Eastholme Rangers 1-1 Brackenford City in the second half, Eastholme down to ten. "
              "The score and the Gauge glow.",
-     "line": "We're following Eastholme Rangers: 1-1 late in the second half, down to ten men since an early red "
-             "card, and our win probability model, the Gaffer, doesn't fancy their chances."},
+     "line": "We're following our team, Eastholme Rangers. They're all square with Brackenford City, but their "
+             "odds aren't great: they've been down to ten men since a red card in the fifth minute."},
     {"id": "why", "title": "Why it moved",
      "show": "Why it moved glows: the agents' latest story, in plain words.",
-     "line": "Next, Why it moved. It explains what caused the win probability to change, in English, Spanish, "
-             "Portuguese or French."},
+     "line": "When the odds swing, Why it moved is the place to look. It explains each big shift in momentum and "
+             "what caused it, in English, Spanish, Portuguese or French."},
     {"id": "ask", "title": "Ask the Gaffer",
      "show": "Typing \"Can Eastholme still win this?\" into Ask the Gaffer; the answer arrives with its AI agents chip.",
      "line": "Ask any question, at any time. One agent gathers the facts through the Model Context Protocol, and "
@@ -73,24 +73,20 @@ SCENES = [
     {"id": "var", "title": "VAR check",
      "show": "82': Eastholme scores and VAR checks it. The VAR card shows the Gauge both ways; Call it asks "
              "\"Will the goal stand?\" and the fan picks It stands.",
-     "line": "Eastholme scores! But VAR is checking it. The Gauge shows both outcomes, and a new call appears: "
+     "line": "Eastholme scores! But hold on, VAR is reviewing it. You can watch the review live, and take a guess: "
              "will the goal stand? We say yes."},
     {"id": "goal", "title": "It stands",
      "show": "The goal stands: the Gauge jumps, both calls pay out, and the agents' story replaces the instant one.",
-     "line": "It stands! The Gauge jumps, and both our calls win biscuits: Eastholme to score, and the goal to "
-             "stand."},
+     "line": "It stands! Eastholme's chances jump, and both our calls win biscuits: Eastholme to score, and the "
+             "goal to stand."},
     {"id": "hood", "title": "Under the hood",
      "show": "Under the hood for the goal's story, enlarged: round one (Stats, Gaffer), round two (Narrator, "
              "Persona, Game Master), then Checked by code, each highlighted in turn.",
-     "line": "How did the agents write that story? Tap AI agents to look under the hood: two agents work out what "
-             "changed, three more write the story, and our code checks every fact before you see it."},
+     "line": "Let's look at how those agents wrote that story. Two agents work out what changed, three more write "
+             "it, and our code checks every fact before you see it."},
     {"id": "fabric", "title": "Microsoft Fabric",
      "show": "Slide: the Lasso agents dashboard in Microsoft Fabric, panning down.",
      "line": "Everything streams into Microsoft Fabric, so we can track the agents' speed, cost and mistakes."},
-    {"id": "compare", "title": "A team of agents or one",
-     "show": "Slide: the Press Room team against one agent alone, on the same 27 questions.",
-     "line": "Is a team of AI agents better than one? On the same 27 questions, the team passed them all, and a "
-             "single agent missed two."},
     {"id": "arch", "title": "How it's built",
      "show": "Slide: how Lasso works, seven agents and one live pipeline.",
      "line": "Built on Microsoft Foundry and Agent Framework, over A2A and the Model Context Protocol, all running "
@@ -150,6 +146,8 @@ OVERLAY_CSS = """
   margin: 0; letter-spacing: .01em; }
 #demo-slide .eyebrow { font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif; font-weight: 600; font-size: 28px;
   letter-spacing: .12em; color: #C9A45C; }
+.toast:not(.win):not(.goal) { display: none !important; }
+.toasts { top: auto !important; bottom: 96px; left: auto !important; right: 48px; transform: none !important; }
 .demo-big .sheet { align-items: center; }
 .demo-big .sheet-inner.uth { max-width: 700px; zoom: 1.42; max-height: calc(92dvh / 1.42); border-radius: 28px; }
 .uth .demo-glow { box-shadow: none !important; outline: 3px solid #C9A45C; outline-offset: 6px; border-radius: 18px; }
@@ -521,7 +519,9 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: float | None, n
         while not (start - 0.1 <= clock() <= start + 2.0) and time.monotonic() < deadline:
             rec.wait(0.5)  # until the restarted match reaches the start (not the old one still playing)
         page.wait_for_selector(".card.why", timeout=30000)
+        page.evaluate("() => window.scrollTo({ top: 0 })")
         hide_slide(rec)
+        rec.wait(0.8)  # a breath on the live match before the voice
 
         s = rec.scene("gauge")
         glow(rec, ".app.wide section.card")  # the score and the Gauge
@@ -577,10 +577,9 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: float | None, n
                 pass
             rec.wait(0.3)
         s = rec.scene("var")
-        page.evaluate("() => { const v = document.querySelector('.card.var'); if (v) window.scrollTo({ top: "
-                      "Math.max(0, v.getBoundingClientRect().top + window.scrollY - 90), behavior: 'smooth' }); }")
+        page.evaluate("() => window.scrollTo({ top: 0, behavior: 'smooth' })")  # the Pitch, the Gauge and the review
         glow(rec, ".card.var")
-        rec.wait(1.2)
+        rec.wait(min(4.0, s["min"] * 0.4))
         try:  # the quick call jumps the queue: will the goal stand?
             page.wait_for_function("() => /stand/i.test(document.querySelector('section.callit')?.innerText || '')",
                                    timeout=5000)
@@ -593,6 +592,8 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: float | None, n
                     cursor_to(rec, lasso)
         except Exception:  # noqa: BLE001
             print("    (the VAR call didn't open in time)")
+        page.evaluate("() => window.scrollTo({ top: 0, behavior: 'smooth' })")  # back up for the decision
+        glow(rec, ".card.var")
         rec.hold(s)
 
         deadline = time.monotonic() + 60
@@ -610,7 +611,7 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: float | None, n
         page.evaluate("() => window.scrollTo({ top: 0, behavior: 'smooth' })")
         glow(rec, ".app.wide section.card")
         rec.wait(min(3.0, s["min"] / 2))
-        glow(rec, ".card.why", scroll=True)
+        glow(rec, ".card.why")
         rec.hold(s)
         try:  # the agents' story for the goal: Why it moved gets its "AI agents" chip
             page.wait_for_function("() => { const w = document.querySelector('.card.why');"
@@ -642,7 +643,7 @@ def run(app: str, key: str, out: Path, pace: float, from_minute: float | None, n
             glow(rec, None)
             cursor_to(rec, page.locator(".sheet .uth button.cta"))
 
-        for scene_id in ("fabric", "compare", "arch", "close"):
+        for scene_id in ("fabric", "arch", "close"):
             s = rec.scene(scene_id)
             show_slide(rec, s)
             rec.hold(s)
