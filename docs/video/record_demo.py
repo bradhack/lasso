@@ -763,7 +763,7 @@ if __name__ == "__main__":
                     help="the voice's speaking style, for voices that have one (default excited; also newscast, "
                          "cheerful; none for no style)")
     ap.add_argument("--rate", default="+14%", help="speaking rate, e.g. +10%% or -5%% (default +14%%)")
-    ap.add_argument("--pitch", default="+0%", help="voice pitch, e.g. +6%% for a livelier read (default +0%%)")
+    ap.add_argument("--pitch", default="+0%", help="voice pitch, e.g. -4 for a calmer read or 6 for a livelier one (default 0)")
     ap.add_argument("--sample-voices", nargs="?", const="us", choices=["us", "uk"],
                     help="say the opening and the VAR moment in about twenty voices, into docs/video/out/voices, and stop")
     ap.add_argument("--preview", action="store_true",
@@ -771,6 +771,10 @@ if __name__ == "__main__":
     ap.add_argument("--resource-group", help="where Lasso's Foundry account is (default: from azd)")
     ap.add_argument("--script-only", action="store_true", help="write docs/video/SCRIPT.md and stop")
     a = ap.parse_args()
+    for name in ("pitch", "rate"):  # -4 means -4%; a bare -4% must be written --pitch=-4%
+        v = getattr(a, name)
+        if v and not v.endswith("%"):
+            setattr(a, name, f"{float(v):+g}%")
     PITCH = a.pitch
     if a.style and a.style.lower() == "none":
         a.style = None
