@@ -36,11 +36,16 @@ from .realtime import LocalHub, make_hub
 from .store import make_store
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+# The Azure SDKs log every HTTP call at INFO (headers and all): a Web PubSub push several times a second per match
+# came to about 1 GB of logs a day. Keep our own logs at INFO, theirs at WARNING.
+for _noisy in ("azure", "uamqp", "httpx", "httpcore", "openai", "uvicorn.access", "opentelemetry"):
+    logging.getLogger(_noisy).setLevel(logging.WARNING)
 log = logging.getLogger("lasso.api")
 if os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING"):
     from azure.monitor.opentelemetry import configure_azure_monitor
 
-    configure_azure_monitor()
+    # Only Lasso's own logs become traces, and a quarter of the requests and calls (a push to phones is one).
+    configure_azure_monitor(logger_name="lasso", sampling_ratio=0.25)
 
 data = DemoData(settings.data_dir)
 rooms: dict[str, MatchRoom] = {mid: MatchRoom(mid, data) for mid in settings.featured_matches

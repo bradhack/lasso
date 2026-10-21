@@ -244,4 +244,6 @@ async def consume_forever(on_event: OnEvent, cfg: Settings = settings,
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
+    for noisy in ("azure", "uamqp"):  # the Event Hubs SDK logs every send at INFO
+        logging.getLogger(noisy).setLevel(logging.WARNING)
     asyncio.run(publish_forever())

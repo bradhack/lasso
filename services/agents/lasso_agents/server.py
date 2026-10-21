@@ -26,6 +26,10 @@ from .settings import settings
 from .team import build_team, make_clients, model_options
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+# The Azure SDKs log every HTTP call at INFO (headers and all): a Web PubSub push several times a second per match
+# came to about 1 GB of logs a day. Keep our own logs at INFO, theirs at WARNING.
+for _noisy in ("azure", "uamqp", "httpx", "httpcore", "openai", "uvicorn.access", "opentelemetry"):
+    logging.getLogger(_noisy).setLevel(logging.WARNING)
 log = logging.getLogger("lasso.agents")
 
 if os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING"):
@@ -34,7 +38,7 @@ if os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING"):
     from agent_framework.observability import enable_instrumentation
     from azure.monitor.opentelemetry import configure_azure_monitor
 
-    configure_azure_monitor()
+    configure_azure_monitor(logger_name="lasso")  # every agent run stays traced; only our own logs, not the SDKs'
     enable_instrumentation()
     log.info("OpenTelemetry tracing enabled")
 
