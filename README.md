@@ -8,7 +8,7 @@ Lasso is a live, multi-agent match companion for phones and broadcasts, built fo
 
 > **Judges start here**
 > - **Live app:** https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io (built for phones, with a two-column layout on desktop)
-> - **Demo video:** <!-- VIDEO LINK --> on the submission page
+> - **Demo video:** [youtu.be/pV_-Hi-CfJI](https://youtu.be/pV_-Hi-CfJI) on the submission page
 > - **Jump to a moment:** [the VAR check](https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io/#/replay/S5-MD07-03/6) · [the winner](https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io/#/replay/S5-MD07-03/83) (your own private replay)
 > - **[Lasso for judges](docs/JUDGING.md):** a two-minute tour, and each judging criterion mapped to the screens, files and numbers that back it up
 

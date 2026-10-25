@@ -1,7 +1,7 @@
 # Lasso for judges
 
 - **Live app:** https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io (built for phones; on a desktop browser the match page spreads into two columns, with Play and Standings & stats as tabs beside the match)
-- **Demo video (under 2 minutes):** <!-- VIDEO LINK --> linked from the submission page
+- **Demo video (under 2 minutes):** [youtu.be/pV_-Hi-CfJI](https://youtu.be/pV_-Hi-CfJI) linked from the submission page
 - **Short on time? Jump straight to a moment** in your own private replay of the showcase match (pick a fan name first, then it starts):
   - [The VAR check (8')](https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io/#/replay/S5-MD07-03/6): VAR reviews a goal, and the Gauge shows the chances both ways until the decision
   - [The equalizer (14')](https://ca-api-eq6gno2m4qr7w.jollyrock-1439cd71.eastus2.azurecontainerapps.io/#/replay/S5-MD07-03/12.5): ten men, a goal down, and level
