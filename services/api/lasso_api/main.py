@@ -44,8 +44,11 @@ log = logging.getLogger("lasso.api")
 if os.environ.get("APPLICATIONINSIGHTS_CONNECTION_STRING"):
     from azure.monitor.opentelemetry import configure_azure_monitor
 
-    # Only Lasso's own logs become traces, and a quarter of the requests and calls (a push to phones is one).
-    configure_azure_monitor(logger_name="lasso", sampling_ratio=0.25)
+    # Only Lasso's own logs become traces, and a quarter of the requests. The Azure SDKs' own tracing is off: it
+    # recorded every Event Hubs event read, Cosmos call and Web PubSub check, about a million items a day even
+    # with nobody watching. Calls to the agents are still traced, and the agents trace every run themselves.
+    configure_azure_monitor(logger_name="lasso", sampling_ratio=0.25,
+                            instrumentation_options={"azure_sdk": {"enabled": False}})
 
 data = DemoData(settings.data_dir)
 rooms: dict[str, MatchRoom] = {mid: MatchRoom(mid, data) for mid in settings.featured_matches
