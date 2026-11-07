@@ -52,6 +52,71 @@ Rough cost while it's running: about $7 to $10 a day with everything on, plus mo
 - **Infrastructure changes** (new roles or settings, such as Listen's Speech access): run `azd provision` first, then deploy. The agents key (only the API may run the agents) is one of these: until `azd provision` adds it to both apps, the agents service stays open as before, so the order doesn't break anything. New role assignments can take a few minutes to apply; until then Listen falls back to the phone's own voice.
 - Open phones pick up a new version on their own within about 90 seconds.
 
+## Pause, resume, tear down and rebuild
+
+Running in full, Lasso costs about $5 a day: about $3.40 for Container Apps (the API replays matches around the clock, so it never idles), about $1.60 for Web PubSub Standard, and small change for the rest. The AI models, Speech and Cosmos DB are pay-per-use, so they cost almost nothing without fans.
+
+| You want to | Do | Costs afterwards |
+|---|---|---|
+| Stop paying for most of it but keep everything | **Pause** | About $0.50 a day (Event Hubs and the container registry) |
+| Bring a paused deployment back | **Resume** | Back to about $5 a day |
+| Remove it for good | **Tear down** | Nothing |
+| Start again after tearing down | **Rebuild** | About $5 a day |
+
+### Pause
+
+Scale the three container apps to zero and move Web PubSub to its free tier. Nothing is deleted. A visit wakes the API in about 30 seconds and restarts the matches from kickoff; the feed stays off, and the API plays the matches itself until you resume. Free Web PubSub allows only about 20,000 messages a day, enough for a quick look but not for real use.
+
+PowerShell, from the repository root:
+
+```powershell
+$rg = azd env get-value AZURE_RESOURCE_GROUP
+foreach ($app in az containerapp list -g $rg --query "[].name" -o tsv) {
+  az containerapp update -n $app -g $rg --min-replicas 0
+}
+$wps = az webpubsub list -g $rg --query "[].name" -o tsv
+az webpubsub update -n $wps -g $rg --sku Free_F1
+```
+
+(`az webpubsub` may ask to install its CLI extension the first time; say yes.)
+
+### Resume
+
+```bash
+azd provision
+```
+
+The Bicep templates set every app back to one replica minimum and Web PubSub back to Standard. Open the app once to check that the Gauge moves. Then check the Log Analytics daily cap is what you want, because a provision can reset it (`az monitor log-analytics workspace update -g $rg -n <log-lasso-…> --quota 1` sets it to 1 GB a day).
+
+### Tear down
+
+```bash
+azd down --purge
+```
+
+This deletes the whole resource group: the apps, the Foundry models and Speech, Cosmos DB (fan accounts, leagues and history), Event Hubs, Web PubSub, the registry and the logs. `--purge` also removes the soft-deleted Foundry account, so a rebuild can reuse the same names. It cannot be undone.
+
+azd does not remove what lives outside the resource group:
+- **Microsoft Fabric:** delete the Lasso workspace in Fabric, or let the trial lapse.
+- **The repository and the demo video:** keep them; a rebuild only needs the repository.
+- **Your azd environment** (the `.azure` folder) stays on your computer, which keeps the environment name for a rebuild.
+
+### Rebuild
+
+From a fresh clone or an up-to-date one:
+
+```bash
+git pull
+az login
+azd auth login
+azd env select lasso        # or, on a new computer: azd env new lasso && azd env set AZURE_LOCATION eastus2
+azd up
+```
+
+About 20 to 30 minutes. The resource names come from the subscription, the resource group and the environment name, so with the same three the app comes back at the same address with the same admin key; use the `LASSO_APP_URL` azd prints. Fans, leagues and history start fresh.
+
+To bring the Fabric dashboard back too, follow [FABRIC.md](FABRIC.md) for a new Eventstream, then `azd env set LASSO_FABRIC_CONNECTION "<connection string>"`, `azd provision` and `azd deploy api`.
+
 ## Useful commands
 
 ```bash
@@ -60,7 +125,7 @@ azd env get-values               # URLs, endpoints
 # Restart the showcase match from minute 78 at 2 real seconds per match minute (for recording the demo):
 curl -X POST -H "X-Admin-Key: <admin key>" "$LASSO_APP_URL/api/admin/matches/S5-MD07-03/restart?from_minute=78&minute_seconds=2"
 # Add &agents=true to have the agents write that replay's stories even with no one watching (the evaluation uses it)
-azd down --purge                 # tear everything down when judging ends (after Nov 10, 2026)
+azd down --purge                 # tear everything down (see Pause, resume, tear down and rebuild above)
 ```
 
 The admin key stays the same across provisions. Pin it to a value of your choice once with `azd env set LASSO_ADMIN_KEY <value>` (then `azd provision`); otherwise a stable key is derived for the environment. To read the current key (PowerShell):

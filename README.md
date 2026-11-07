@@ -189,7 +189,7 @@ Twenty fictional clubs, each with an original crest designed as one set: a disti
 | `fabric/` | Microsoft Fabric Real-Time Intelligence: the Eventhouse table and the agents dashboard's queries ([guide](docs/FABRIC.md)) |
 | `.github/` | CI, the security workflow, Copilot instructions and prompt files |
 | `.vscode/mcp.json` | GitHub Copilot Agent Mode: the Gaffer's live MCP tools and the Azure MCP Server |
-| `docs/` | [Lasso for judges](docs/JUDGING.md), [two agents or one?](docs/agent-comparison.md), [model report](docs/model-report.md), [agent evaluation](docs/agent-eval.md), [deploy guide](docs/DEPLOY.md), [security](docs/SECURITY.md) |, [demo video script](docs/video/SCRIPT.md) and its recorder
+| `docs/` | [Lasso for judges](docs/JUDGING.md), [two agents or one?](docs/agent-comparison.md), [model report](docs/model-report.md), [agent evaluation](docs/agent-eval.md), [deploy guide](docs/DEPLOY.md), [security](docs/SECURITY.md), [demo video script](docs/video/SCRIPT.md) and its recorder |
 
 ## Quick start
 
@@ -201,7 +201,7 @@ pip install -e engine -r services/api/requirements.txt
 (cd services/api && uvicorn lasso_api.main:app --port 8000)   # open http://localhost:8000
 ```
 
-To deploy to Azure, see [docs/DEPLOY.md](docs/DEPLOY.md). The short version: `azd up`.
+To deploy to Azure, see [docs/DEPLOY.md](docs/DEPLOY.md). The short version: `azd up`. To pause it, bring it back, tear it down or rebuild it, see [pause, resume, tear down and rebuild](docs/DEPLOY.md#pause-resume-tear-down-and-rebuild).
 
 To run the tests (the same ones CI runs):
 
