@@ -58,14 +58,16 @@ Running in full, Lasso costs about $5 a day: about $3.40 for Container Apps (the
 
 | You want to | Do | Costs afterwards |
 |---|---|---|
-| Stop paying for most of it but keep everything | **Pause** | About $0.50 a day (Event Hubs and the container registry) |
+| Stop paying for most of it but keep everything | **Pause** | About $0.60 a day (Event Hubs and the container registry) |
 | Bring a paused deployment back | **Resume** | Back to about $5 a day |
 | Remove it for good | **Tear down** | Nothing |
 | Start again after tearing down | **Rebuild** | About $5 a day |
 
 ### Pause
 
-Scale the three container apps to zero and move Web PubSub to its free tier. Nothing is deleted. A visit wakes the API in about 30 seconds and restarts the matches from kickoff; the feed stays off, and the API plays the matches itself until you resume. Free Web PubSub allows only about 20,000 messages a day, enough for a quick look but not for real use.
+Let the API and agents scale to zero, stop the feed, and move Web PubSub to its free tier. Nothing is deleted. A visit wakes the API in about 30 seconds and restarts the matches from kickoff; with the feed stopped, the API waits two minutes for it and then plays the matches itself until you resume. Free Web PubSub allows only about 20,000 messages a day, enough for a quick look but not for real use.
+
+The feed has to be stopped rather than scaled: it takes no requests, so Container Apps has nothing to scale it down on, and with a minimum of zero it still keeps one replica running.
 
 PowerShell, from the repository root:
 
@@ -74,19 +76,30 @@ $rg = azd env get-value AZURE_RESOURCE_GROUP
 foreach ($app in az containerapp list -g $rg --query "[].name" -o tsv) {
   az containerapp update -n $app -g $rg --min-replicas 0
 }
+$feed = az containerapp list -g $rg --query "[?starts_with(name,'ca-feed-')].name" -o tsv
+$rev = az containerapp show -n $feed -g $rg --query properties.latestRevisionName -o tsv
+az containerapp revision deactivate -n $feed -g $rg --revision $rev
 $wps = az webpubsub list -g $rg --query "[].name" -o tsv
 az webpubsub update -n $wps -g $rg --sku Free_F1
 ```
 
 (`az webpubsub` may ask to install its CLI extension the first time; say yes.)
 
+Anything holding a connection open to the API keeps it awake, and billing, around the clock. The usual one is the `lasso` MCP server in [.vscode/mcp.json](../.vscode/mcp.json): while VS Code has it running, the API never scales to zero. Stop it (**MCP: List Servers**, then **lasso**, then **Stop**) while paused. To check the pause worked, `az containerapp replica list -n <app> -g $rg` should show no replicas for any app a few minutes later.
+
 ### Resume
 
-```bash
+PowerShell, from the repository root:
+
+```powershell
+$rg = azd env get-value AZURE_RESOURCE_GROUP
+$feed = az containerapp list -g $rg --query "[?starts_with(name,'ca-feed-')].name" -o tsv
+$rev = az containerapp show -n $feed -g $rg --query properties.latestRevisionName -o tsv
+az containerapp revision activate -n $feed -g $rg --revision $rev
 azd provision
 ```
 
-The Bicep templates set every app back to one replica minimum and Web PubSub back to Standard. Open the app once to check that the Gauge moves. Then check the Log Analytics daily cap is what you want, because a provision can reset it (`az monitor log-analytics workspace update -g $rg -n <log-lasso-…> --quota 1` sets it to 1 GB a day).
+Activate the feed first: a provision doesn't bring back a stopped revision on its own. The Bicep templates set every app back to one replica minimum and Web PubSub back to Standard. Open the app once to check that the Gauge moves. Then check the Log Analytics daily cap is what you want, because a provision can reset it (`az monitor log-analytics workspace update -g $rg -n <log-lasso-…> --quota 1` sets it to 1 GB a day).
 
 ### Tear down
 
