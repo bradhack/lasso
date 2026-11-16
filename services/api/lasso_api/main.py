@@ -548,7 +548,19 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Lasso API", version="1.0.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-app.mount("/mcp", mcp.streamable_http_app())
+_mcp_app = mcp.streamable_http_app()
+
+
+async def _mcp_without_stream(scope, receive, send) -> None:
+    """The Gaffer's MCP endpoint, minus the optional GET stream. The tools answer over POST, so the stream carries
+    nothing, but a connected client holds it open for hours and that keeps the API from ever scaling to zero."""
+    if scope["type"] == "http" and scope["method"] == "GET":
+        await Response(status_code=405, headers={"Allow": "POST, DELETE"})(scope, receive, send)
+        return
+    await _mcp_app(scope, receive, send)
+
+
+app.mount("/mcp", _mcp_without_stream)
 
 
 class NewUser(BaseModel):

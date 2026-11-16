@@ -85,7 +85,7 @@ az webpubsub update -n $wps -g $rg --sku Free_F1
 
 (`az webpubsub` may ask to install its CLI extension the first time; say yes.)
 
-Anything holding a connection open to the API keeps it awake, and billing, around the clock. The usual one is the `lasso` MCP server in [.vscode/mcp.json](../.vscode/mcp.json): while VS Code has it running, the API never scales to zero. Stop it (**MCP: List Servers**, then **lasso**, then **Stop**) while paused. To check the pause worked, `az containerapp replica list -n <app> -g $rg` should show no replicas for any app a few minutes later.
+Anything holding a connection open to the API keeps it awake, and billing, around the clock. MCP clients used to (the `lasso` server in [.vscode/mcp.json](../.vscode/mcp.json) held a stream open for hours), so `/mcp/` refuses that optional stream; the tools still answer over POST. To check the pause worked, `az containerapp replica list -n <app> -g $rg` should show no replicas for any app a few minutes later.
 
 ### Resume
 
